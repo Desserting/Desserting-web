@@ -2,7 +2,7 @@
 
 Desserting 서비스의 프론트엔드 웹 애플리케이션입니다.
 
-<!-- 서비스 소개(어떤 문제를 해결하는 서비스인지)를 여기에 한두 문장으로 추가해주세요. -->
+<!-- 서비스 소개(어떤 문제를 해결하는 서비스인지) 추가 예정-->
 
 ## 기술 스택
 
@@ -17,7 +17,7 @@ Desserting 서비스의 프론트엔드 웹 애플리케이션입니다.
 | 실시간 통신     | STOMP (WebSocket)                    |
 | 코드 품질       | ESLint, Prettier                     |
 
-## 시작하기
+## 실행 방법
 
 ### 요구 사항
 
@@ -69,6 +69,7 @@ npm run dev
 `gen:api`는 백엔드 서버가 `http://localhost:8080`에서 실행 중이어야 합니다.
 
 ## 프로젝트 구조
+<!-- 수정 예정 -->
 
 ```
 src
@@ -106,7 +107,6 @@ npx shadcn@latest add <component>
 | test     | 테스트 코드 추가·수정                 |
 | chore    | 빌드 설정, 패키지 관리 등 기타 변경   |
 | ci       | CI/CD 설정 변경                       |
-| merge    | 브랜치 또는 PR 병합                   |
 
 예시: `feat: 시작 화면 버튼 컴포넌트 추가`, `fix: API 요청 baseURL 누락 수정`, `chore: prettier tailwind 플러그인 추가`
 
@@ -136,4 +136,4 @@ npx shadcn@latest add <component>
 2. 커밋 컨벤션에 맞춰 작업 내용을 커밋합니다.
 3. `main`을 대상으로 Pull Request를 작성합니다. PR 템플릿의 체크리스트를 확인해주세요.
 4. PR을 올리면 CI(`npm ci` → `npm run build`)가 자동으로 실행됩니다. 빌드가 실패하면 원인을 해결한 뒤 다시 푸시해주세요.
-5. 리뷰를 받고 머지합니다.
+5. 기본적으로 스스로 검토 하되, 필요시 리뷰 요청 및 승인 머지합니다.
