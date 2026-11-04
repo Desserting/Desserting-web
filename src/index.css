@@ -105,13 +105,6 @@
   margin-top: clamp(8px, 3dvh, 30px);
 }
 
-.my-page > nav {
-  position: static;
-  flex-shrink: 0;
-  height: calc(68px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
 .premium-page {
   padding-top: 76px;
   padding-bottom: max(46px, env(safe-area-inset-bottom));
