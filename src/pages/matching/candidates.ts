@@ -48,6 +48,28 @@ export const MOCK_CANDIDATES: MatchCandidate[] = [
     photo: matchPhoto,
     gallery: [matchPhoto, matchPhoto],
   },
+  {
+    id: 4,
+    nickname: '마카롱좋아',
+    age: 25,
+    location: '경산',
+    distanceKm: 10,
+    interests: ['베이커리', '커피'],
+    bio: '알록달록한 마카롱을 모으는 게 취미예요.\n맛있는 디저트 카페 추천해 주세요!',
+    photo: matchPhoto,
+    gallery: [matchPhoto, matchPhoto],
+  },
+  {
+    id: 5,
+    nickname: '쿠키매니아',
+    age: 27,
+    location: '구미',
+    distanceKm: 6,
+    interests: ['베이커리', '카페투어'],
+    bio: '갓 구운 쿠키에 우유 한 잔이면 행복해요.\n같이 쿠키 맛집 탐방 가요!',
+    photo: matchPhoto,
+    gallery: [matchPhoto, matchPhoto],
+  },
 ];
 
 export function findCandidate(id: number) {

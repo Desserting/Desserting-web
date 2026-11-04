@@ -134,7 +134,8 @@ export default function MatchingCardsPage() {
           넘기기
         </button>
         <Link
-          to={`/matching/profile/${candidate.id}`}
+          to={`/profile/${candidate.id}`}
+          state={{ from: '/matching/cards' }}
           className={cn(ACTION_BUTTON, 'bg-mint')}
         >
           <img src={iconProfile} alt="" className="size-[22px]" />
