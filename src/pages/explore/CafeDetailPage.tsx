@@ -23,7 +23,7 @@ export default function CafeDetailPage() {
       <section aria-labelledby="cafe-name" className="mt-[33px]">
         <img
           src={cafe.photo}
-          alt={`${cafe.name}의 햇살이 들어오는 창가 좌석과 디저트 진열대`}
+          alt={cafe.photoAlt}
           className="aspect-[345/245] w-full rounded-[17px] object-cover"
         />
         <h2
@@ -35,16 +35,27 @@ export default function CafeDetailPage() {
         <p className="mt-1.5 text-base leading-6">{cafe.category}</p>
         <p
           className="mt-[25px] text-lg leading-[27px] font-bold"
-          aria-label={`평점 5점 만점에 ${cafe.rating}점, 리뷰 ${cafe.reviewCount.toLocaleString('ko-KR')}개`}
+          aria-label={
+            cafe.rating !== undefined && cafe.reviewCount !== undefined
+              ? `평점 5점 만점에 ${cafe.rating}점, 리뷰 ${cafe.reviewCount.toLocaleString('ko-KR')}개`
+              : undefined
+          }
         >
-          <span aria-hidden="true">
-            ★ {cafe.rating.toFixed(1)} (
-            {cafe.reviewCount.toLocaleString('ko-KR')})
+          <span
+            aria-hidden={
+              cafe.rating !== undefined && cafe.reviewCount !== undefined
+                ? true
+                : undefined
+            }
+          >
+            {cafe.rating !== undefined && cafe.reviewCount !== undefined
+              ? `★ ${cafe.rating.toFixed(1)} (${cafe.reviewCount.toLocaleString('ko-KR')})`
+              : '평점 정보를 준비 중이에요.'}
           </span>
         </p>
         <p className="mt-[13px] text-base leading-6">
           <span aria-hidden="true">⌖ </span>
-          {cafe.address}
+          {cafe.address ?? '주소 정보를 준비 중이에요.'}
         </p>
       </section>
 
