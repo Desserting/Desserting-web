@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Camera } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import avatarCake from '@/assets/signup/avatar-cake.svg';
 import BackButton from '@/components/BackButton';
@@ -19,6 +20,7 @@ const profileSchema = z.object({
 type ProfileForm = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const setProfile = useSignupStore((state) => state.setProfile);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatar, setAvatar] = useState<{ file: File; url: string } | null>(
@@ -43,6 +45,7 @@ export default function ProfilePage() {
 
   const onSubmit = (values: ProfileForm) => {
     setProfile({ ...values, avatar: avatar?.file ?? null });
+    navigate('/home');
   };
 
   return (
