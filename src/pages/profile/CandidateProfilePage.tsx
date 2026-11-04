@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Heart, Send } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import BackButton from '@/components/BackButton';
+import Bubble from '@/components/Bubble';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -100,16 +101,13 @@ export default function CandidateProfilePage() {
           className="mt-6 flex flex-col items-start gap-2"
         >
           {candidate.bio.split('\n').map((line, lineIndex) => (
-            <p
+            <Bubble
               key={`${candidate.id}-${lineIndex}`}
+              tail={lineIndex === 0}
               style={{ animationDelay: `${150 + lineIndex * 550}ms` }}
-              className={cn(
-                'bg-mint-100 motion-safe:animate-bubble-in max-w-[88%] origin-top-left rounded-[22px] px-4 py-3 text-[16px] leading-6 break-keep',
-                lineIndex === 0 && 'rounded-tl-[6px]',
-              )}
             >
               {line}
-            </p>
+            </Bubble>
           ))}
         </div>
       </section>
