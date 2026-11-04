@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import avatarCake from '@/assets/signup/avatar-cake.svg';
+import myAvatar from '@/assets/my/avatar.png';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,12 +20,21 @@ const profileSchema = z.object({
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
-export default function ProfilePage() {
+export default function ProfilePage({
+  mode = 'signup',
+}: {
+  mode?: 'signup' | 'edit';
+}) {
+  const isEditing = mode === 'edit';
   const navigate = useNavigate();
+  const profile = useSignupStore((state) => state.profile);
   const setProfile = useSignupStore((state) => state.setProfile);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatar, setAvatar] = useState<{ file: File; url: string } | null>(
-    null,
+    () =>
+      isEditing && profile?.avatar
+        ? { file: profile.avatar, url: URL.createObjectURL(profile.avatar) }
+        : null,
   );
   const {
     register,
@@ -32,7 +42,10 @@ export default function ProfilePage() {
     formState: { errors, isValid },
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { nickname: '', bio: '' },
+    defaultValues: {
+      nickname: isEditing ? (profile?.nickname ?? '디저트러버') : '',
+      bio: isEditing ? (profile?.bio ?? '') : '',
+    },
     mode: 'onChange',
   });
 
@@ -45,14 +58,14 @@ export default function ProfilePage() {
 
   const onSubmit = (values: ProfileForm) => {
     setProfile({ ...values, avatar: avatar?.file ?? null });
-    navigate('/home');
+    navigate(isEditing ? '/my' : '/home');
   };
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-8 pt-[55px]">
-      <BackButton to="/signup/interests" />
+      <BackButton to={isEditing ? '/my' : '/signup/interests'} />
       <h1 className="text-center text-[25px] leading-[30px] font-bold">
-        프로필을 완성해요
+        {isEditing ? '내 프로필 관리' : '프로필을 완성해요'}
       </h1>
       <div className="relative mt-[66px] size-[176px] self-center">
         <div className="bg-cream size-full overflow-hidden rounded-full">
@@ -60,6 +73,12 @@ export default function ProfilePage() {
             <img
               src={avatar.url}
               alt="프로필 사진"
+              className="size-full object-cover"
+            />
+          ) : isEditing ? (
+            <img
+              src={myAvatar}
+              alt="기본 프로필 사진"
               className="size-full object-cover"
             />
           ) : (
@@ -120,7 +139,7 @@ export default function ProfilePage() {
           disabled={!isValid}
           className="mt-auto mb-10"
         >
-          완료
+          {isEditing ? '저장' : '완료'}
         </Button>
       </form>
     </main>

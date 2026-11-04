@@ -88,8 +88,35 @@
   box-sizing: border-box;
 }
 
+.my-page-content {
+  padding-top: clamp(12px, 6dvh, 50px);
+}
+
+.my-page-profile {
+  margin-top: clamp(8px, 3dvh, 26px);
+}
+
+.my-page-avatar {
+  width: clamp(56px, 15dvh, 126px);
+  height: clamp(56px, 15dvh, 126px);
+}
+
+.my-page-menu {
+  margin-top: clamp(8px, 3dvh, 30px);
+}
+
+.my-page > nav {
+  position: static;
+  flex-shrink: 0;
+  height: calc(68px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @theme {
   --color-mint: #8ce2d0;
+  --color-mint-deep: #258f77;
+  --color-my-divider: #f0f2f3;
+  --color-my-muted: #6e777c;
   --color-mint-50: #f3fcf9;
   --color-mint-100: #e8f9f4;
   --color-ink: #111111;

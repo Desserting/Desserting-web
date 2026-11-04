@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import SplashScreen from '@/components/SplashScreen';
 import HomePage from '@/pages/home/HomePage';
+import MyPage from '@/pages/my/MyPage';
 import MatchingCardsPage from '@/pages/matching/MatchingCardsPage';
 import MatchingSettingsPage from '@/pages/matching/MatchingSettingsPage';
 import InterestsPage from '@/pages/signup/InterestsPage';
@@ -16,6 +17,8 @@ export default function App() {
     <>
       <Routes>
         <Route path="/home" element={<HomePage />} />
+        <Route path="/my" element={<MyPage />} />
+        <Route path="/my/profile" element={<ProfilePage mode="edit" />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/signup/interests" element={<InterestsPage />} />
         <Route path="/signup/profile" element={<ProfilePage />} />
