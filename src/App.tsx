@@ -4,6 +4,8 @@ import SplashScreen from '@/components/SplashScreen';
 import ChatListPage from '@/pages/chat/ChatListPage';
 import ChatRoomPage from '@/pages/chat/ChatRoomPage';
 import HomePage from '@/pages/home/HomePage';
+import CafeDetailPage from '@/pages/explore/CafeDetailPage';
+import CafeReservationPage from '@/pages/explore/CafeReservationPage';
 import ChatRequestsPage from '@/pages/chat/ChatRequestsPage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import MyPage from '@/pages/my/MyPage';
@@ -25,6 +27,11 @@ export default function App() {
     <>
       <Routes>
         <Route path="/home" element={<HomePage />} />
+        <Route path="/explore/cafes/:cafeId" element={<CafeDetailPage />} />
+        <Route
+          path="/explore/cafes/:cafeId/reservation"
+          element={<CafeReservationPage />}
+        />
         <Route path="/chat" element={<ChatListPage />} />
         <Route path="/chat/requests" element={<ChatRequestsPage />} />
         <Route path="/chat/:roomId" element={<ChatRoomPage />} />

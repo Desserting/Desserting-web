@@ -149,6 +149,8 @@ html {
 }
 
 @theme {
+  --color-cafe-action: #f3f5f5;
+  --color-cafe-field: #f5f6f7;
   --color-premium-emblem: #e4f8f0;
   --color-premium-price: #e6f9f2;
   --color-mint: #8ce2d0;
