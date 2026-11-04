@@ -97,6 +97,9 @@
   --color-field: #dfe3e5;
   --color-kakao: #f4df1f;
   --color-cream: #f1eae0;
+  --color-blush: #fff0f5;
+  --color-sky: #edf7ff;
+  --color-hairline: #e8eceb;
 }
 
 @theme inline {
