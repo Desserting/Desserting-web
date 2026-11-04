@@ -126,7 +126,7 @@ export default function MyPage() {
           })}
         </ul>
       </main>
-      <BottomNav variant="my" />
+      <BottomNav />
       <Dialog
         open={selectedMenu !== null}
         onOpenChange={(open) => {
