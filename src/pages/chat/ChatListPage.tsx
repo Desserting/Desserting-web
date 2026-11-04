@@ -15,12 +15,12 @@ function RoomItem({ room }: { room: ChatRoom }) {
     <li>
       <Link
         to={`/chat/${roomId}`}
-        className="active:bg-surface -mx-3 flex items-center gap-3.5 rounded-2xl px-3 py-4 transition-colors"
+        className="active:bg-surface -mx-3 flex items-center gap-4 rounded-2xl px-3 py-6 transition-colors"
       >
-        <ChatAvatar src={room.otherUserAvatarUrl} className="size-14" />
+        <ChatAvatar src={room.otherUserAvatarUrl} className="size-16" />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
-            <p className="truncate text-[18px] leading-7 font-bold">
+            <p className="truncate text-[20px] leading-7 font-bold">
               {otherUserNickname}
             </p>
             {lastMessageAt && (
@@ -82,9 +82,9 @@ export default function ChatListPage() {
               <div
                 key={key}
                 aria-hidden
-                className="flex animate-pulse items-center gap-3.5 py-4"
+                className="flex animate-pulse items-center gap-4 py-6"
               >
-                <div className="bg-chip size-14 shrink-0 rounded-full" />
+                <div className="bg-chip size-16 shrink-0 rounded-full" />
                 <div className="flex-1 space-y-3">
                   <div className="bg-chip h-5 w-2/5 rounded-full" />
                   <div className="bg-chip h-4 w-4/5 rounded-full" />
