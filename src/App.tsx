@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import SplashScreen from '@/components/SplashScreen';
+import ChatListPage from '@/pages/chat/ChatListPage';
+import ChatRoomPage from '@/pages/chat/ChatRoomPage';
 import HomePage from '@/pages/home/HomePage';
 import CafeDetailPage from '@/pages/explore/CafeDetailPage';
 import CafeReservationPage from '@/pages/explore/CafeReservationPage';
@@ -29,6 +31,8 @@ export default function App() {
           path="/explore/cafes/:cafeId/reservation"
           element={<CafeReservationPage />}
         />
+        <Route path="/chat" element={<ChatListPage />} />
+        <Route path="/chat/:roomId" element={<ChatRoomPage />} />
         <Route path="/profile" element={<ProfileExplorePage />} />
         <Route path="/profile/:id" element={<CandidateProfilePage />} />
         <Route path="/notifications" element={<ChatRequestsPage />} />

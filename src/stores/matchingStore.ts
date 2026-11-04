@@ -34,14 +34,10 @@ export const LIVING_AREAS: Record<Region, LivingArea[]> = {
 };
 
 export const DISTANCES = [
-  { value: '10km', label: '10km 이내', summary: '10km 이내' },
-  { value: '30km', label: '30km 이내', summary: '30km 이내' },
-  { value: '50km', label: '50km 이내', summary: '50km 이내' },
-  {
-    value: 'unlimited',
-    label: '거리 제한 없음 (선택한 생활권)',
-    summary: '거리 제한 없음',
-  },
+  { value: '10km', label: '10km', summary: '10km 이내' },
+  { value: '30km', label: '30km', summary: '30km 이내' },
+  { value: '50km', label: '50km', summary: '50km 이내' },
+  { value: 'unlimited', label: '무제한', summary: '생활권 내 무제한' },
 ];
 
 export interface MatchingFilter {
