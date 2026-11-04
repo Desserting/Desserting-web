@@ -1,10 +1,17 @@
-import { Button } from '@/components/ui/button';
+import { useCallback, useState } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import SplashScreen from '@/components/SplashScreen';
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+  const finishSplash = useCallback(() => setShowSplash(false), []);
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-[430px] flex-col items-center justify-center gap-4 p-4">
-      <h1 className="text-2xl font-bold">Desserting</h1>
-      <Button>시작하기</Button>
-    </div>
+    <>
+      <Routes>
+        <Route path="*" element={<Navigate to="/signup" replace />} />
+      </Routes>
+      {showSplash && <SplashScreen onFinish={finishSplash} />}
+    </>
   );
 }
