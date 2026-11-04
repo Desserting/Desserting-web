@@ -39,7 +39,9 @@ export default function BottomNav({
                     />
                     <span
                       className={
-                        active ? 'h-6 leading-6 font-bold' : 'h-6 leading-6'
+                        active
+                          ? 'text-mint-deep h-6 leading-6 font-bold'
+                          : 'h-6 leading-6'
                       }
                     >
                       {label}
