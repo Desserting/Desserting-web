@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { BellOff } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -6,8 +8,23 @@ import { useChatRequestStore } from '@/stores/chatRequestStore';
 import type { ChatRequest } from './chatRequests';
 
 function RequestItem({ request }: { request: ChatRequest }) {
-  const respond = useChatRequestStore((state) => state.respond);
-  const { id, nickname, avatar, status } = request;
+  const navigate = useNavigate();
+  const accept = useChatRequestStore((state) => state.accept);
+  const reject = useChatRequestStore((state) => state.reject);
+  const [submitting, setSubmitting] = useState(false);
+  const { id, nickname, avatar, status, chatRoomId } = request;
+
+  const handleAccept = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const roomId = await accept(id);
+      if (roomId !== null) navigate(`/chat/${roomId}`);
+    } catch {
+      // TODO: API 연동 시 수락 실패 안내 추가
+      setSubmitting(false);
+    }
+  };
 
   return (
     <li className="flex items-start gap-4 py-6">
@@ -31,7 +48,8 @@ function RequestItem({ request }: { request: ChatRequest }) {
               <Button
                 type="button"
                 variant="brand"
-                onClick={() => respond(id, 'accepted')}
+                onClick={handleAccept}
+                disabled={submitting}
                 aria-label={`${nickname}님의 대화 요청 수락`}
                 className="h-11 cursor-pointer rounded-[12px] text-[17px] font-bold"
               >
@@ -39,7 +57,8 @@ function RequestItem({ request }: { request: ChatRequest }) {
               </Button>
               <Button
                 type="button"
-                onClick={() => respond(id, 'rejected')}
+                onClick={() => reject(id)}
+                disabled={submitting}
                 aria-label={`${nickname}님의 대화 요청 거절`}
                 className="bg-chip text-ink hover:bg-chip/70 h-11 cursor-pointer rounded-[12px] text-[17px] font-bold"
               >
@@ -55,9 +74,19 @@ function RequestItem({ request }: { request: ChatRequest }) {
               <br />
               대화를 시작할 수 있어요!
             </p>
-            <p className="bg-mint-100 text-mint-deep mt-3 inline-block rounded-full px-3 py-1 text-[13px] leading-5 font-bold">
-              수락 완료
-            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <p className="bg-mint-100 text-mint-deep rounded-full px-3 py-1 text-[13px] leading-5 font-bold">
+                수락 완료
+              </p>
+              {chatRoomId !== undefined && (
+                <Link
+                  to={`/chat/${chatRoomId}`}
+                  className="text-ink text-[13px] leading-5 font-bold underline underline-offset-2"
+                >
+                  채팅방 가기
+                </Link>
+              )}
+            </div>
           </div>
         )}
         {status === 'rejected' && (
