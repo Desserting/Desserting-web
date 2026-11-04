@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import SplashScreen from '@/components/SplashScreen';
 import InterestsPage from '@/pages/signup/InterestsPage';
+import ProfilePage from '@/pages/signup/ProfilePage';
 import SignupPage from '@/pages/signup/SignupPage';
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
       <Routes>
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/signup/interests" element={<InterestsPage />} />
+        <Route path="/signup/profile" element={<ProfilePage />} />
         <Route path="*" element={<Navigate to="/signup" replace />} />
       </Routes>
       {showSplash && <SplashScreen onFinish={finishSplash} />}
