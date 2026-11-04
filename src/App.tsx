@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import SplashScreen from '@/components/SplashScreen';
 import HomePage from '@/pages/home/HomePage';
 import CafeDetailPage from '@/pages/explore/CafeDetailPage';
+import CafeReservationPage from '@/pages/explore/CafeReservationPage';
 import ChatRequestsPage from '@/pages/notifications/ChatRequestsPage';
 import MyPage from '@/pages/my/MyPage';
 import PremiumPassPage from '@/pages/my/PremiumPassPage';
@@ -24,6 +25,10 @@ export default function App() {
       <Routes>
         <Route path="/home" element={<HomePage />} />
         <Route path="/explore/cafes/:cafeId" element={<CafeDetailPage />} />
+        <Route
+          path="/explore/cafes/:cafeId/reservation"
+          element={<CafeReservationPage />}
+        />
         <Route path="/profile" element={<ProfileExplorePage />} />
         <Route path="/profile/:id" element={<CandidateProfilePage />} />
         <Route path="/notifications" element={<ChatRequestsPage />} />

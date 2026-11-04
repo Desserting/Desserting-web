@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -59,12 +59,17 @@ export default function CafeDetailPage() {
 
       <div className="mt-auto flex flex-col gap-3 pt-8">
         <Button
-          disabled
+          asChild
           variant="brand"
           size="xl"
           className="cursor-pointer rounded-[13px] pb-0 text-lg"
         >
-          예약하기
+          <Link
+            to={`/explore/cafes/${cafe.id}/reservation`}
+            state={{ from: backTo }}
+          >
+            예약하기
+          </Link>
         </Button>
         <Button
           variant="secondary"
