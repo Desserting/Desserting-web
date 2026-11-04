@@ -34,7 +34,7 @@ export default function BottomNav({
                       aria-hidden="true"
                       strokeWidth={1.8}
                       className={
-                        active ? 'size-[26px] text-[#379B85]' : 'size-[26px]'
+                        active ? 'size-[26px] text-mint-deep' : 'size-[26px]'
                       }
                     />
                     <span
