@@ -18,8 +18,11 @@ const TABS = [
 
 export default function BottomNav({
   variant = 'default',
+  activePath,
 }: {
   variant?: 'default' | 'my';
+  /** 홈의 하위 화면처럼 URL이 탭 경로와 다를 때 활성화할 탭 경로 */
+  activePath?: string;
 }) {
   const myIcons: Record<string, string> = {
     '/home': myHome,
@@ -37,13 +40,14 @@ export default function BottomNav({
           <li key={to}>
             <NavLink
               to={to}
-              className={({ isActive }) =>
-                cn(
+              className={({ isActive }) => {
+                const active = isActive || to === activePath;
+                return cn(
                   'text-ink flex flex-col items-center gap-1 text-xs',
-                  isActive && 'font-bold',
-                  isActive && variant === 'my' && 'text-mint-deep',
-                )
-              }
+                  active && 'font-bold',
+                  active && variant === 'my' && 'text-mint-deep',
+                );
+              }}
             >
               <img
                 src={variant === 'my' ? myIcons[to] : icon}

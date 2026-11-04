@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Heart, Send } from 'lucide-react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useMatchingStore } from '@/stores/matchingStore';
-import { findCandidate } from './candidates';
+import { findCandidate } from '@/pages/matching/candidates';
 
 const TOAST_DURATION_MS = 2000;
 
@@ -20,6 +20,11 @@ type RequestStep = 'confirm' | 'sent';
 
 export default function CandidateProfilePage() {
   const { id } = useParams();
+  // 매칭 카드·프로필 탐색 등 어디서 들어왔든 그곳으로 돌아간다
+  const backTo =
+    (useLocation().state as { from?: string } | null)?.from ?? '/profile';
+  // 랜덤 매칭에서 온 경우에만 "매칭"이라고 부른다
+  const fromMatching = backTo.startsWith('/matching');
   const candidate = findCandidate(Number(id));
   const liked = useMatchingStore((state) =>
     candidate ? state.likedIds.includes(candidate.id) : false,
@@ -41,12 +46,17 @@ export default function CandidateProfilePage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  if (!candidate) return <Navigate to="/matching/cards" replace />;
+  if (!candidate) return <Navigate to={backTo} replace />;
 
   const like = () => {
     toggleLike(candidate.id);
     if (!liked) {
-      setToast({ message: '이 매칭이 마음에 들어요!', key: Date.now() });
+      setToast({
+        message: fromMatching
+          ? '이 매칭이 마음에 들어요!'
+          : '이 프로필이 마음에 들어요!',
+        key: Date.now(),
+      });
     }
   };
 
@@ -62,7 +72,7 @@ export default function CandidateProfilePage() {
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-[35px]">
-      <BackButton to="/matching/cards" />
+      <BackButton to={backTo} />
       <h1 className="text-center text-[19px] leading-6 font-bold">
         상대 프로필
       </h1>
@@ -84,9 +94,24 @@ export default function CandidateProfilePage() {
           </span>
           {candidate.interests.join(' / ')}
         </p>
-        <p className="mt-6 text-[17px] leading-7 whitespace-pre-line">
-          {candidate.bio}
-        </p>
+        <div
+          aria-label="자기소개"
+          role="group"
+          className="mt-6 flex flex-col items-start gap-2"
+        >
+          {candidate.bio.split('\n').map((line, lineIndex) => (
+            <p
+              key={`${candidate.id}-${lineIndex}`}
+              style={{ animationDelay: `${150 + lineIndex * 550}ms` }}
+              className={cn(
+                'bg-mint-100 motion-safe:animate-bubble-in max-w-[88%] origin-top-left rounded-[22px] px-4 py-3 text-[16px] leading-6 break-keep',
+                lineIndex === 0 && 'rounded-tl-[6px]',
+              )}
+            >
+              {line}
+            </p>
+          ))}
+        </div>
       </section>
 
       <ul className="mt-9 grid grid-cols-2 gap-[15px]">
@@ -128,16 +153,17 @@ export default function CandidateProfilePage() {
         >
           {requested ? '요청을 보냈어요' : '대화 요청하기'}
         </Button>
-        {toast && (
-          <div
-            key={toast.key}
-            role="status"
-            className="bg-mint text-ink animate-in fade-in-0 slide-in-from-bottom-2 absolute bottom-full left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-3 text-[15px] font-bold whitespace-nowrap shadow-[0_6px_16px_rgba(0,0,0,0.18)]"
-          >
-            {toast.message}
-          </div>
-        )}
       </div>
+
+      {toast && (
+        <div
+          key={toast.key}
+          role="status"
+          className="bg-mint text-ink animate-in fade-in-0 slide-in-from-top-2 absolute top-[74px] left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-3 text-[15px] font-bold whitespace-nowrap shadow-[0_6px_16px_rgba(0,0,0,0.18)]"
+        >
+          {toast.message}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent

@@ -5,9 +5,10 @@ import HomePage from '@/pages/home/HomePage';
 import MyPage from '@/pages/my/MyPage';
 import PremiumPassPage from '@/pages/my/PremiumPassPage';
 import HeartPurchasePage from '@/pages/my/HeartPurchasePage';
-import CandidateProfilePage from '@/pages/matching/CandidateProfilePage';
+import CandidateProfilePage from '@/pages/profile/CandidateProfilePage';
 import MatchingCardsPage from '@/pages/matching/MatchingCardsPage';
 import MatchingSettingsPage from '@/pages/matching/MatchingSettingsPage';
+import ProfileExplorePage from '@/pages/profile/ProfileExplorePage';
 import InterestsPage from '@/pages/signup/InterestsPage';
 import ProfilePage from '@/pages/signup/ProfilePage';
 import SignupPage from '@/pages/signup/SignupPage';
@@ -20,6 +21,8 @@ export default function App() {
     <>
       <Routes>
         <Route path="/home" element={<HomePage />} />
+        <Route path="/profile" element={<ProfileExplorePage />} />
+        <Route path="/profile/:id" element={<CandidateProfilePage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/my/premium" element={<PremiumPassPage />} />
         <Route path="/my/hearts" element={<HeartPurchasePage />} />
@@ -29,10 +32,6 @@ export default function App() {
         <Route path="/signup/profile" element={<ProfilePage />} />
         <Route path="/matching" element={<MatchingSettingsPage />} />
         <Route path="/matching/cards" element={<MatchingCardsPage />} />
-        <Route
-          path="/matching/profile/:id"
-          element={<CandidateProfilePage />}
-        />
         <Route path="*" element={<Navigate to="/signup" replace />} />
       </Routes>
       {showSplash && <SplashScreen onFinish={finishSplash} />}
