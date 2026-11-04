@@ -1,13 +1,5 @@
-import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { findCafe } from './cafes';
 import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
@@ -19,7 +11,6 @@ export default function CafeDetailPage() {
   const backTo =
     from?.startsWith('/') && !from.startsWith('//') ? from : '/home';
   const cafe = findCafe(cafeId);
-  const [showOrderNotice, setShowOrderNotice] = useState(false);
 
   if (!cafe) {
     return <CafeNotFound backTo={backTo} />;
@@ -72,26 +63,16 @@ export default function CafeDetailPage() {
           </Link>
         </Button>
         <Button
+          asChild
           variant="secondary"
           size="xl"
           className="bg-cafe-action text-ink hover:bg-cafe-action/80 cursor-pointer rounded-[13px] pb-0 text-lg"
-          onClick={() => setShowOrderNotice(true)}
         >
-          메뉴 주문하기
+          <Link to={`/explore/cafes/${cafe.id}/menu`} state={{ from: backTo }}>
+            메뉴 주문하기
+          </Link>
         </Button>
       </div>
-
-      <Dialog open={showOrderNotice} onOpenChange={setShowOrderNotice}>
-        <DialogContent className="max-w-[345px]">
-          <DialogTitle>메뉴 주문 안내</DialogTitle>
-          <DialogDescription>
-            {cafe.name} 메뉴 주문 기능은 준비 중이에요.
-          </DialogDescription>
-          <DialogClose asChild>
-            <Button variant="brand">확인</Button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }
