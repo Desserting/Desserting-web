@@ -77,7 +77,7 @@ export default function CafeReservationPage() {
 
       <form onSubmit={submit} className="flex flex-1 flex-col">
         <section aria-label="예약 날짜 선택">
-          <div className="mt-6 flex h-11 items-center justify-between">
+          <div className="mx-10 mt-6 flex h-11 items-center justify-between">
             <button
               type="button"
               aria-label="이전 달"
