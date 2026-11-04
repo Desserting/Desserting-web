@@ -3,6 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import chevron from '@/assets/matching/icon-chevron.svg';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   DISTANCES,
@@ -36,25 +43,23 @@ function FilterSelect({
       <label htmlFor={id} className="text-[17px] leading-6 font-bold">
         {label}
       </label>
-      <div className="relative">
-        <select
-          id={id}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="border-field h-[54px] w-full cursor-pointer appearance-none rounded-xl border bg-white px-[15px] pr-12 text-[17px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id}>
+          <SelectValue />
+          <img
+            src={chevron}
+            alt=""
+            className="mr-1.5 shrink-0 transition-transform group-data-[state=open]:rotate-180"
+          />
+        </SelectTrigger>
+        <SelectContent>
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value}>
               {option.label}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        <img
-          src={chevron}
-          alt=""
-          className="pointer-events-none absolute top-4 right-[21px]"
-        />
-      </div>
+        </SelectContent>
+      </Select>
     </div>
   );
 }
