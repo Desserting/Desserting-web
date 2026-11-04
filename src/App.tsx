@@ -6,7 +6,6 @@ import ChatRoomPage from '@/pages/chat/ChatRoomPage';
 import HomePage from '@/pages/home/HomePage';
 import CafeDetailPage from '@/pages/explore/CafeDetailPage';
 import CafeReservationPage from '@/pages/explore/CafeReservationPage';
-import ChatRequestsPage from '@/pages/notifications/ChatRequestsPage';
 import ChatRequestsPage from '@/pages/chat/ChatRequestsPage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import MyPage from '@/pages/my/MyPage';
