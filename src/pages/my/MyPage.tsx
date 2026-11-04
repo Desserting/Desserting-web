@@ -27,7 +27,12 @@ const MENUS = [
     accent: true,
     to: '/my/hearts',
   },
-  { label: '프리미엄 패스', icon: premium, detail: '미보유' },
+  {
+    label: '프리미엄 패스',
+    icon: premium,
+    detail: '미보유',
+    to: '/my/premium',
+  },
   { label: '좋아요한 사람', icon: heart },
   { label: '예약 · 주문 내역', icon: calendar },
   { label: '설정', icon: settings },
