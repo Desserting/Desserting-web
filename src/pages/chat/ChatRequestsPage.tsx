@@ -1,4 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { BellOff } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { chatKeys } from '@/api/chat';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -6,8 +10,28 @@ import { useChatRequestStore } from '@/stores/chatRequestStore';
 import type { ChatRequest } from './chatRequests';
 
 function RequestItem({ request }: { request: ChatRequest }) {
-  const respond = useChatRequestStore((state) => state.respond);
-  const { id, nickname, avatar, status } = request;
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const accept = useChatRequestStore((state) => state.accept);
+  const reject = useChatRequestStore((state) => state.reject);
+  const [submitting, setSubmitting] = useState(false);
+  const { id, nickname, avatar, status, chatRoomId } = request;
+
+  const handleAccept = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const roomId = await accept(id);
+      if (roomId !== null) {
+        // 새로 생긴 채팅방이 채팅 목록에 보이도록 목록을 다시 불러온다
+        void queryClient.invalidateQueries({ queryKey: chatKeys.rooms });
+        navigate(`/chat/${roomId}`);
+      }
+    } catch {
+      // TODO: API 연동 시 수락 실패 안내 추가
+      setSubmitting(false);
+    }
+  };
 
   return (
     <li className="flex items-start gap-4 py-6">
@@ -31,7 +55,8 @@ function RequestItem({ request }: { request: ChatRequest }) {
               <Button
                 type="button"
                 variant="brand"
-                onClick={() => respond(id, 'accepted')}
+                onClick={handleAccept}
+                disabled={submitting}
                 aria-label={`${nickname}님의 대화 요청 수락`}
                 className="h-11 cursor-pointer rounded-[12px] text-[17px] font-bold"
               >
@@ -39,7 +64,8 @@ function RequestItem({ request }: { request: ChatRequest }) {
               </Button>
               <Button
                 type="button"
-                onClick={() => respond(id, 'rejected')}
+                onClick={() => reject(id)}
+                disabled={submitting}
                 aria-label={`${nickname}님의 대화 요청 거절`}
                 className="bg-chip text-ink hover:bg-chip/70 h-11 cursor-pointer rounded-[12px] text-[17px] font-bold"
               >
@@ -55,9 +81,19 @@ function RequestItem({ request }: { request: ChatRequest }) {
               <br />
               대화를 시작할 수 있어요!
             </p>
-            <p className="bg-mint-100 text-mint-deep mt-3 inline-block rounded-full px-3 py-1 text-[13px] leading-5 font-bold">
-              수락 완료
-            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <p className="bg-mint-100 text-mint-deep rounded-full px-3 py-1 text-[13px] leading-5 font-bold">
+                수락 완료
+              </p>
+              {chatRoomId !== undefined && (
+                <Link
+                  to={`/chat/${chatRoomId}`}
+                  className="text-ink text-[13px] leading-5 font-bold underline underline-offset-2"
+                >
+                  채팅방 가기
+                </Link>
+              )}
+            </div>
           </div>
         )}
         {status === 'rejected' && (
@@ -78,11 +114,14 @@ function RequestItem({ request }: { request: ChatRequest }) {
 }
 
 export default function ChatRequestsPage() {
+  // 홈의 메시지 버튼으로 들어왔으면 홈으로, 아니면 채팅 목록으로 돌아간다
+  const backTo =
+    (useLocation().state as { from?: string } | null)?.from ?? '/chat';
   const requests = useChatRequestStore((state) => state.requests);
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-10">
-      <BackButton to="/home" />
+      <BackButton to={backTo} />
       <h1 className="text-center text-[19px] leading-6 font-bold">대화 요청</h1>
 
       {requests.length === 0 ? (

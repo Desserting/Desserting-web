@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Heart, Send } from 'lucide-react';
-import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import BackButton from '@/components/BackButton';
 import Bubble from '@/components/Bubble';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { REQUEST_HEART_COST, useHeartStore } from '@/stores/heartStore';
 import { useMatchingStore } from '@/stores/matchingStore';
 import { findCandidate } from '@/pages/matching/candidates';
 
@@ -35,6 +36,10 @@ export default function CandidateProfilePage() {
   );
   const toggleLike = useMatchingStore((state) => state.toggleLike);
   const requestChat = useMatchingStore((state) => state.requestChat);
+  const heartCount = useHeartStore((state) => state.heartCount);
+  const isPremium = useHeartStore((state) => state.isPremium);
+  const spendForRequest = useHeartStore((state) => state.spendForRequest);
+  const [spent, setSpent] = useState<'deducted' | 'free'>('deducted');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [step, setStep] = useState<RequestStep>('confirm');
   const [toast, setToast] = useState<{ message: string; key: number } | null>(
@@ -66,8 +71,16 @@ export default function CandidateProfilePage() {
     setSheetOpen(true);
   };
 
+  // 하트가 모자라면 요청을 막는다. 프리미엄은 차감 없이 보낼 수 있다
+  const insufficient = !isPremium && heartCount < REQUEST_HEART_COST;
+
   const sendRequest = () => {
+    // 이미 보낸 상대에게는 하트를 다시 차감하지 않는다
+    if (requested) return;
+    const result = spendForRequest(candidate.nickname);
+    if (result === 'insufficient') return;
     requestChat(candidate.id);
+    setSpent(result);
     setStep('sent');
   };
 
@@ -184,6 +197,28 @@ export default function CandidateProfilePage() {
               <SheetDescription className="text-ink-muted mt-[38px] text-[15px] leading-6">
                 상대가 수락하면 채팅을 시작할 수 있어요.
               </SheetDescription>
+              <p
+                className={cn(
+                  'mt-4 rounded-full px-4 py-1.5 text-[14px] leading-5 font-bold',
+                  insufficient
+                    ? 'bg-chip text-ink-muted'
+                    : 'bg-mint-100 text-mint-deep',
+                )}
+              >
+                {isPremium
+                  ? '프리미엄은 하트가 차감되지 않아요'
+                  : insufficient
+                    ? `하트가 부족해요 (보유 ${heartCount}개)`
+                    : `하트 ${REQUEST_HEART_COST}개가 차감돼요 (보유 ${heartCount}개)`}
+              </p>
+              {insufficient && (
+                <Link
+                  to="/my/hearts"
+                  className="mt-2 text-[14px] leading-5 font-bold underline underline-offset-2"
+                >
+                  하트 구매하러 가기
+                </Link>
+              )}
               <div className="mt-auto grid w-full grid-cols-[1fr_1.75fr] gap-3 pt-6">
                 <SheetClose asChild>
                   <Button
@@ -199,6 +234,7 @@ export default function CandidateProfilePage() {
                   variant="brand"
                   size="xl"
                   onClick={sendRequest}
+                  disabled={insufficient}
                   className="h-[54px] cursor-pointer rounded-[14px] pb-0 text-[17px]"
                 >
                   대화 요청하기
@@ -213,6 +249,14 @@ export default function CandidateProfilePage() {
               <SheetDescription className="text-ink-muted mt-[38px] text-[15px] leading-6">
                 상대의 수락을 기다리고 있어요.
               </SheetDescription>
+              <p
+                role="status"
+                className="bg-mint-100 text-mint-deep mt-4 rounded-full px-4 py-1.5 text-[14px] leading-5 font-bold"
+              >
+                {spent === 'free'
+                  ? '프리미엄이라 하트는 차감되지 않았어요'
+                  : `하트 ${REQUEST_HEART_COST}개를 사용했어요 (남은 하트 ${heartCount}개)`}
+              </p>
               <SheetClose asChild>
                 <Button
                   type="button"

@@ -7,6 +7,8 @@ import HomePage from '@/pages/home/HomePage';
 import CafeDetailPage from '@/pages/explore/CafeDetailPage';
 import CafeReservationPage from '@/pages/explore/CafeReservationPage';
 import ChatRequestsPage from '@/pages/notifications/ChatRequestsPage';
+import ChatRequestsPage from '@/pages/chat/ChatRequestsPage';
+import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import MyPage from '@/pages/my/MyPage';
 import PremiumPassPage from '@/pages/my/PremiumPassPage';
 import HeartPurchasePage from '@/pages/my/HeartPurchasePage';
@@ -32,10 +34,11 @@ export default function App() {
           element={<CafeReservationPage />}
         />
         <Route path="/chat" element={<ChatListPage />} />
+        <Route path="/chat/requests" element={<ChatRequestsPage />} />
         <Route path="/chat/:roomId" element={<ChatRoomPage />} />
         <Route path="/profile" element={<ProfileExplorePage />} />
         <Route path="/profile/:id" element={<CandidateProfilePage />} />
-        <Route path="/notifications" element={<ChatRequestsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/my/premium" element={<PremiumPassPage />} />
         <Route path="/my/hearts" element={<HeartPurchasePage />} />
