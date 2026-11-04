@@ -8,6 +8,10 @@ import menuSameTaste from '@/assets/home/menu-same-taste.svg';
 import menuStore from '@/assets/home/menu-store.svg';
 import BottomNav from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
+import {
+  selectPendingCount,
+  useChatRequestStore,
+} from '@/stores/chatRequestStore';
 import { selectUnreadHeartCount, useHeartStore } from '@/stores/heartStore';
 
 const MENUS = [
@@ -39,6 +43,7 @@ const MENUS = [
 
 export default function HomePage() {
   const unreadCount = useHeartStore(selectUnreadHeartCount);
+  const pendingCount = useChatRequestStore(selectPendingCount);
 
   return (
     <>
@@ -64,9 +69,26 @@ export default function HomePage() {
               </span>
             )}
           </Link>
-          <button type="button" aria-label="메시지" className="cursor-pointer">
+          <Link
+            to="/chat/requests"
+            state={{ from: '/home' }}
+            aria-label={
+              pendingCount > 0
+                ? `메시지함, 받은 대화 요청 ${pendingCount}개`
+                : '메시지함'
+            }
+            className="relative block cursor-pointer"
+          >
             <img src={iconMail} alt="" className="size-[26px]" />
-          </button>
+            {pendingCount > 0 && (
+              <span
+                aria-hidden
+                className="bg-mint-deep absolute -top-1.5 -right-1.5 box-content flex size-[18px] items-center justify-center rounded-full border-2 border-white text-[10px] leading-none font-bold text-white"
+              >
+                {pendingCount}
+              </span>
+            )}
+          </Link>
         </header>
         <section className="bg-mint relative h-[162px] overflow-hidden rounded-[22px]">
           <p className="absolute top-[42px] left-[22px] text-[23px] leading-7 font-bold">

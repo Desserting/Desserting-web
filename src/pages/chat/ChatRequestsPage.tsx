@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { BellOff } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { chatKeys } from '@/api/chat';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
@@ -114,11 +114,14 @@ function RequestItem({ request }: { request: ChatRequest }) {
 }
 
 export default function ChatRequestsPage() {
+  // 홈의 메시지 버튼으로 들어왔으면 홈으로, 아니면 채팅 목록으로 돌아간다
+  const backTo =
+    (useLocation().state as { from?: string } | null)?.from ?? '/chat';
   const requests = useChatRequestStore((state) => state.requests);
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-10">
-      <BackButton to="/chat" />
+      <BackButton to={backTo} />
       <h1 className="text-center text-[19px] leading-6 font-bold">대화 요청</h1>
 
       {requests.length === 0 ? (
