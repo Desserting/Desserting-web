@@ -1,10 +1,16 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import iconClose from '@/assets/matching/icon-close.svg';
 import iconHeart from '@/assets/matching/icon-heart.svg';
 import iconNext from '@/assets/matching/icon-next.svg';
 import iconPin from '@/assets/matching/icon-pin.svg';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { MOCK_CANDIDATES } from './candidates';
 
@@ -12,8 +18,11 @@ const ACTION_BUTTON =
   'flex size-[70px] cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95';
 
 export default function MatchingCardsPage() {
+  const navigate = useNavigate();
   const [index, setIndex] = useState(0);
+  const [exitOpen, setExitOpen] = useState(false);
   const candidate = MOCK_CANDIDATES[index];
+
   const showNext = () => setIndex((current) => current + 1);
 
   if (!candidate) {
@@ -67,8 +76,8 @@ export default function MatchingCardsPage() {
       <div className="mt-[21px] flex justify-center gap-8">
         <button
           type="button"
-          aria-label="거절"
-          onClick={showNext}
+          aria-label="종료"
+          onClick={() => setExitOpen(true)}
           className={cn(ACTION_BUTTON, 'bg-chip')}
         >
           <img src={iconClose} alt="" />
@@ -90,6 +99,39 @@ export default function MatchingCardsPage() {
           <img src={iconNext} alt="" />
         </button>
       </div>
+
+      <Dialog open={exitOpen} onOpenChange={setExitOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="text-ink max-w-[calc(100%-48px)] gap-0 rounded-3xl bg-white p-6 text-center sm:max-w-[340px]"
+        >
+          <DialogTitle className="text-[19px] leading-7 font-bold">
+            랜덤 매칭을 종료하시겠습니까?
+          </DialogTitle>
+          <DialogDescription className="text-ink-muted mt-2 text-[15px] leading-6">
+            같은 사람과 다시 매칭되지 않을 수 있습니다.
+          </DialogDescription>
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              size="xl"
+              onClick={() => setExitOpen(false)}
+              className="bg-chip text-ink hover:bg-chip/80 h-12 rounded-xl pb-0 text-base"
+            >
+              아니요
+            </Button>
+            <Button
+              type="button"
+              variant="brand"
+              size="xl"
+              onClick={() => navigate('/home')}
+              className="h-12 rounded-xl pb-0 text-base"
+            >
+              예
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
