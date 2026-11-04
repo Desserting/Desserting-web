@@ -118,7 +118,7 @@ export default function ChatRequestsPage() {
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-10">
-      <BackButton to="/home" />
+      <BackButton to="/chat" />
       <h1 className="text-center text-[19px] leading-6 font-bold">대화 요청</h1>
 
       {requests.length === 0 ? (

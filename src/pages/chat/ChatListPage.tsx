@@ -2,10 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { MessageCircleOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { chatKeys, fetchChatRooms, type ChatRoom } from '@/api/chat';
+import iconMail from '@/assets/home/icon-mail.svg';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
+import {
+  selectPendingCount,
+  useChatRequestStore,
+} from '@/stores/chatRequestStore';
 import ChatAvatar from './ChatAvatar';
 
 function RoomItem({ room }: { room: ChatRoom }) {
@@ -58,6 +63,8 @@ function RoomItem({ room }: { room: ChatRoom }) {
 }
 
 export default function ChatListPage() {
+  const pendingCount = useChatRequestStore(selectPendingCount);
+
   // 목록의 마지막 메시지·안 읽은 수는 실시간 갱신되지 않으므로 화면에 들어올 때마다 다시 불러온다
   const {
     data: rooms,
@@ -73,7 +80,28 @@ export default function ChatListPage() {
   return (
     <>
       <main className="text-ink flex flex-1 flex-col bg-white px-6 pt-[34px]">
-        <h1 className="text-center text-[27px] leading-9 font-bold">채팅</h1>
+        <header className="relative">
+          <h1 className="text-center text-[27px] leading-9 font-bold">채팅</h1>
+          <Link
+            to="/chat/requests"
+            aria-label={
+              pendingCount > 0
+                ? `메시지함, 받은 대화 요청 ${pendingCount}개`
+                : '메시지함'
+            }
+            className="absolute top-1/2 right-0 block -translate-y-1/2 cursor-pointer"
+          >
+            <img src={iconMail} alt="" className="size-[26px]" />
+            {pendingCount > 0 && (
+              <span
+                aria-hidden
+                className="bg-mint-deep absolute -top-1.5 -right-1.5 box-content flex size-[18px] items-center justify-center rounded-full border-2 border-white text-[10px] leading-none font-bold text-white"
+              >
+                {pendingCount}
+              </span>
+            )}
+          </Link>
+        </header>
 
         {isPending && (
           <div role="status" className="mt-3">

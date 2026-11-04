@@ -8,10 +8,7 @@ import menuSameTaste from '@/assets/home/menu-same-taste.svg';
 import menuStore from '@/assets/home/menu-store.svg';
 import BottomNav from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
-import {
-  selectPendingCount,
-  useChatRequestStore,
-} from '@/stores/chatRequestStore';
+import { selectUnreadHeartCount, useHeartStore } from '@/stores/heartStore';
 
 const MENUS = [
   {
@@ -41,7 +38,7 @@ const MENUS = [
 ];
 
 export default function HomePage() {
-  const pendingCount = useChatRequestStore(selectPendingCount);
+  const unreadCount = useHeartStore(selectUnreadHeartCount);
 
   return (
     <>
@@ -51,17 +48,19 @@ export default function HomePage() {
           <Link
             to="/notifications"
             aria-label={
-              pendingCount > 0 ? `알림, 새 대화 요청 ${pendingCount}개` : '알림'
+              unreadCount > 0
+                ? `알림, 새 하트 사용 기록 ${unreadCount}개`
+                : '알림'
             }
             className="relative block cursor-pointer"
           >
             <img src={iconBell} alt="" className="size-[26px]" />
-            {pendingCount > 0 && (
+            {unreadCount > 0 && (
               <span
                 aria-hidden
                 className="bg-mint-deep absolute -top-1.5 -right-1.5 box-content flex size-[18px] items-center justify-center rounded-full border-2 border-white text-[10px] leading-none font-bold text-white"
               >
-                {pendingCount}
+                {unreadCount}
               </span>
             )}
           </Link>

@@ -3,7 +3,7 @@ import {
   acceptChatRequest,
   MOCK_CHAT_REQUESTS,
   type ChatRequest,
-} from '@/pages/notifications/chatRequests';
+} from '@/pages/chat/chatRequests';
 
 interface ChatRequestState {
   requests: ChatRequest[];
