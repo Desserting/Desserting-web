@@ -20,7 +20,13 @@ import { useSignupStore } from '@/stores/signupStore';
 
 const MENUS = [
   { label: '내 프로필 관리', icon: profileIcon, to: '/my/profile' },
-  { label: '하트 구매', icon: heart, detail: '5개 보유', accent: true },
+  {
+    label: '하트 구매',
+    icon: heart,
+    detail: '5개 보유',
+    accent: true,
+    to: '/my/hearts',
+  },
   { label: '프리미엄 패스', icon: premium, detail: '미보유' },
   { label: '좋아요한 사람', icon: heart },
   { label: '예약 · 주문 내역', icon: calendar },

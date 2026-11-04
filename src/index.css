@@ -114,6 +114,9 @@
 
 @theme {
   --color-mint: #8ce2d0;
+  --color-heart-selected: #eaf9f3;
+  --color-heart-border: #e4e8ea;
+  --color-heart-muted: #626d73;
   --color-mint-deep: #258f77;
   --color-my-divider: #f0f2f3;
   --color-my-muted: #6e777c;
