@@ -6,6 +6,7 @@ export interface MatchCandidate {
   age: number;
   location: string;
   distanceKm: number;
+  /** 첫 번째 항목을 "나와 같은/다른 ○○ 취향" 칩에 강조해서 보여준다 */
   interests: string[];
   photo: string;
 }
@@ -14,20 +15,20 @@ export interface MatchCandidate {
 export const MOCK_CANDIDATES: MatchCandidate[] = [
   {
     id: 1,
-    nickname: '딸기케이크러버',
-    age: 24,
+    nickname: '크루아상러버',
+    age: 26,
     location: '대구',
-    distanceKm: 5,
-    interests: ['케이크', '마카롱', '카페투어'],
+    distanceKm: 8,
+    interests: ['베이커리', '카페투어'],
     photo: matchPhoto,
   },
   {
     id: 2,
-    nickname: '마카롱수집가',
-    age: 26,
+    nickname: '딸기케이크러버',
+    age: 24,
     location: '대구',
-    distanceKm: 8,
-    interests: ['마카롱', '쿠키', '타르트'],
+    distanceKm: 5,
+    interests: ['케이크', '카페투어'],
     photo: matchPhoto,
   },
   {
@@ -36,7 +37,7 @@ export const MOCK_CANDIDATES: MatchCandidate[] = [
     age: 23,
     location: '경북',
     distanceKm: 10,
-    interests: ['빙수', '음료', '카페투어'],
+    interests: ['빙수&아이스크림', '커피'],
     photo: matchPhoto,
   },
 ];
