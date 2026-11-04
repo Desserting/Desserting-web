@@ -1,15 +1,18 @@
 import { Link } from 'react-router-dom';
 import back from '@/assets/cafes/back.svg';
 import type { CafeNavigationState } from './cafeNavigation';
+import { cn } from '@/lib/utils';
 
 export default function CafePageHeader({
   title,
   backTo,
   backState,
+  titleClassName,
 }: {
   title: string;
   backTo: string;
   backState?: CafeNavigationState;
+  titleClassName?: string;
 }) {
   return (
     <header className="relative flex h-11 shrink-0 items-center justify-center">
@@ -21,7 +24,11 @@ export default function CafePageHeader({
       >
         <img src={back} alt="" />
       </Link>
-      <h1 className="text-[23px] leading-[34px] font-bold">{title}</h1>
+      <h1
+        className={cn('text-[23px] leading-[34px] font-bold', titleClassName)}
+      >
+        {title}
+      </h1>
     </header>
   );
 }

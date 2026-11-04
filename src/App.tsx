@@ -6,6 +6,8 @@ import ChatRoomPage from '@/pages/chat/ChatRoomPage';
 import HomePage from '@/pages/home/HomePage';
 import CafeDetailPage from '@/pages/explore/CafeDetailPage';
 import CafeReservationPage from '@/pages/explore/CafeReservationPage';
+import CafeMapPage from '@/pages/explore/CafeMapPage';
+import CafeListPage from '@/pages/explore/CafeListPage';
 import ChatRequestsPage from '@/pages/chat/ChatRequestsPage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import CafeMenuPage from '@/pages/explore/CafeMenuPage';
@@ -30,6 +32,8 @@ export default function App() {
     <>
       <Routes>
         <Route path="/home" element={<HomePage />} />
+        <Route path="/explore" element={<CafeMapPage />} />
+        <Route path="/explore/areas/:areaId/cafes" element={<CafeListPage />} />
         <Route path="/explore/cafes/:cafeId" element={<CafeDetailPage />} />
         <Route path="/explore/cafes/:cafeId/menu" element={<CafeMenuPage />} />
         <Route
