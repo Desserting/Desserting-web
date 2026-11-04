@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import iconClose from '@/assets/matching/icon-close.svg';
 import iconHeart from '@/assets/matching/icon-heart.svg';
+import iconHeartOutline from '@/assets/matching/icon-heart-outline.svg';
 import iconNext from '@/assets/matching/icon-next.svg';
 import iconPin from '@/assets/matching/icon-pin.svg';
 import { Button } from '@/components/ui/button';
@@ -17,13 +18,32 @@ import { MOCK_CANDIDATES } from './candidates';
 const ACTION_BUTTON =
   'flex size-[70px] cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95';
 
+const TOAST_DURATION_MS = 2000;
+
 export default function MatchingCardsPage() {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
+  const [likedIds, setLikedIds] = useState<number[]>([]);
   const [exitOpen, setExitOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; key: number } | null>(
+    null,
+  );
   const candidate = MOCK_CANDIDATES[index];
+  const liked = candidate ? likedIds.includes(candidate.id) : false;
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), TOAST_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const showNext = () => setIndex((current) => current + 1);
+
+  const like = () => {
+    if (!candidate || liked) return;
+    setLikedIds((current) => [...current, candidate.id]);
+    setToast({ message: '이 매칭이 마음에 들어요!', key: Date.now() });
+  };
 
   if (!candidate) {
     return (
@@ -41,7 +61,7 @@ export default function MatchingCardsPage() {
   }
 
   return (
-    <main className="text-ink flex flex-1 flex-col bg-white px-6 pt-[53px] pb-10">
+    <main className="text-ink flex flex-1 flex-col bg-white px-6 pt-[53px] pb-[35px]">
       <article
         key={candidate.id}
         className="relative max-h-[610px] min-h-0 flex-1 overflow-hidden rounded-[20px]"
@@ -73,7 +93,7 @@ export default function MatchingCardsPage() {
         </div>
       </article>
 
-      <div className="mt-[21px] flex justify-center gap-8">
+      <div className="relative mt-auto flex justify-center gap-8 pt-[21px]">
         <button
           type="button"
           aria-label="종료"
@@ -85,10 +105,11 @@ export default function MatchingCardsPage() {
         <button
           type="button"
           aria-label="좋아요"
-          onClick={showNext}
+          aria-pressed={liked}
+          onClick={like}
           className={cn(ACTION_BUTTON, 'bg-mint')}
         >
-          <img src={iconHeart} alt="" />
+          <img src={liked ? iconHeart : iconHeartOutline} alt="" />
         </button>
         <button
           type="button"
@@ -98,6 +119,15 @@ export default function MatchingCardsPage() {
         >
           <img src={iconNext} alt="" />
         </button>
+        {toast && (
+          <div
+            key={toast.key}
+            role="status"
+            className="bg-mint text-ink animate-in fade-in-0 slide-in-from-bottom-2 absolute bottom-full left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-3 text-[15px] font-bold whitespace-nowrap shadow-[0_6px_16px_rgba(0,0,0,0.18)]"
+          >
+            {toast.message}
+          </div>
+        )}
       </div>
 
       <Dialog open={exitOpen} onOpenChange={setExitOpen}>
