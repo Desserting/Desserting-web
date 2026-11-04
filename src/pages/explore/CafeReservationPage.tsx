@@ -1,14 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -21,6 +14,7 @@ import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
 import { findCafe } from './cafes';
 import ReservationTimePicker from './ReservationTimePicker';
+import type { CafeNavigationState } from './cafeNavigation';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 // Preview values from Figma, not live availability or a reservation policy.
@@ -39,10 +33,14 @@ export default function CafeReservationPage() {
   const { cafeId } = useParams();
   const cafe = findCafe(cafeId);
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from;
+  const navigate = useNavigate();
+  const navigationState = location.state as CafeNavigationState | null;
+  const from = navigationState?.from;
+  const savedReservation = navigationState?.reservation;
   const backState =
     from?.startsWith('/') && !from.startsWith('//') ? { from } : undefined;
   const [date, setDate] = useState(() => {
+    if (savedReservation) return new Date(savedReservation.date);
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   });
@@ -50,9 +48,10 @@ export default function CafeReservationPage() {
     () => new Date(date.getFullYear(), date.getMonth(), 1),
   );
   const today = new Date().toDateString();
-  const [time, setTime] = useState(PREVIEW.time);
-  const [guests, setGuests] = useState(PREVIEW.guests);
-  const [showNotice, setShowNotice] = useState(false);
+  const [time, setTime] = useState(savedReservation?.time ?? PREVIEW.time);
+  const [guests, setGuests] = useState(
+    savedReservation?.guests ?? PREVIEW.guests,
+  );
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -64,7 +63,13 @@ export default function CafeReservationPage() {
     setMonth(new Date(year, monthIndex + offset, 1));
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setShowNotice(true);
+    const state = {
+      ...backState,
+      ...(navigationState?.order ? { order: navigationState.order } : {}),
+      reservation: { date: date.getTime(), time, guests },
+    } satisfies CafeNavigationState;
+    navigate(location.pathname, { replace: true, state });
+    navigate(`/explore/cafes/${cafe.id}/menu`, { state });
   };
 
   return (
@@ -205,21 +210,6 @@ export default function CafeReservationPage() {
           </Button>
         </div>
       </form>
-
-      <Dialog open={showNotice} onOpenChange={setShowNotice}>
-        <DialogContent className="max-w-[345px]">
-          <DialogTitle>예약 안내</DialogTitle>
-          <DialogDescription>
-            {cafe.name}
-            <br />
-            {dateFormatter.format(date)} {time} · {guests}명<br />
-            예약 기능은 준비 중이에요. 아직 예약이 접수되지 않았습니다.
-          </DialogDescription>
-          <DialogClose asChild>
-            <Button variant="brand">확인</Button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }
