@@ -11,13 +11,13 @@ import { cn } from '@/lib/utils';
 
 const MENUS = [
   {
-    to: '/matching/same',
+    to: '/matching?type=same',
     label: ['같은 취향', '랜덤 매칭'],
     icon: menuSameTaste,
     className: 'bg-blush',
   },
   {
-    to: '/matching/different',
+    to: '/matching?type=different',
     label: ['다른 취향', '랜덤 매칭'],
     icon: menuOtherTaste,
     className: 'bg-sky',

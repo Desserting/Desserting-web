@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import chevron from '@/assets/matching/icon-chevron.svg';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
@@ -60,12 +61,20 @@ function FilterSelect({
 
 export default function MatchingSettingsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const filter = useMatchingStore((state) => state.filter);
   const setFilter = useMatchingStore((state) => state.setFilter);
+  const typeParam = searchParams.get('type');
+
+  useEffect(() => {
+    if (typeParam === 'same' || typeParam === 'different') {
+      setFilter({ type: typeParam });
+    }
+  }, [typeParam, setFilter]);
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px]">
-      <BackButton to="/signup/profile" />
+      <BackButton to="/home" />
       <h1 className="text-center text-[23px] leading-6 font-bold">매칭 설정</h1>
 
       <section className="mt-[59px] flex flex-col gap-5">
