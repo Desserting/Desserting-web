@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Navigate,
   useLocation,
+  useNavigate,
   useParams,
 } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import {
   getMenuTotals,
 } from './cafeMenus';
 import type { CafeNavigationState } from './cafeNavigation';
+import { PREVIEW_CAFE_ORDER } from './cafeOrders';
 
 const PAYMENT_METHODS = [
   { id: 'card', label: '카드 결제 (모의)' },
@@ -27,6 +29,7 @@ export default function CafePaymentPage() {
   const { cafeId } = useParams();
   const cafe = findCafe(cafeId);
   const location = useLocation();
+  const navigate = useNavigate();
   const navigationState = location.state as CafeNavigationState | null;
   const menu = getCafeMenu(cafeId ?? '');
   const quantities = getMenuQuantities(
@@ -58,6 +61,17 @@ export default function CafePaymentPage() {
       />
     );
   }
+
+  const completeMockPayment = () => {
+    const state = {
+      ...backState,
+      paymentMethod: method,
+    } satisfies CafeNavigationState;
+    navigate(location.pathname, { replace: true, state });
+    navigate(`/explore/cafes/${cafe.id}/orders/${PREVIEW_CAFE_ORDER.id}`, {
+      state,
+    });
+  };
 
   return (
     <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
@@ -115,7 +129,7 @@ export default function CafePaymentPage() {
           variant="brand"
           size="xl"
           className="cursor-pointer rounded-[13px] pb-0 text-lg"
-          disabled
+          onClick={completeMockPayment}
         >
           결제하기
         </Button>
