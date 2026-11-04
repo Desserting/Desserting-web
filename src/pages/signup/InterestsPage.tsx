@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import beverage from '@/assets/signup/dessert-beverage.svg';
+import bakedGoods from '@/assets/signup/dessert-baked-goods.svg';
+import bakery from '@/assets/signup/dessert-bakery.svg';
 import cake from '@/assets/signup/dessert-cake.svg';
-import cookie from '@/assets/signup/dessert-cookie.svg';
-import macaron from '@/assets/signup/dessert-macaron.svg';
-import shavedIce from '@/assets/signup/dessert-shaved-ice.svg';
-import tart from '@/assets/signup/dessert-tart.svg';
+import coffee from '@/assets/signup/dessert-coffee.svg';
+import shavedIce from '@/assets/signup/dessert-shaved-ice-icecream.svg';
+import tartPie from '@/assets/signup/dessert-tart-pie.svg';
+import tea from '@/assets/signup/dessert-tea.svg';
+import traditional from '@/assets/signup/dessert-traditional.svg';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,11 +14,13 @@ import { useSignupStore } from '@/stores/signupStore';
 
 const DESSERTS = [
   { id: 'cake', label: '케이크', image: cake },
-  { id: 'macaron', label: '마카롱', image: macaron },
-  { id: 'cookie', label: '쿠키', image: cookie },
-  { id: 'tart', label: '타르트', image: tart },
-  { id: 'shaved-ice', label: '빙수', image: shavedIce },
-  { id: 'beverage', label: '음료', image: beverage },
+  { id: 'bakery', label: '베이커리', image: bakery },
+  { id: 'baked-goods', label: '구움과자', image: bakedGoods },
+  { id: 'tart-pie', label: '타르트&파이', image: tartPie },
+  { id: 'shaved-ice-icecream', label: '빙수&아이스크림', image: shavedIce },
+  { id: 'coffee', label: '커피', image: coffee },
+  { id: 'tea', label: '차&논커피', image: tea },
+  { id: 'traditional', label: '전통 디저트', image: traditional },
 ];
 
 export default function InterestsPage() {
@@ -33,7 +37,7 @@ export default function InterestsPage() {
         선택해 주세요
       </h1>
       <p className="mt-[22px] text-center text-base">(복수 선택 가능)</p>
-      <ul className="mt-[59px] -ml-[5px] grid w-[335px] max-w-none grid-cols-3 gap-x-[7px] gap-y-[33px] self-start">
+      <ul className="mt-[31px] grid w-[339px] max-w-none grid-cols-2 gap-x-[11px] gap-y-[15px] self-center">
         {DESSERTS.map(({ id, label, image }) => {
           const selected = interests.includes(id);
           return (
@@ -43,12 +47,16 @@ export default function InterestsPage() {
                 aria-pressed={selected}
                 onClick={() => toggleInterest(id)}
                 className={cn(
-                  'flex h-[141px] w-full cursor-pointer flex-col items-center rounded-[18px] pt-1.5 transition-colors',
+                  'flex h-[106px] w-full cursor-pointer flex-col items-center rounded-[18px] pt-1 transition-colors',
                   selected ? 'bg-mint-100' : 'bg-white',
                 )}
               >
-                <img src={image} alt="" className="block" />
-                <span className="mt-[15px] text-[17px] font-bold">{label}</span>
+                <span className="flex h-[60px] items-center justify-center">
+                  <img src={image} alt="" className="block" />
+                </span>
+                <span className="mt-2.5 text-[15px] leading-6 font-bold">
+                  {label}
+                </span>
               </button>
             </li>
           );
