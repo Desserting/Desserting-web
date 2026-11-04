@@ -107,9 +107,10 @@ npx shadcn@latest add <component>
 | test     | 테스트 코드 추가·수정                 |
 | chore    | 빌드 설정, 패키지 관리 등 기타 변경   |
 | ci       | CI/CD 설정 변경                       |
+| merge    | 브랜치 병합                       |
 
 예시: `feat: 시작 화면 버튼 컴포넌트 추가`, `fix: API 요청 baseURL 누락 수정`, `chore: prettier tailwind 플러그인 추가`
-
+,`merge: 회원가입 플로우 추가 #pr번호`
 ### 브랜치 컨벤션
 
 작업 브랜치는 `type/작업내용` 형식을 사용하며, 작업 내용은 영문 소문자와 하이픈으로 작성합니다.
