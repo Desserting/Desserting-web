@@ -8,6 +8,10 @@ import menuSameTaste from '@/assets/home/menu-same-taste.svg';
 import menuStore from '@/assets/home/menu-store.svg';
 import BottomNav from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
+import {
+  selectPendingCount,
+  useChatRequestStore,
+} from '@/stores/chatRequestStore';
 
 const MENUS = [
   {
@@ -37,14 +41,30 @@ const MENUS = [
 ];
 
 export default function HomePage() {
+  const pendingCount = useChatRequestStore(selectPendingCount);
+
   return (
     <>
       <main className="text-ink flex flex-1 flex-col gap-5 bg-white px-[22px] pt-6 pb-10">
         <header className="flex h-11 items-center gap-[18px]">
           <h1 className="flex-1 text-[27px] leading-6 font-bold">Desserting</h1>
-          <button type="button" aria-label="알림" className="cursor-pointer">
+          <Link
+            to="/notifications"
+            aria-label={
+              pendingCount > 0 ? `알림, 새 대화 요청 ${pendingCount}개` : '알림'
+            }
+            className="relative block cursor-pointer"
+          >
             <img src={iconBell} alt="" className="size-[26px]" />
-          </button>
+            {pendingCount > 0 && (
+              <span
+                aria-hidden
+                className="bg-mint-deep absolute -top-1.5 -right-1.5 box-content flex size-[18px] items-center justify-center rounded-full border-2 border-white text-[10px] leading-none font-bold text-white"
+              >
+                {pendingCount}
+              </span>
+            )}
+          </Link>
           <button type="button" aria-label="메시지" className="cursor-pointer">
             <img src={iconMail} alt="" className="size-[26px]" />
           </button>

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import SplashScreen from '@/components/SplashScreen';
 import HomePage from '@/pages/home/HomePage';
+import ChatRequestsPage from '@/pages/notifications/ChatRequestsPage';
 import MyPage from '@/pages/my/MyPage';
 import PremiumPassPage from '@/pages/my/PremiumPassPage';
 import HeartPurchasePage from '@/pages/my/HeartPurchasePage';
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfileExplorePage />} />
         <Route path="/profile/:id" element={<CandidateProfilePage />} />
+        <Route path="/notifications" element={<ChatRequestsPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/my/premium" element={<PremiumPassPage />} />
         <Route path="/my/hearts" element={<HeartPurchasePage />} />
