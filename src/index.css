@@ -78,6 +78,10 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 #root {
   width: 100%;
   max-width: 430px;
