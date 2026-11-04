@@ -1,6 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { BellOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { chatKeys } from '@/api/chat';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -9,6 +11,7 @@ import type { ChatRequest } from './chatRequests';
 
 function RequestItem({ request }: { request: ChatRequest }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const accept = useChatRequestStore((state) => state.accept);
   const reject = useChatRequestStore((state) => state.reject);
   const [submitting, setSubmitting] = useState(false);
@@ -19,7 +22,11 @@ function RequestItem({ request }: { request: ChatRequest }) {
     setSubmitting(true);
     try {
       const roomId = await accept(id);
-      if (roomId !== null) navigate(`/chat/${roomId}`);
+      if (roomId !== null) {
+        // 새로 생긴 채팅방이 채팅 목록에 보이도록 목록을 다시 불러온다
+        void queryClient.invalidateQueries({ queryKey: chatKeys.rooms });
+        navigate(`/chat/${roomId}`);
+      }
     } catch {
       // TODO: API 연동 시 수락 실패 안내 추가
       setSubmitting(false);
