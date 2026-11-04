@@ -151,7 +151,15 @@
   }
 }
 
+.cafe-map-page > nav {
+  position: static;
+  flex-shrink: 0;
+  height: calc(83px + max(25px, env(safe-area-inset-bottom, 0px)));
+  padding-bottom: max(25px, env(safe-area-inset-bottom, 0px));
+}
+
 @theme {
+  --color-map-surface: #f3f5f3;
   --color-premium-emblem: #e4f8f0;
   --color-premium-price: #e6f9f2;
   --color-mint: #8ce2d0;
