@@ -3,6 +3,10 @@ import chat from '@/assets/home/tab-chat.svg';
 import home from '@/assets/home/tab-home.svg';
 import my from '@/assets/home/tab-my.svg';
 import search from '@/assets/home/tab-search.svg';
+import myActive from '@/assets/my/my-active.svg';
+import myHome from '@/assets/my/home.svg';
+import mySearch from '@/assets/my/search.svg';
+import myChat from '@/assets/my/chat.svg';
 import { cn } from '@/lib/utils';
 
 const TABS = [
@@ -12,7 +16,17 @@ const TABS = [
   { to: '/my', label: '마이', icon: my },
 ];
 
-export default function BottomNav() {
+export default function BottomNav({
+  variant = 'default',
+}: {
+  variant?: 'default' | 'my';
+}) {
+  const myIcons: Record<string, string> = {
+    '/home': myHome,
+    '/explore': mySearch,
+    '/chat': myChat,
+    '/my': myActive,
+  };
   return (
     <nav
       aria-label="메인 메뉴"
@@ -27,10 +41,15 @@ export default function BottomNav() {
                 cn(
                   'text-ink flex flex-col items-center gap-1 text-xs',
                   isActive && 'font-bold',
+                  isActive && variant === 'my' && 'text-mint-deep',
                 )
               }
             >
-              <img src={icon} alt="" className="size-[26px]" />
+              <img
+                src={variant === 'my' ? myIcons[to] : icon}
+                alt=""
+                className="size-[26px]"
+              />
               <span className="h-6 leading-6">{label}</span>
             </NavLink>
           </li>
