@@ -54,6 +54,17 @@ export interface MatchingFilter {
 interface MatchingState {
   filter: MatchingFilter;
   setFilter: (filter: Partial<MatchingFilter>) => void;
+
+  // 카드 목록과 프로필 화면을 오가도 진행 상황이 유지되도록 스토어에 둔다
+  cardIndex: number;
+  dealt: boolean;
+  likedIds: number[];
+  requestedIds: number[];
+  startMatching: () => void;
+  showNextCard: () => void;
+  markDealt: () => void;
+  toggleLike: (id: number) => void;
+  requestChat: (id: number) => void;
 }
 
 export const useMatchingStore = create<MatchingState>((set) => ({
@@ -65,4 +76,24 @@ export const useMatchingStore = create<MatchingState>((set) => ({
   },
   setFilter: (filter) =>
     set((state) => ({ filter: { ...state.filter, ...filter } })),
+
+  cardIndex: 0,
+  dealt: false,
+  likedIds: [],
+  requestedIds: [],
+  startMatching: () => set({ cardIndex: 0, dealt: false }),
+  showNextCard: () => set((state) => ({ cardIndex: state.cardIndex + 1 })),
+  markDealt: () => set({ dealt: true }),
+  toggleLike: (id) =>
+    set((state) => ({
+      likedIds: state.likedIds.includes(id)
+        ? state.likedIds.filter((likedId) => likedId !== id)
+        : [...state.likedIds, id],
+    })),
+  requestChat: (id) =>
+    set((state) =>
+      state.requestedIds.includes(id)
+        ? state
+        : { requestedIds: [...state.requestedIds, id] },
+    ),
 }));

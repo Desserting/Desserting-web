@@ -5,6 +5,7 @@ import HomePage from '@/pages/home/HomePage';
 import MyPage from '@/pages/my/MyPage';
 import PremiumPassPage from '@/pages/my/PremiumPassPage';
 import HeartPurchasePage from '@/pages/my/HeartPurchasePage';
+import CandidateProfilePage from '@/pages/matching/CandidateProfilePage';
 import MatchingCardsPage from '@/pages/matching/MatchingCardsPage';
 import MatchingSettingsPage from '@/pages/matching/MatchingSettingsPage';
 import InterestsPage from '@/pages/signup/InterestsPage';
@@ -28,6 +29,10 @@ export default function App() {
         <Route path="/signup/profile" element={<ProfilePage />} />
         <Route path="/matching" element={<MatchingSettingsPage />} />
         <Route path="/matching/cards" element={<MatchingCardsPage />} />
+        <Route
+          path="/matching/profile/:id"
+          element={<CandidateProfilePage />}
+        />
         <Route path="*" element={<Navigate to="/signup" replace />} />
       </Routes>
       {showSplash && <SplashScreen onFinish={finishSplash} />}

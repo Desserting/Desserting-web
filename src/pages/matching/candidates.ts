@@ -8,7 +8,9 @@ export interface MatchCandidate {
   distanceKm: number;
   /** 첫 번째 항목을 "나와 같은/다른 ○○ 취향" 칩에 강조해서 보여준다 */
   interests: string[];
+  bio: string;
   photo: string;
+  gallery: string[];
 }
 
 // TODO: 매칭 API 연동 시 교체 (현재는 디자인 시안 기반 임시 데이터)
@@ -20,7 +22,9 @@ export const MOCK_CANDIDATES: MatchCandidate[] = [
     location: '대구',
     distanceKm: 8,
     interests: ['베이커리', '카페투어'],
+    bio: '바삭한 크루아상과 커피를 좋아해요.\n주말에 같이 카페 투어 해요!',
     photo: matchPhoto,
+    gallery: [matchPhoto, matchPhoto],
   },
   {
     id: 2,
@@ -29,7 +33,9 @@ export const MOCK_CANDIDATES: MatchCandidate[] = [
     location: '대구',
     distanceKm: 5,
     interests: ['케이크', '카페투어'],
+    bio: '딸기가 듬뿍 올라간 케이크를 좋아해요.\n주말에 같이 카페 투어 해요!',
     photo: matchPhoto,
+    gallery: [matchPhoto, matchPhoto],
   },
   {
     id: 3,
@@ -38,6 +44,12 @@ export const MOCK_CANDIDATES: MatchCandidate[] = [
     location: '경북',
     distanceKm: 10,
     interests: ['빙수&아이스크림', '커피'],
+    bio: '여름엔 빙수, 겨울에도 빙수!\n맛있는 빙수집 알고 있으면 알려주세요.',
     photo: matchPhoto,
+    gallery: [matchPhoto, matchPhoto],
   },
 ];
+
+export function findCandidate(id: number) {
+  return MOCK_CANDIDATES.find((candidate) => candidate.id === id);
+}

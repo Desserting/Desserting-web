@@ -53,6 +53,7 @@ export default function MatchingSettingsPage() {
   const [searchParams] = useSearchParams();
   const filter = useMatchingStore((state) => state.filter);
   const setFilter = useMatchingStore((state) => state.setFilter);
+  const startMatching = useMatchingStore((state) => state.startMatching);
   const typeParam = searchParams.get('type');
 
   useEffect(() => {
@@ -154,7 +155,10 @@ export default function MatchingSettingsPage() {
         type="button"
         variant="brand"
         size="xl"
-        onClick={() => navigate('/matching/cards')}
+        onClick={() => {
+          startMatching();
+          navigate('/matching/cards');
+        }}
         className="mt-auto mb-10"
       >
         매칭 시작

@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import iconClose from '@/assets/matching/icon-close.svg';
-import iconHeart from '@/assets/matching/icon-heart.svg';
-import iconHeartOutline from '@/assets/matching/icon-heart-outline.svg';
+import iconProfile from '@/assets/matching/icon-profile.svg';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,30 +20,26 @@ const ACTION_BUTTON =
 const BACK_FACE =
   'absolute inset-0 rounded-[20px] [backface-visibility:hidden] [transform:rotateY(180deg)]';
 
-const TOAST_DURATION_MS = 2000;
 // index.css의 --animate-card-out 시간과 맞춘다
 const CARD_OUT_MS = 420;
 
 export default function MatchingCardsPage() {
   const navigate = useNavigate();
   const matchType = useMatchingStore((state) => state.filter.type);
-  const [index, setIndex] = useState(0);
+  const index = useMatchingStore((state) => state.cardIndex);
+  const showNextCard = useMatchingStore((state) => state.showNextCard);
+  const markDealt = useMatchingStore((state) => state.markDealt);
+  // 프로필을 보고 돌아왔을 때는 카드를 다시 섞지 않는다
+  const [playDeal] = useState(() => !useMatchingStore.getState().dealt);
   const [leaving, setLeaving] = useState(false);
-  const [likedIds, setLikedIds] = useState<number[]>([]);
   const [exitOpen, setExitOpen] = useState(false);
-  const [toast, setToast] = useState<{ message: string; key: number } | null>(
-    null,
-  );
   const leaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const candidate = MOCK_CANDIDATES[index];
-  const liked = candidate ? likedIds.includes(candidate.id) : false;
   const isSameTaste = matchType === 'same';
 
   useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), TOAST_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
+    markDealt();
+  }, [markDealt]);
 
   useEffect(() => () => clearTimeout(leaveTimer.current), []);
 
@@ -52,15 +47,9 @@ export default function MatchingCardsPage() {
     if (leaving) return;
     setLeaving(true);
     leaveTimer.current = setTimeout(() => {
-      setIndex((current) => current + 1);
+      showNextCard();
       setLeaving(false);
     }, CARD_OUT_MS);
-  };
-
-  const like = () => {
-    if (!candidate || liked) return;
-    setLikedIds((current) => [...current, candidate.id]);
-    setToast({ message: '이 매칭이 마음에 들어요!', key: Date.now() });
   };
 
   if (!candidate) {
@@ -102,7 +91,7 @@ export default function MatchingCardsPage() {
             'relative [transform-style:preserve-3d] motion-reduce:animate-none',
             leaving
               ? 'animate-card-out origin-bottom'
-              : index === 0
+              : index === 0 && playDeal
                 ? 'animate-deal'
                 : 'animate-card-in',
           )}
@@ -144,28 +133,13 @@ export default function MatchingCardsPage() {
           <img src={iconClose} alt="" className="size-[22px]" />
           넘기기
         </button>
-        <button
-          type="button"
-          aria-pressed={liked}
-          onClick={like}
+        <Link
+          to={`/matching/profile/${candidate.id}`}
           className={cn(ACTION_BUTTON, 'bg-mint')}
         >
-          <img
-            src={liked ? iconHeart : iconHeartOutline}
-            alt=""
-            className="size-[22px]"
-          />
+          <img src={iconProfile} alt="" className="size-[22px]" />
           프로필 보기
-        </button>
-        {toast && (
-          <div
-            key={toast.key}
-            role="status"
-            className="bg-mint text-ink animate-in fade-in-0 slide-in-from-bottom-2 absolute bottom-full left-1/2 z-10 -translate-x-1/2 rounded-full px-5 py-3 text-[15px] font-bold whitespace-nowrap shadow-[0_6px_16px_rgba(0,0,0,0.18)]"
-          >
-            {toast.message}
-          </div>
-        )}
+        </Link>
       </div>
 
       <Dialog open={exitOpen} onOpenChange={setExitOpen}>
