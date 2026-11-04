@@ -1,66 +1,50 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import chevron from '@/assets/matching/icon-chevron.svg';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   DISTANCES,
+  LIVING_AREAS,
   REGIONS,
   useMatchingStore,
-  type MatchType,
 } from '@/stores/matchingStore';
 
-const MATCH_TYPES: { id: MatchType; label: string }[] = [
-  { id: 'same', label: '같은 취향' },
-  { id: 'different', label: '다른 취향' },
-];
-
-interface FilterSelectProps {
-  id: string;
-  label: string;
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
+interface RadioOptionProps {
+  name: string;
+  checked: boolean;
+  onChange: () => void;
+  className?: string;
+  children: ReactNode;
 }
 
-function FilterSelect({
-  id,
-  label,
-  value,
-  options,
+function RadioOption({
+  name,
+  checked,
   onChange,
-}: FilterSelectProps) {
+  className,
+  children,
+}: RadioOptionProps) {
   return (
-    <div className="flex flex-col gap-2.5">
-      <label htmlFor={id} className="text-[17px] leading-6 font-bold">
-        {label}
-      </label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id={id}>
-          <SelectValue />
-          <img
-            src={chevron}
-            alt=""
-            className="mr-1.5 shrink-0 transition-transform group-data-[state=open]:rotate-180"
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <label
+      className={cn(
+        'flex cursor-pointer items-center gap-[9px] pl-0.5',
+        className,
+      )}
+    >
+      <input
+        type="radio"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="peer sr-only"
+      />
+      <span
+        aria-hidden
+        className="border-ink-muted/40 peer-checked:bg-mint peer-checked:border-mint peer-focus-visible:outline-mint-deep after:bg-ink relative size-[22px] shrink-0 rounded-full border-[1.5px] bg-white transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 after:absolute after:top-1/2 after:left-1/2 after:size-1.5 after:-translate-x-1/2 after:-translate-y-1/2 after:rounded-full after:opacity-0 peer-checked:after:opacity-100"
+      />
+      {children}
+    </label>
   );
 }
 
@@ -77,57 +61,92 @@ export default function MatchingSettingsPage() {
     }
   }, [typeParam, setFilter]);
 
+  const areas = LIVING_AREAS[filter.region];
+  const selectedArea = areas.find((area) => area.id === filter.area);
+  const selectedDistance = DISTANCES.find(
+    (distance) => distance.value === filter.distance,
+  );
+
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px]">
       <BackButton to="/home" />
       <h1 className="text-center text-[23px] leading-6 font-bold">매칭 설정</h1>
 
-      <section className="mt-[59px] flex flex-col gap-5">
-        <h2 className="text-[19px] leading-6 font-bold">매칭 타입</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {MATCH_TYPES.map(({ id, label }) => {
-            const selected = filter.type === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setFilter({ type: id })}
-                className={cn(
-                  'h-14 cursor-pointer rounded-[13px] border text-lg font-bold transition-colors',
-                  selected
-                    ? 'bg-mint-100 border-mint border-[1.5px]'
-                    : 'bg-surface border-line',
-                )}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+      <h2 className="mt-[17px] text-[17px] leading-6 font-bold">지역 선택</h2>
+      <div
+        role="radiogroup"
+        aria-label="지역 선택"
+        className="mt-[7px] grid grid-cols-2 gap-[10px]"
+      >
+        {REGIONS.map((region) => {
+          const selected = filter.region === region;
+          return (
+            <button
+              key={region}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() =>
+                setFilter({ region, area: LIVING_AREAS[region][0].id })
+              }
+              className={cn(
+                'h-[43px] cursor-pointer rounded-[14px] text-base font-bold transition-colors',
+                selected ? 'bg-mint' : 'bg-chip',
+              )}
+            >
+              {region}
+            </button>
+          );
+        })}
+      </div>
 
-      <section className="mt-[52px] flex flex-col gap-5">
-        <h2 className="text-xl font-bold">주변 사람 필터</h2>
-        <FilterSelect
-          id="region"
-          label="지역"
-          value={filter.region}
-          options={REGIONS.map((region) => ({ value: region, label: region }))}
-          onChange={(region) => setFilter({ region })}
-        />
-        <FilterSelect
-          id="distance"
-          label="거리"
-          value={filter.distance}
-          options={DISTANCES.map((distance) => ({
-            value: distance,
-            label: `${distance} 이내`,
-          }))}
-          onChange={(distance) => setFilter({ distance })}
-        />
-        <p className="text-ink-muted text-xs leading-6">
-          * 위치 권한 이용 시 주변 사람과 매칭됩니다.
+      <h2 className="mt-4 text-[17px] leading-6 font-bold">생활권 선택</h2>
+      <div role="radiogroup" aria-label="생활권 선택" className="mt-1">
+        {areas.map(({ id, label, districts }) => (
+          <RadioOption
+            key={id}
+            name="area"
+            checked={filter.area === id}
+            onChange={() => setFilter({ area: id })}
+            className="h-[47px]"
+          >
+            <span className="flex flex-col">
+              <span className="text-base leading-5 font-bold">{label}</span>
+              {districts && (
+                <span className="text-my-muted text-[11px] leading-[14px]">
+                  {districts}
+                </span>
+              )}
+            </span>
+          </RadioOption>
+        ))}
+      </div>
+
+      <h2 className="mt-4 text-[17px] leading-6 font-bold">매칭 거리</h2>
+      <div role="radiogroup" aria-label="매칭 거리" className="mt-[5px]">
+        {DISTANCES.map(({ value, label }) => (
+          <RadioOption
+            key={value}
+            name="distance"
+            checked={filter.distance === value}
+            onChange={() => setFilter({ distance: value })}
+            className="h-9"
+          >
+            <span className="text-[15px] leading-5">{label}</span>
+          </RadioOption>
+        ))}
+      </div>
+
+      <section
+        aria-label="선택된 조건"
+        className="bg-mint-100 mt-[10px] mb-6 flex h-16 flex-col justify-center rounded-[14px] px-[13px]"
+      >
+        <p className="text-[11px] leading-4 font-bold">선택된 조건</p>
+        <p className="mt-[3px] flex items-center justify-between text-[15px] leading-5 font-bold">
+          <span>
+            {filter.region} · {selectedArea?.label}
+          </span>
+          <span>{selectedDistance?.summary}</span>
         </p>
       </section>
 

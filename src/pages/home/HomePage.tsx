@@ -39,7 +39,7 @@ const MENUS = [
 export default function HomePage() {
   return (
     <>
-      <main className="text-ink flex flex-1 flex-col gap-5 bg-white px-[22px] pt-12 pb-10">
+      <main className="text-ink flex flex-1 flex-col gap-5 bg-white px-[22px] pt-6 pb-10">
         <header className="flex h-11 items-center gap-[18px]">
           <h1 className="flex-1 text-[27px] leading-6 font-bold">Desserting</h1>
           <button type="button" aria-label="알림" className="cursor-pointer">

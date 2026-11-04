@@ -85,24 +85,28 @@ export default function ProfilePage({
             <img src={avatarCake} alt="" className="mt-8 ml-[9px] block" />
           )}
         </div>
-        <button
-          type="button"
-          aria-label="프로필 사진 변경"
-          onClick={() => fileInputRef.current?.click()}
-          className="absolute top-[128px] left-[140px] flex size-11 cursor-pointer items-center justify-center rounded-full bg-white"
-        >
-          <Camera className="size-7" aria-hidden />
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) setAvatar({ file, url: URL.createObjectURL(file) });
-          }}
-        />
+        {isEditing && (
+          <>
+            <button
+              type="button"
+              aria-label="프로필 사진 변경"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute top-[128px] left-[140px] flex size-11 cursor-pointer items-center justify-center rounded-full bg-white"
+            >
+              <Camera className="size-7" aria-hidden />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) setAvatar({ file, url: URL.createObjectURL(file) });
+              }}
+            />
+          </>
+        )}
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col">
         <div className="mt-[41px] flex flex-col gap-[14px]">

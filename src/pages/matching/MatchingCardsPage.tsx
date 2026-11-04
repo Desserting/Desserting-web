@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import iconClose from '@/assets/matching/icon-close.svg';
 import iconHeart from '@/assets/matching/icon-heart.svg';
 import iconHeartOutline from '@/assets/matching/icon-heart-outline.svg';
-import iconNext from '@/assets/matching/icon-next.svg';
-import iconPin from '@/assets/matching/icon-pin.svg';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,12 +12,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { useMatchingStore } from '@/stores/matchingStore';
 import { MOCK_CANDIDATES } from './candidates';
 
 const ACTION_BUTTON =
-  'flex size-[70px] cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95';
+  'flex h-[54px] cursor-pointer items-center justify-center gap-2 rounded-[14px] text-[17px] font-bold transition-transform active:scale-95';
 
-const FACE = 'absolute inset-0 rounded-[20px] [backface-visibility:hidden]';
+const BACK_FACE =
+  'absolute inset-0 rounded-[20px] [backface-visibility:hidden] [transform:rotateY(180deg)]';
 
 const TOAST_DURATION_MS = 2000;
 // index.css의 --animate-card-out 시간과 맞춘다
@@ -26,6 +27,7 @@ const CARD_OUT_MS = 420;
 
 export default function MatchingCardsPage() {
   const navigate = useNavigate();
+  const matchType = useMatchingStore((state) => state.filter.type);
   const [index, setIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const [likedIds, setLikedIds] = useState<number[]>([]);
@@ -36,6 +38,7 @@ export default function MatchingCardsPage() {
   const leaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const candidate = MOCK_CANDIDATES[index];
   const liked = candidate ? likedIds.includes(candidate.id) : false;
+  const isSameTaste = matchType === 'same';
 
   useEffect(() => {
     if (!toast) return;
@@ -76,12 +79,27 @@ export default function MatchingCardsPage() {
   }
 
   return (
-    <main className="text-ink flex flex-1 flex-col overflow-x-clip bg-white px-6 pt-[53px] pb-[35px]">
-      <div className="relative max-h-[610px] min-h-0 flex-1 [perspective:1200px]">
+    <main className="text-ink relative flex flex-1 flex-col overflow-x-clip bg-white px-6 pt-[34px] pb-[98px]">
+      <button
+        type="button"
+        aria-label="랜덤 매칭 종료"
+        onClick={() => setExitOpen(true)}
+        className="absolute top-[34px] left-[26px] block size-6 cursor-pointer"
+      >
+        <ChevronLeft className="size-6" strokeWidth={3} aria-hidden />
+      </button>
+      <h1 className="text-center text-[20px] leading-6 font-bold">
+        {isSameTaste ? '같은' : '다른'} 취향 랜덤
+      </h1>
+      <p className="text-my-muted mt-[15px] text-right text-[13px] leading-[18px]">
+        오늘의 추천 {index + 1} / {MOCK_CANDIDATES.length}
+      </p>
+
+      <div className="mt-[19px] [perspective:1200px]">
         <div
           key={candidate.id}
           className={cn(
-            'absolute inset-0 [transform-style:preserve-3d] motion-reduce:animate-none',
+            'relative [transform-style:preserve-3d] motion-reduce:animate-none',
             leaving
               ? 'animate-card-out origin-bottom'
               : index === 0
@@ -89,45 +107,27 @@ export default function MatchingCardsPage() {
                 : 'animate-card-in',
           )}
         >
-          <article
-            className={cn(
-              FACE,
-              'overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.18)] ring-1 ring-black/5',
-            )}
-          >
+          <article className="[backface-visibility:hidden]">
             <img
               src={candidate.photo}
               alt=""
-              className="absolute inset-0 size-full object-cover"
+              className="block h-[315px] w-full rounded-[20px] object-cover"
             />
-            <div className="absolute inset-x-0 bottom-0 h-[205px] bg-linear-to-b from-black/0 to-black/83" />
-            <div className="absolute inset-x-[22px] bottom-[25px] flex flex-col text-white">
-              <h1 className="text-[26px] leading-[38px] font-bold">
-                {candidate.nickname}, {candidate.age}
-              </h1>
-              <p className="mt-[7px] flex items-center gap-[7px] text-base leading-6 font-bold">
-                <img src={iconPin} alt="" className="shrink-0" />
+            <h2 className="mt-4 text-2xl leading-8 font-bold">
+              {candidate.nickname}, {candidate.age}
+            </h2>
+            <p className="mt-4 flex items-center gap-[11px] text-[15px] leading-5">
+              <span>
                 {candidate.location} · {candidate.distanceKm}km
-              </p>
-              <ul className="mt-[19px] flex gap-2">
-                {candidate.interests.map((interest) => (
-                  <li
-                    key={interest}
-                    className="text-ink h-8 rounded-full bg-white px-[19px] text-[13px] leading-8 font-bold"
-                  >
-                    {interest}
-                  </li>
-                ))}
-              </ul>
-            </div>
+              </span>
+              <span aria-hidden>·</span>
+              <span>{candidate.interests.join(' / ')}</span>
+            </p>
+            <p className="bg-mint-100 mt-5 inline-flex h-[42px] min-w-[243px] items-center justify-center rounded-full px-6 text-sm font-bold">
+              나와 {isSameTaste ? '같은' : '다른'} {candidate.interests[0]} 취향
+            </p>
           </article>
-          <div
-            aria-hidden
-            className={cn(
-              FACE,
-              'bg-mint [transform:rotateY(180deg)] p-3 shadow-[0_10px_30px_rgba(0,0,0,0.18)]',
-            )}
-          >
+          <div aria-hidden className={cn(BACK_FACE, 'bg-mint p-3')}>
             <div className="flex size-full items-center justify-center rounded-[14px] border-2 border-white/70 text-[28px] font-bold text-white">
               Desserting
             </div>
@@ -135,31 +135,27 @@ export default function MatchingCardsPage() {
         </div>
       </div>
 
-      <div className="relative mt-auto flex justify-center gap-8 pt-[21px]">
+      <div className="relative mt-auto grid grid-cols-2 gap-[19px] pt-6">
         <button
           type="button"
-          aria-label="종료"
-          onClick={() => setExitOpen(true)}
+          onClick={showNext}
           className={cn(ACTION_BUTTON, 'bg-chip')}
         >
-          <img src={iconClose} alt="" />
+          <img src={iconClose} alt="" className="size-[22px]" />
+          넘기기
         </button>
         <button
           type="button"
-          aria-label="좋아요"
           aria-pressed={liked}
           onClick={like}
           className={cn(ACTION_BUTTON, 'bg-mint')}
         >
-          <img src={liked ? iconHeart : iconHeartOutline} alt="" />
-        </button>
-        <button
-          type="button"
-          aria-label="다음 사람"
-          onClick={showNext}
-          className={cn(ACTION_BUTTON, 'bg-chip')}
-        >
-          <img src={iconNext} alt="" />
+          <img
+            src={liked ? iconHeart : iconHeartOutline}
+            alt=""
+            className="size-[22px]"
+          />
+          프로필 보기
         </button>
         {toast && (
           <div
