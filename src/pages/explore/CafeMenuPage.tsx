@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CafeNotFound from './CafeNotFound';
@@ -87,6 +87,7 @@ export default function CafeMenuPage() {
   const cafe = findCafe(cafeId);
   const menu = getCafeMenu(cafeId ?? '');
   const location = useLocation();
+  const navigate = useNavigate();
   const navigationState = location.state as CafeNavigationState | null;
   const from = navigationState?.from;
   const reservation = navigationState?.reservation;
@@ -107,6 +108,15 @@ export default function CafeMenuPage() {
   );
 
   if (!cafe) return <CafeNotFound />;
+
+  const goToPayment = () => {
+    const state = {
+      ...backState,
+      order: { quantities, category },
+    } satisfies CafeNavigationState;
+    navigate(location.pathname, { replace: true, state });
+    navigate(`/explore/cafes/${cafe.id}/payment`, { state });
+  };
 
   return (
     <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
@@ -190,7 +200,8 @@ export default function CafeMenuPage() {
           type="button"
           variant="brand"
           size="xl"
-          disabled
+          disabled={totalCount === 0}
+          onClick={goToPayment}
           className="mt-6 cursor-pointer rounded-[13px] pb-0 text-lg"
         >
           주문하기

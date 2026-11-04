@@ -9,6 +9,7 @@ import CafeReservationPage from '@/pages/explore/CafeReservationPage';
 import ChatRequestsPage from '@/pages/chat/ChatRequestsPage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import CafeMenuPage from '@/pages/explore/CafeMenuPage';
+import CafePaymentPage from '@/pages/explore/CafePaymentPage';
 import MyPage from '@/pages/my/MyPage';
 import PremiumPassPage from '@/pages/my/PremiumPassPage';
 import HeartPurchasePage from '@/pages/my/HeartPurchasePage';
@@ -30,6 +31,10 @@ export default function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/explore/cafes/:cafeId" element={<CafeDetailPage />} />
         <Route path="/explore/cafes/:cafeId/menu" element={<CafeMenuPage />} />
+        <Route
+          path="/explore/cafes/:cafeId/payment"
+          element={<CafePaymentPage />}
+        />
         <Route
           path="/explore/cafes/:cafeId/reservation"
           element={<CafeReservationPage />}
