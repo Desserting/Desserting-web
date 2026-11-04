@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import SplashScreen from '@/components/SplashScreen';
 import HomePage from '@/pages/home/HomePage';
 import MyPage from '@/pages/my/MyPage';
+import PremiumPassPage from '@/pages/my/PremiumPassPage';
 import HeartPurchasePage from '@/pages/my/HeartPurchasePage';
 import MatchingCardsPage from '@/pages/matching/MatchingCardsPage';
 import MatchingSettingsPage from '@/pages/matching/MatchingSettingsPage';
@@ -19,6 +20,7 @@ export default function App() {
       <Routes>
         <Route path="/home" element={<HomePage />} />
         <Route path="/my" element={<MyPage />} />
+        <Route path="/my/premium" element={<PremiumPassPage />} />
         <Route path="/my/hearts" element={<HeartPurchasePage />} />
         <Route path="/my/profile" element={<ProfilePage mode="edit" />} />
         <Route path="/signup" element={<SignupPage />} />

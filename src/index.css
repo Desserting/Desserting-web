@@ -112,7 +112,48 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.premium-page {
+  padding-top: 76px;
+  padding-bottom: max(46px, env(safe-area-inset-bottom));
+}
+
+.premium-emblem {
+  width: 126px;
+  height: 126px;
+  margin-top: 44px;
+}
+
+.premium-benefits {
+  margin-top: 58px;
+  gap: 26px;
+}
+
+.premium-purchase-button {
+  margin-top: 30px;
+}
+
+@media (max-height: 760px) {
+  .premium-page {
+    padding-top: 32px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+  .premium-emblem {
+    width: 100px;
+    height: 100px;
+    margin-top: 24px;
+  }
+  .premium-benefits {
+    margin-top: 24px;
+    gap: 12px;
+  }
+  .premium-purchase-button {
+    margin-top: 16px;
+  }
+}
+
 @theme {
+  --color-premium-emblem: #e4f8f0;
+  --color-premium-price: #e6f9f2;
   --color-mint: #8ce2d0;
   --color-heart-selected: #eaf9f3;
   --color-heart-border: #e4e8ea;
