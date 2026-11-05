@@ -14,6 +14,7 @@ export default function CafeOrderHistoryPage() {
   const navigationState = useLocation().state as CafeNavigationState | null;
   const from = navigationState?.from;
   const backState = {
+    bookingFrom: navigationState?.bookingFrom,
     ...(from?.startsWith('/') && !from.startsWith('//') ? { from } : {}),
     ...(navigationState?.reservation
       ? { reservation: navigationState.reservation }

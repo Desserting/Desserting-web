@@ -1,15 +1,26 @@
 import BottomNav from '@/components/BottomNav';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CAFE_AREAS } from './cafeAreas';
+import CafePageHeader from './CafePageHeader';
+import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
 export default function CafeMapPage() {
+  const bookingFrom = getBookingFrom(
+    useLocation().state as CafeNavigationState | null,
+  );
   return (
     <div className="text-ink flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <header className="flex h-[clamp(112px,18dvh,151px)] shrink-0 items-end justify-center px-6 pb-[34px]">
-        <h1 className="text-center text-[23px] leading-[34px] font-bold">
-          카페 지도
-        </h1>
+        {bookingFrom ? (
+          <div className="w-full">
+            <CafePageHeader title="카페 지도" backTo={bookingFrom} />
+          </div>
+        ) : (
+          <h1 className="text-center text-[23px] leading-[34px] font-bold">
+            카페 지도
+          </h1>
+        )}
       </header>
 
       {/* Area links provide entry points until map hit areas are connected. */}
@@ -25,7 +36,12 @@ export default function CafeMapPage() {
               variant="social"
               className="h-11 rounded-xl px-4 text-sm font-bold"
             >
-              <Link to={`/explore/areas/${area.id}/cafes`}>{area.name}</Link>
+              <Link
+                to={`/explore/areas/${area.id}/cafes`}
+                state={{ bookingFrom }}
+              >
+                {area.name}
+              </Link>
             </Button>
           ))}
         </nav>

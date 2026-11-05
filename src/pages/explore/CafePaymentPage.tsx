@@ -44,6 +44,7 @@ export default function CafePaymentPage() {
   );
   const from = navigationState?.from;
   const backState = {
+    bookingFrom: navigationState?.bookingFrom,
     ...(from?.startsWith('/') && !from.startsWith('//') ? { from } : {}),
     ...(navigationState?.reservation
       ? { reservation: navigationState.reservation }
