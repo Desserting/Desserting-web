@@ -7,7 +7,7 @@ import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
 import { findCafe } from './cafes';
 import ReservationTimePicker from './ReservationTimePicker';
-import type { CafeNavigationState } from './cafeNavigation';
+import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 // Preview values from Figma, not live availability or a reservation policy.
@@ -29,8 +29,10 @@ export default function CafeReservationPage() {
   const navigationState = location.state as CafeNavigationState | null;
   const from = navigationState?.from;
   const savedReservation = navigationState?.reservation;
-  const backState =
-    from?.startsWith('/') && !from.startsWith('//') ? { from } : undefined;
+  const backState = {
+    ...(from?.startsWith('/') && !from.startsWith('//') ? { from } : {}),
+    bookingFrom: getBookingFrom(navigationState),
+  };
   const now = new Date();
   const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const [date, setDate] = useState(() => {

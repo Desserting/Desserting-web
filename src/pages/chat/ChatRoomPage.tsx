@@ -447,11 +447,13 @@ function ChatRoom({ roomId }: { roomId: number }) {
       </div>
 
       {/* 입력창 바로 위에 떠 있는 예약 버튼. 버튼 말고는 배경이 투명해서 대화가 비쳐 보이고 클릭도 통과한다 */}
-      {/* TODO: 카페 방문 예약하기 동작은 아직 정해지지 않아 화면만 있다 */}
       <div className="pointer-events-none relative z-10 h-0 px-6">
         <Button
           type="button"
           variant="brand"
+          onClick={() =>
+            navigate('/explore', { state: { bookingFrom: `/chat/${roomId}` } })
+          }
           className="pointer-events-auto absolute bottom-4 left-6 flex h-11 w-fit cursor-pointer gap-2.5 rounded-[20px] py-0 pr-5 pl-1.5 text-[15px] font-normal shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
         >
           <span

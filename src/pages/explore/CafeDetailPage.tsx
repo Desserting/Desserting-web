@@ -3,11 +3,14 @@ import { Button } from '@/components/ui/button';
 import { findCafe } from './cafes';
 import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
+import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
 export default function CafeDetailPage() {
   const { cafeId } = useParams();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from;
+  const navigationState = location.state as CafeNavigationState | null;
+  const from = navigationState?.from;
+  const bookingFrom = getBookingFrom(navigationState);
   const backTo =
     from?.startsWith('/') && !from.startsWith('//') ? from : '/home';
   const cafe = findCafe(cafeId);
@@ -18,7 +21,11 @@ export default function CafeDetailPage() {
 
   return (
     <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
-      <CafePageHeader title="매장 상세" backTo={backTo} />
+      <CafePageHeader
+        title="매장 상세"
+        backTo={backTo}
+        backState={{ bookingFrom }}
+      />
 
       <section aria-labelledby="cafe-name" className="mt-[33px]">
         <img
@@ -59,21 +66,23 @@ export default function CafeDetailPage() {
         </p>
       </section>
 
-      <div className="mt-auto pt-8">
-        <Button
-          asChild
-          variant="brand"
-          size="xl"
-          className="cursor-pointer rounded-[13px] pb-0 text-lg"
-        >
-          <Link
-            to={`/explore/cafes/${cafe.id}/reservation`}
-            state={{ from: backTo }}
+      {bookingFrom && (
+        <div className="mt-auto pt-8">
+          <Button
+            asChild
+            variant="brand"
+            size="xl"
+            className="cursor-pointer rounded-[13px] pb-0 text-lg"
           >
-            예약하기
-          </Link>
-        </Button>
-      </div>
+            <Link
+              to={`/explore/cafes/${cafe.id}/reservation`}
+              state={{ from: backTo, bookingFrom }}
+            >
+              예약하기
+            </Link>
+          </Button>
+        </div>
+      )}
     </main>
   );
 }
