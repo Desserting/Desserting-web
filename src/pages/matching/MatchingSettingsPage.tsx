@@ -1,14 +1,24 @@
 import {
   useEffect,
   useRef,
+  useState,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
 } from 'react';
-import { Check, Info } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { Check, Info, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { fetchRandomMatch } from '@/api/matching';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { getApiError } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 import {
   DISTANCES,
@@ -16,6 +26,11 @@ import {
   REGIONS,
   useMatchingStore,
 } from '@/stores/matchingStore';
+import {
+  getLocationPermission,
+  saveMyLocation,
+  toMatchParams,
+} from './matchRequest';
 
 interface SectionTitleProps {
   step: number;
@@ -136,6 +151,40 @@ export default function MatchingSettingsPage() {
   const setFilter = useMatchingStore((state) => state.setFilter);
   const startMatching = useMatchingStore((state) => state.startMatching);
   const typeParam = searchParams.get('type');
+
+  const locationPrompted = useMatchingStore((state) => state.locationPrompted);
+  const setLocationPrompted = useMatchingStore(
+    (state) => state.setLocationPrompted,
+  );
+  const [locationOpen, setLocationOpen] = useState(false);
+
+  // 위치를 쓰기로 했으면 서버에 저장한 뒤, 첫 상대를 받아 카드 화면으로 넘어간다
+  const start = useMutation({
+    mutationFn: async (useLocation: boolean) => {
+      if (useLocation) await saveMyLocation();
+      return fetchRandomMatch(toMatchParams(filter));
+    },
+    onSuccess: (first) => {
+      startMatching(first);
+      navigate('/matching/cards');
+    },
+  });
+
+  // 위치 권한을 아직 묻지 않았으면 브라우저 권한 창 전에 우리 안내를 먼저 보여준다
+  const handleStart = async () => {
+    const permission = await getLocationPermission();
+    if (permission === 'prompt' && !locationPrompted) {
+      setLocationOpen(true);
+      return;
+    }
+    start.mutate(permission === 'granted');
+  };
+
+  const answerLocation = (allow: boolean) => {
+    setLocationPrompted();
+    setLocationOpen(false);
+    start.mutate(allow);
+  };
 
   useEffect(() => {
     if (typeParam === 'same' || typeParam === 'different') {
@@ -268,19 +317,66 @@ export default function MatchingSettingsPage() {
             {selectedArea?.label} · {selectedDistance?.summary}
           </span>
         </p>
+        {start.isError && (
+          <p role="alert" className="text-destructive mb-2 text-[13px]">
+            {getApiError(start.error)?.message ??
+              '매칭을 시작하지 못했어요. 잠시 후 다시 시도해 주세요.'}
+          </p>
+        )}
         <Button
           type="button"
           variant="brand"
           size="xl"
-          onClick={() => {
-            startMatching();
-            navigate('/matching/cards');
-          }}
+          disabled={start.isPending}
+          onClick={() => void handleStart()}
           className="mb-10"
         >
-          매칭 시작
+          {start.isPending ? '상대를 찾는 중...' : '매칭 시작'}
         </Button>
       </div>
+
+      <Dialog open={locationOpen} onOpenChange={setLocationOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="text-ink max-w-[calc(100%-48px)] gap-0 rounded-3xl bg-white p-6 text-center sm:max-w-[340px]"
+        >
+          <div className="bg-mint-100 mx-auto flex size-16 items-center justify-center rounded-full">
+            <MapPin
+              aria-hidden
+              className="text-mint-deep size-8 stroke-[1.8]"
+            />
+          </div>
+          <DialogTitle className="mt-5 text-[19px] leading-7 font-bold">
+            내 위치를 사용할까요?
+          </DialogTitle>
+          <DialogDescription className="text-ink-muted mt-2 text-[15px] leading-6 break-keep">
+            가까운 사람을 찾기 위해 현재 위치를 사용해요. 상대에게는 정확한 위치
+            대신 &lsquo;3km 이내&rsquo;처럼 대략적인 거리만 보여요.
+          </DialogDescription>
+          <p className="bg-chip text-ink-muted mt-4 rounded-[12px] px-3 py-2 text-[13px] leading-5 break-keep">
+            허용하지 않으면 선택한 지역을 기준으로 찾아요.
+          </p>
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              size="xl"
+              onClick={() => answerLocation(false)}
+              className="bg-chip text-ink hover:bg-chip/80 h-12 rounded-xl pb-0 text-base"
+            >
+              허용 안 함
+            </Button>
+            <Button
+              type="button"
+              variant="brand"
+              size="xl"
+              onClick={() => answerLocation(true)}
+              className="h-12 rounded-xl pb-0 text-base"
+            >
+              허용
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

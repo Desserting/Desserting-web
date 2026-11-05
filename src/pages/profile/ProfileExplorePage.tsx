@@ -28,7 +28,7 @@ export default function ProfileExplorePage() {
   const tab: TabId = searchParams.get('tab') === 'liked' ? 'liked' : 'explore';
   const candidates =
     tab === 'liked'
-      ? MOCK_CANDIDATES.filter(({ id }) => likedIds.includes(id))
+      ? MOCK_CANDIDATES.filter(({ id }) => likedIds.includes(`mock-${id}`))
       : MOCK_CANDIDATES;
 
   const selectTab = (next: TabId) =>
@@ -79,7 +79,7 @@ export default function ProfileExplorePage() {
             </p>
             <ul role="tabpanel" className="mt-3 flex flex-col gap-3">
               {candidates.map((candidate, candidateIndex) => {
-                const liked = likedIds.includes(candidate.id);
+                const liked = likedIds.includes(`mock-${candidate.id}`);
                 return (
                   <li
                     key={candidate.id}
@@ -130,7 +130,7 @@ export default function ProfileExplorePage() {
                       type="button"
                       aria-label={`${candidate.nickname} 좋아요`}
                       aria-pressed={liked}
-                      onClick={() => toggleLike(candidate.id)}
+                      onClick={() => toggleLike(`mock-${candidate.id}`)}
                       className={cn(
                         'absolute top-1/2 right-3.5 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full transition-colors',
                         liked ? 'bg-mint-100' : 'bg-chip hover:bg-chip/70',

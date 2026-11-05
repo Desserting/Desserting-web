@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { RandomMatchResult } from '@/api/matching';
 
 export type MatchType = 'same' | 'different';
 
@@ -51,16 +52,23 @@ interface MatchingState {
   filter: MatchingFilter;
   setFilter: (filter: Partial<MatchingFilter>) => void;
 
-  // 카드 목록과 프로필 화면을 오가도 진행 상황이 유지되도록 스토어에 둔다
-  cardIndex: number;
+  // 카드 화면과 프로필 화면을 오가도 진행 상황이 유지되도록 스토어에 둔다
+  /** 지금 보여주는 랜덤 매칭 결과. 서버는 호출할 때마다 다음 상대를 준다 */
+  current: RandomMatchResult | null;
+  /** 이번 매칭에서 지금까지 본 상대 수 */
+  shownCount: number;
+  /** 위치 사용 안내를 이미 보여줬는지. 한 번 답했으면 매칭마다 다시 묻지 않는다 */
+  locationPrompted: boolean;
+  setLocationPrompted: () => void;
   dealt: boolean;
-  likedIds: number[];
-  requestedIds: number[];
-  startMatching: () => void;
-  showNextCard: () => void;
+  likedIds: string[];
+  requestedIds: string[];
+  /** 매칭을 새로 시작한다. 첫 결과를 같이 넣는다 */
+  startMatching: (first: RandomMatchResult) => void;
+  showNextMatch: (next: RandomMatchResult) => void;
   markDealt: () => void;
-  toggleLike: (id: number) => void;
-  requestChat: (id: number) => void;
+  toggleLike: (key: string) => void;
+  requestChat: (key: string) => void;
 }
 
 export const useMatchingStore = create<MatchingState>((set) => ({
@@ -73,12 +81,20 @@ export const useMatchingStore = create<MatchingState>((set) => ({
   setFilter: (filter) =>
     set((state) => ({ filter: { ...state.filter, ...filter } })),
 
-  cardIndex: 0,
+  current: null,
+  shownCount: 0,
+  locationPrompted: false,
+  setLocationPrompted: () => set({ locationPrompted: true }),
   dealt: false,
   likedIds: [],
   requestedIds: [],
-  startMatching: () => set({ cardIndex: 0, dealt: false }),
-  showNextCard: () => set((state) => ({ cardIndex: state.cardIndex + 1 })),
+  startMatching: (first) =>
+    set({ current: first, shownCount: first.found ? 1 : 0, dealt: false }),
+  showNextMatch: (next) =>
+    set((state) => ({
+      current: next,
+      shownCount: next.found ? state.shownCount + 1 : state.shownCount,
+    })),
   markDealt: () => set({ dealt: true }),
   toggleLike: (id) =>
     set((state) => ({

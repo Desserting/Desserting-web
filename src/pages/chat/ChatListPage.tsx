@@ -6,7 +6,7 @@ import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
-import ChatAvatar from './ChatAvatar';
+import DessertAvatar from '@/components/DessertAvatar';
 
 function RoomItem({ room }: { room: ChatRoom }) {
   const { roomId, otherUserNickname, lastMessagePreview, lastMessageAt } = room;
@@ -17,7 +17,7 @@ function RoomItem({ room }: { room: ChatRoom }) {
         to={`/chat/${roomId}`}
         className="active:bg-surface -mx-3 flex items-center gap-4 rounded-2xl px-3 py-6 transition-colors"
       >
-        <ChatAvatar src={room.otherUserAvatarUrl} className="size-16" />
+        <DessertAvatar src={room.otherUserAvatarUrl} className="size-16" />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
             <p className="truncate text-[20px] leading-7 font-bold">

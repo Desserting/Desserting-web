@@ -15,7 +15,7 @@ import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { getApiError } from '@/lib/axios';
 import { cn } from '@/lib/utils';
-import ChatAvatar from './ChatAvatar';
+import DessertAvatar from '@/components/DessertAvatar';
 
 function RequestItem({ request }: { request: ReceivedRequest }) {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ function RequestItem({ request }: { request: ReceivedRequest }) {
 
   return (
     <li className="flex items-start gap-4 py-6">
-      <ChatAvatar
+      <DessertAvatar
         src={senderAvatarUrl}
         className={cn(
           'size-[74px]',

@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart, Send } from 'lucide-react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
+import { heartKeys } from '@/api/hearts';
+import { sendChatRequest } from '@/api/matches';
+import { toggleLike as sendLike } from '@/api/matching';
+import { fetchMe, userKeys } from '@/api/users';
 import BackButton from '@/components/BackButton';
 import Bubble from '@/components/Bubble';
+import DessertAvatar from '@/components/DessertAvatar';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -11,6 +17,8 @@ import {
   SheetDescription,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { getApiError } from '@/lib/axios';
+import { dessertLabel } from '@/lib/dessert';
 import { cn } from '@/lib/utils';
 import { REQUEST_HEART_COST, useHeartStore } from '@/stores/heartStore';
 import { useMatchingStore } from '@/stores/matchingStore';
@@ -20,25 +28,121 @@ const TOAST_DURATION_MS = 2000;
 
 type RequestStep = 'confirm' | 'sent';
 
+/** 화면에 보여줄 프로필. 서버 후보(랜덤 매칭)와 목업 후보(프로필 탐색)를 같은 모양으로 맞춘다 */
+interface ProfileView {
+  /** 좋아요·요청 상태를 기억하는 키. 서버 후보와 목업 후보가 섞이지 않게 구분한다 */
+  key: string;
+  /** 서버 후보만 있다. 대화 요청의 receiverId로 쓴다 */
+  userId?: number;
+  nickname: string;
+  age: number;
+  /** 지역과 거리 */
+  place: string;
+  interests: string[];
+  bio: string;
+  /** 서버 후보는 사진이 없어서 아바타를 보여준다 */
+  photo?: string;
+  avatarUrl?: string | null;
+  gallery: string[];
+}
+
+interface SendErrorView {
+  message: string;
+  link?: { to: string; label: string };
+}
+
+/** 대화 요청 실패 코드별 안내 */
+function describeSendError(error: unknown): SendErrorView {
+  const apiError = getApiError(error);
+  switch (apiError?.code) {
+    case 'H001':
+      return {
+        message: '하트가 부족해요.',
+        link: { to: '/my/hearts', label: '하트 구매하러 가기' },
+      };
+    case 'H002':
+      return { message: '이미 요청을 보냈거나 대화 중인 상대예요.' };
+    case 'H004':
+      return { message: '나에게는 대화를 요청할 수 없어요.' };
+    case 'A002':
+      return {
+        message:
+          '일반 회원은 최근 24시간 안에 랜덤 매칭으로 만난 상대에게만 요청할 수 있어요. 프리미엄이면 누구에게나 요청할 수 있어요.',
+        link: { to: '/my/premium', label: '프리미엄 알아보기' },
+      };
+    default:
+      return {
+        message:
+          apiError?.message ??
+          '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.',
+      };
+  }
+}
+
 export default function CandidateProfilePage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
   // 매칭 카드·프로필 탐색 등 어디서 들어왔든 그곳으로 돌아간다
   const backTo =
     (useLocation().state as { from?: string } | null)?.from ?? '/profile';
   // 랜덤 매칭에서 온 경우에만 "매칭"이라고 부른다
   const fromMatching = backTo.startsWith('/matching');
-  const candidate = findCandidate(Number(id));
+
+  // 랜덤 매칭에서 왔으면 서버 후보를, 프로필 탐색에서 왔으면 목업 후보를 보여준다
+  const matched = useMatchingStore((state) => state.current?.candidate);
+  const mock = fromMatching ? undefined : findCandidate(Number(id));
+  let profile: ProfileView | null = null;
+  if (fromMatching && matched && matched.userId === Number(id)) {
+    profile = {
+      key: `user-${matched.userId}`,
+      userId: matched.userId,
+      nickname: matched.nickname,
+      age: matched.age,
+      place:
+        matched.approxDistanceKm != null
+          ? `${matched.region} · ${matched.approxDistanceKm}km 이내`
+          : matched.region,
+      interests: matched.dessertTags.map(dessertLabel),
+      bio: matched.bio ?? '',
+      avatarUrl: matched.dessertAvatarUrl,
+      gallery: [],
+    };
+  } else if (mock) {
+    profile = {
+      key: `mock-${mock.id}`,
+      nickname: mock.nickname,
+      age: mock.age,
+      place: `${mock.location} · ${mock.distanceKm}km`,
+      interests: mock.interests,
+      bio: mock.bio,
+      photo: mock.photo,
+      gallery: mock.gallery,
+    };
+  }
+
+  const isServer = profile?.userId !== undefined;
   const liked = useMatchingStore((state) =>
-    candidate ? state.likedIds.includes(candidate.id) : false,
+    profile ? state.likedIds.includes(profile.key) : false,
   );
   const requested = useMatchingStore((state) =>
-    candidate ? state.requestedIds.includes(candidate.id) : false,
+    profile ? state.requestedIds.includes(profile.key) : false,
   );
   const toggleLike = useMatchingStore((state) => state.toggleLike);
   const requestChat = useMatchingStore((state) => state.requestChat);
-  const heartCount = useHeartStore((state) => state.heartCount);
-  const isPremium = useHeartStore((state) => state.isPremium);
+
+  // 서버 후보는 서버의 하트·프리미엄 값을, 목업 후보는 임시 값을 쓴다
+  const me = useQuery({
+    queryKey: userKeys.me,
+    queryFn: fetchMe,
+    enabled: isServer,
+  });
+  const mockHeartCount = useHeartStore((state) => state.heartCount);
+  const mockIsPremium = useHeartStore((state) => state.isPremium);
   const spendForRequest = useHeartStore((state) => state.spendForRequest);
+  const heartCount = isServer ? (me.data?.heartCount ?? 0) : mockHeartCount;
+  const isPremium = isServer ? (me.data?.isPremium ?? false) : mockIsPremium;
+  const heartsKnown = !isServer || me.isSuccess;
+
   const [spent, setSpent] = useState<'deducted' | 'free'>('deducted');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [step, setStep] = useState<RequestStep>('confirm');
@@ -46,17 +150,44 @@ export default function CandidateProfilePage() {
     null,
   );
 
+  const send = useMutation({
+    mutationFn: (receiverId: number) => sendChatRequest(receiverId),
+    onSuccess: () => {
+      if (!profile) return;
+      requestChat(profile.key);
+      setSpent(isPremium ? 'free' : 'deducted');
+      setStep('sent');
+      // 응답에 남은 하트 수가 없으므로 내 정보와 하트 내역을 다시 불러온다
+      void queryClient.invalidateQueries({ queryKey: userKeys.me });
+      void queryClient.invalidateQueries({ queryKey: heartKeys.history });
+    },
+    onError: (error) => {
+      const code = getApiError(error)?.code;
+      // 이미 요청한 상대면 버튼도 "요청을 보냈어요"로 맞춘다
+      if (code === 'H002' && profile) requestChat(profile.key);
+      // 하트 수가 서버와 다르면 다시 맞춘다
+      if (code === 'H001') {
+        void queryClient.invalidateQueries({ queryKey: userKeys.me });
+      }
+    },
+  });
+
+  const likeOnServer = useMutation({
+    mutationFn: (userId: number) => sendLike(userId),
+  });
+
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), TOAST_DURATION_MS);
     return () => clearTimeout(timer);
   }, [toast]);
 
-  if (!candidate) return <Navigate to={backTo} replace />;
+  if (!profile) return <Navigate to={backTo} replace />;
 
   const like = () => {
-    toggleLike(candidate.id);
-    if (!liked) {
+    const nextLiked = !liked;
+    toggleLike(profile.key);
+    if (nextLiked) {
       setToast({
         message: fromMatching
           ? '이 매칭이 마음에 들어요!'
@@ -64,25 +195,46 @@ export default function CandidateProfilePage() {
         key: Date.now(),
       });
     }
+    if (profile.userId !== undefined) {
+      likeOnServer.mutate(profile.userId, {
+        // 서버에 반영하지 못하면 화면도 원래대로 돌린다
+        onError: () => {
+          toggleLike(profile.key);
+          setToast({ message: '좋아요를 처리하지 못했어요', key: Date.now() });
+        },
+      });
+    }
   };
 
   const openRequest = () => {
+    send.reset();
     setStep('confirm');
     setSheetOpen(true);
   };
 
   // 하트가 모자라면 요청을 막는다. 프리미엄은 차감 없이 보낼 수 있다
-  const insufficient = !isPremium && heartCount < REQUEST_HEART_COST;
+  const insufficient =
+    heartsKnown && !isPremium && heartCount < REQUEST_HEART_COST;
 
   const sendRequest = () => {
     // 이미 보낸 상대에게는 하트를 다시 차감하지 않는다
     if (requested) return;
-    const result = spendForRequest(candidate.nickname);
+    if (profile.userId !== undefined) {
+      send.mutate(profile.userId);
+      return;
+    }
+    // 프로필 탐색의 목업 후보는 아직 서버 연동 전이라 임시 흐름을 쓴다
+    const result = spendForRequest(profile.nickname);
     if (result === 'insufficient') return;
-    requestChat(candidate.id);
+    requestChat(profile.key);
     setSpent(result);
     setStep('sent');
   };
+
+  const sendError = send.isError ? describeSendError(send.error) : null;
+  // 남은 하트 수가 갱신되는 동안에는 옛 숫자를 보여주지 않는다
+  const heartsRefreshing = isServer && me.isFetching;
+  const bioLines = profile.bio.split('\n').filter((line) => line.trim());
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-[35px]">
@@ -91,51 +243,68 @@ export default function CandidateProfilePage() {
         상대 프로필
       </h1>
 
-      <img
-        src={candidate.photo}
-        alt={`${candidate.nickname}의 대표 사진`}
-        className="mt-[30px] aspect-[345/248] w-full rounded-[22px] object-cover"
-      />
+      {profile.photo ? (
+        <img
+          src={profile.photo}
+          alt={`${profile.nickname}의 대표 사진`}
+          className="mt-[30px] aspect-[345/248] w-full rounded-[22px] object-cover"
+        />
+      ) : (
+        <div className="bg-mint-100 mt-[30px] flex aspect-[345/248] w-full items-center justify-center rounded-[22px]">
+          <DessertAvatar
+            src={profile.avatarUrl}
+            className="size-[170px] bg-white"
+          />
+        </div>
+      )}
 
       <section className="mt-[22px]">
         <h2 className="text-[28px] leading-10 font-bold">
-          {candidate.nickname}, {candidate.age}
+          {profile.nickname}, {profile.age}
         </h2>
         <p className="text-ink-muted mt-1 text-[15px] leading-6">
-          {candidate.location} · {candidate.distanceKm}km
-          <span aria-hidden className="mx-2">
-            ·
-          </span>
-          {candidate.interests.join(' / ')}
+          {profile.place}
+          {profile.interests.length > 0 && (
+            <>
+              <span aria-hidden className="mx-2">
+                ·
+              </span>
+              {profile.interests.join(' / ')}
+            </>
+          )}
         </p>
-        <div
-          aria-label="자기소개"
-          role="group"
-          className="mt-6 flex flex-col items-start gap-2"
-        >
-          {candidate.bio.split('\n').map((line, lineIndex) => (
-            <Bubble
-              key={`${candidate.id}-${lineIndex}`}
-              tail={lineIndex === 0}
-              style={{ animationDelay: `${150 + lineIndex * 550}ms` }}
-            >
-              {line}
-            </Bubble>
-          ))}
-        </div>
+        {bioLines.length > 0 && (
+          <div
+            aria-label="자기소개"
+            role="group"
+            className="mt-6 flex flex-col items-start gap-2"
+          >
+            {bioLines.map((line, lineIndex) => (
+              <Bubble
+                key={`${profile.key}-${lineIndex}`}
+                tail={lineIndex === 0}
+                style={{ animationDelay: `${150 + lineIndex * 550}ms` }}
+              >
+                {line}
+              </Bubble>
+            ))}
+          </div>
+        )}
       </section>
 
-      <ul className="mt-9 grid grid-cols-2 gap-[15px]">
-        {candidate.gallery.map((photo, photoIndex) => (
-          <li key={photoIndex}>
-            <img
-              src={photo}
-              alt=""
-              className="aspect-[165/120] w-full rounded-[20px] object-cover"
-            />
-          </li>
-        ))}
-      </ul>
+      {profile.gallery.length > 0 && (
+        <ul className="mt-9 grid grid-cols-2 gap-[15px]">
+          {profile.gallery.map((photo, photoIndex) => (
+            <li key={photoIndex}>
+              <img
+                src={photo}
+                alt=""
+                className="aspect-[165/120] w-full rounded-[20px] object-cover"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div className="relative mt-auto flex gap-3 pt-6">
         <Button
@@ -190,27 +359,29 @@ export default function CandidateProfilePage() {
           {step === 'confirm' ? (
             <>
               <SheetTitle className="mt-[38px] text-[22px] leading-[30px] font-bold break-keep">
-                {candidate.nickname}님에게
+                {profile.nickname}님에게
                 <br />
                 대화를 요청할까요?
               </SheetTitle>
               <SheetDescription className="text-ink-muted mt-[38px] text-[15px] leading-6">
                 상대가 수락하면 채팅을 시작할 수 있어요.
               </SheetDescription>
-              <p
-                className={cn(
-                  'mt-4 rounded-full px-4 py-1.5 text-[14px] leading-5 font-bold',
-                  insufficient
-                    ? 'bg-chip text-ink-muted'
-                    : 'bg-mint-100 text-mint-deep',
-                )}
-              >
-                {isPremium
-                  ? '프리미엄은 하트가 차감되지 않아요'
-                  : insufficient
-                    ? `하트가 부족해요 (보유 ${heartCount}개)`
-                    : `하트 ${REQUEST_HEART_COST}개가 차감돼요 (보유 ${heartCount}개)`}
-              </p>
+              {heartsKnown && (
+                <p
+                  className={cn(
+                    'mt-4 rounded-full px-4 py-1.5 text-[14px] leading-5 font-bold',
+                    insufficient
+                      ? 'bg-chip text-ink-muted'
+                      : 'bg-mint-100 text-mint-deep',
+                  )}
+                >
+                  {isPremium
+                    ? '프리미엄은 하트가 차감되지 않아요'
+                    : insufficient
+                      ? `하트가 부족해요 (보유 ${heartCount}개)`
+                      : `하트 ${REQUEST_HEART_COST}개가 차감돼요 (보유 ${heartCount}개)`}
+                </p>
+              )}
               {insufficient && (
                 <Link
                   to="/my/hearts"
@@ -218,6 +389,21 @@ export default function CandidateProfilePage() {
                 >
                   하트 구매하러 가기
                 </Link>
+              )}
+              {sendError && (
+                <div role="alert" className="mt-3 flex flex-col items-center">
+                  <p className="text-destructive text-[14px] leading-5 break-keep">
+                    {sendError.message}
+                  </p>
+                  {sendError.link && (
+                    <Link
+                      to={sendError.link.to}
+                      className="mt-1 text-[14px] leading-5 font-bold underline underline-offset-2"
+                    >
+                      {sendError.link.label}
+                    </Link>
+                  )}
+                </div>
               )}
               <div className="mt-auto grid w-full grid-cols-[1fr_1.75fr] gap-3 pt-6">
                 <SheetClose asChild>
@@ -234,10 +420,10 @@ export default function CandidateProfilePage() {
                   variant="brand"
                   size="xl"
                   onClick={sendRequest}
-                  disabled={insufficient}
+                  disabled={insufficient || send.isPending || !heartsKnown}
                   className="h-[54px] cursor-pointer rounded-[14px] pb-0 text-[17px]"
                 >
-                  대화 요청하기
+                  {send.isPending ? '보내는 중...' : '대화 요청하기'}
                 </Button>
               </div>
             </>
@@ -255,7 +441,9 @@ export default function CandidateProfilePage() {
               >
                 {spent === 'free'
                   ? '프리미엄이라 하트는 차감되지 않았어요'
-                  : `하트 ${REQUEST_HEART_COST}개를 사용했어요 (남은 하트 ${heartCount}개)`}
+                  : heartsRefreshing
+                    ? `하트 ${REQUEST_HEART_COST}개를 사용했어요`
+                    : `하트 ${REQUEST_HEART_COST}개를 사용했어요 (남은 하트 ${heartCount}개)`}
               </p>
               <SheetClose asChild>
                 <Button
