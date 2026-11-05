@@ -51,6 +51,7 @@ import { getApiError } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 import DessertAvatar from '@/components/DessertAvatar';
 import MessageItem from './MessageItem';
+import PlaceProposalSheet, { type PlaceProposal } from './PlaceProposalSheet';
 import { useChatSocket } from './useChatSocket';
 
 /** 서버가 에러를 알려주지 않으므로, 이 시간 안에 내 메시지가 돌아오지 않으면 실패로 본다 */
@@ -93,6 +94,8 @@ function ChatRoom({ roomId }: { roomId: number }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingMessage[]>([]);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  // 열 때마다 key를 바꿔 제안 시트를 처음 단계부터 새로 시작한다
+  const [proposal, setProposal] = useState({ open: false, key: 0 });
   const navigate = useNavigate();
   // 이 화면에 있는 동안 실시간으로 도착한 메시지. 이 메시지들만 등장 애니메이션을 준다
   const [liveIds, setLiveIds] = useState<ReadonlySet<string>>(new Set());
@@ -226,6 +229,13 @@ function ChatRoom({ roomId }: { roomId: number }) {
     if (sendMessage(content)) setText('');
   };
 
+  /** 직접 고른 카페 방문 제안을 보낸다. 연결이 안 돼 못 보내면 false */
+  const handlePropose = ({ content, metadata }: PlaceProposal) => {
+    if (otherLeft || socket.status !== 'connected') return false;
+    setNotice(null);
+    return sendMessage(content, 'PLACE_PROPOSAL', metadata);
+  };
+
   const handleRetry = (item: PendingMessage) => {
     if (!ensureConnected()) return;
     setPending((list) => list.filter((entry) => entry.id !== item.id));
@@ -302,6 +312,10 @@ function ChatRoom({ roomId }: { roomId: number }) {
         <Button
           type="button"
           variant="brand"
+          disabled={otherLeft}
+          onClick={() =>
+            setProposal((prev) => ({ open: true, key: prev.key + 1 }))
+          }
           className="pointer-events-auto absolute top-3 right-6 flex h-11 w-fit cursor-pointer gap-2 rounded-full px-5 text-[15px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.12)] [&_svg:not([class*='size-'])]:size-5"
         >
           <CalendarDays aria-hidden strokeWidth={1.8} />
@@ -476,6 +490,14 @@ function ChatRoom({ roomId }: { roomId: number }) {
           )}
         </form>
       </footer>
+
+      <PlaceProposalSheet
+        key={proposal.key}
+        roomId={roomId}
+        open={proposal.open}
+        onOpenChange={(open) => setProposal((prev) => ({ ...prev, open }))}
+        onPropose={handlePropose}
+      />
 
       <Dialog open={leaveOpen} onOpenChange={setLeaveOpen}>
         <DialogContent className="max-w-[345px]">
