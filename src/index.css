@@ -183,6 +183,15 @@ html {
   --color-chip: #f1f3f5;
   --color-surface: #f7f8f9;
   --color-ink-muted: #555e64;
+  --color-ink-soft: #65706c;
+  --color-field-bg: #fbfcfc;
+  --color-field-line: #d8e3e0;
+  --color-placeholder: #a3aaa8;
+  --color-faint: #a0a7a5;
+  --color-divider: #dfe4e2;
+  --color-mint-link: #397f70;
+  --color-mint-eyebrow: #397267;
+  --color-ink-sub: #6c7471;
 }
 
 @theme {

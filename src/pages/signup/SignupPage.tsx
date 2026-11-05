@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import googleIcon from '@/assets/signup/icon-google.svg';
 import appleIcon from '@/assets/signup/icon-apple.svg';
+import AuthSwitch from '@/components/AuthSwitch';
 import { Button } from '@/components/ui/button';
 
 export default function SignupPage() {
@@ -39,12 +40,12 @@ export default function SignupPage() {
           이메일로 가입하기
         </Button>
       </div>
-      <p className="mt-auto flex items-center justify-center gap-3 pb-[96px] text-base">
-        이미 계정이 있으신가요?
-        <button type="button" className="cursor-pointer">
-          로그인
-        </button>
-      </p>
+      <AuthSwitch
+        message="이미 계정이 있으신가요?"
+        linkLabel="로그인"
+        to="/login"
+        className="mt-auto pb-[96px]"
+      />
     </main>
   );
 }
