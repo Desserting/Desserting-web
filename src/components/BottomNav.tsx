@@ -24,19 +24,27 @@ export default function BottomNav({
           <li key={to}>
             <NavLink
               to={to}
-              className="text-ink flex flex-col items-center gap-1 text-xs"
+              className="text-ink flex flex-col items-center gap-0.5 text-xs"
             >
               {({ isActive }) => {
                 const active = isActive || to === activePath;
                 return (
                   <>
-                    <Icon
-                      aria-hidden="true"
-                      strokeWidth={1.8}
+                    <span
                       className={
-                        active ? 'text-mint-deep size-[26px]' : 'size-[26px]'
+                        active
+                          ? 'bg-mint-100 flex h-8 w-[58px] items-center justify-center rounded-full'
+                          : 'flex h-8 w-[58px] items-center justify-center'
                       }
-                    />
+                    >
+                      <Icon
+                        aria-hidden="true"
+                        strokeWidth={1.8}
+                        className={
+                          active ? 'text-mint-deep size-[26px]' : 'size-[26px]'
+                        }
+                      />
+                    </span>
                     <span
                       className={
                         active
