@@ -68,10 +68,12 @@ interface MatchingState {
   showNextMatch: (next: RandomMatchResult) => void;
   markDealt: () => void;
   toggleLike: (key: string) => void;
+  /** 서버가 알려준 좋아요 여부를 반영한다 (프로필 목록·상세를 불러올 때) */
+  syncLiked: (profiles: { userId: number; liked?: boolean | null }[]) => void;
   requestChat: (key: string) => void;
 }
 
-/** 좋아요·요청 상태를 기억하는 키. 서버 후보와 목업 후보가 섞이지 않게 구분한다 */
+/** 좋아요·요청 상태를 기억하는 키 */
 export const serverCandidateKey = (userId: number) => `user-${userId}`;
 
 const withKey = (keys: string[], key: string, on: boolean) =>
@@ -135,6 +137,15 @@ export const useMatchingStore = create<MatchingState>((set) => ({
         ? state.likedIds.filter((likedId) => likedId !== id)
         : [...state.likedIds, id],
     })),
+  syncLiked: (profiles) =>
+    set((state) => {
+      let likedIds = state.likedIds;
+      for (const { userId, liked } of profiles) {
+        if (typeof liked !== 'boolean') continue;
+        likedIds = withKey(likedIds, serverCandidateKey(userId), liked);
+      }
+      return likedIds === state.likedIds ? state : { likedIds };
+    }),
   requestChat: (id) =>
     set((state) =>
       state.requestedIds.includes(id)
