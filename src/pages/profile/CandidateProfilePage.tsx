@@ -21,7 +21,7 @@ import { getApiError } from '@/lib/axios';
 import { dessertLabel } from '@/lib/dessert';
 import { cn } from '@/lib/utils';
 import { REQUEST_HEART_COST, useHeartStore } from '@/stores/heartStore';
-import { useMatchingStore } from '@/stores/matchingStore';
+import { serverCandidateKey, useMatchingStore } from '@/stores/matchingStore';
 import { findCandidate } from '@/pages/matching/candidates';
 
 const TOAST_DURATION_MS = 2000;
@@ -34,6 +34,8 @@ interface ProfileView {
   key: string;
   /** 서버 후보만 있다. 대화 요청의 receiverId로 쓴다 */
   userId?: number;
+  /** 서버가 false로 알려주면 요청 버튼을 막는다 */
+  canRequest?: boolean;
   nickname: string;
   age: number;
   /** 지역과 거리 */
@@ -94,8 +96,9 @@ export default function CandidateProfilePage() {
   let profile: ProfileView | null = null;
   if (fromMatching && matched && matched.userId === Number(id)) {
     profile = {
-      key: `user-${matched.userId}`,
+      key: serverCandidateKey(matched.userId),
       userId: matched.userId,
+      canRequest: matched.canRequest,
       nickname: matched.nickname,
       age: matched.age,
       place:
@@ -231,6 +234,10 @@ export default function CandidateProfilePage() {
     setStep('sent');
   };
 
+  // 서버가 요청할 수 없다고 알려준 상대는 눌러 보기 전에 막는다.
+  // 하트 부족이 이유일 수 있어서, 하트가 모자란 경우는 열어서 구매 링크를 보여준다
+  const blocked = profile.canRequest === false && !requested && !insufficient;
+
   const sendError = send.isError ? describeSendError(send.error) : null;
   // 남은 하트 수가 갱신되는 동안에는 옛 숫자를 보여주지 않는다
   const heartsRefreshing = isServer && me.isFetching;
@@ -327,11 +334,15 @@ export default function CandidateProfilePage() {
           type="button"
           variant="brand"
           size="xl"
-          disabled={requested}
+          disabled={requested || blocked}
           onClick={openRequest}
           className="h-[54px] flex-1 cursor-pointer rounded-[14px] pb-0 text-[17px]"
         >
-          {requested ? '요청을 보냈어요' : '대화 요청하기'}
+          {requested
+            ? '요청을 보냈어요'
+            : blocked
+              ? '요청할 수 없어요'
+              : '대화 요청하기'}
         </Button>
       </div>
 
