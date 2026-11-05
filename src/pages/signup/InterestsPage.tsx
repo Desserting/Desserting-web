@@ -7,6 +7,7 @@ import shavedIce from '@/assets/signup/dessert-shaved-ice-icecream.svg';
 import tartPie from '@/assets/signup/dessert-tart-pie.svg';
 import tea from '@/assets/signup/dessert-tea.svg';
 import traditional from '@/assets/signup/dessert-traditional.svg';
+import { AuthLayout } from '@/components/AuthLayout';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -29,15 +30,24 @@ export default function InterestsPage() {
   const toggleInterest = useSignupStore((state) => state.toggleInterest);
 
   return (
-    <main className="text-ink relative flex flex-1 flex-col bg-white px-8 pt-[55px]">
-      <BackButton to="/signup" />
-      <h1 className="text-center text-[25px] leading-[30px] font-bold">
-        좋아하는 디저트를
-        <br />
-        선택해 주세요
-      </h1>
-      <p className="mt-[22px] text-center text-base">(복수 선택 가능)</p>
-      <ul className="mt-[31px] grid w-[339px] max-w-none grid-cols-2 gap-x-[11px] gap-y-[15px] self-center">
+    <AuthLayout>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex w-full">
+          <BackButton
+            to="/signup"
+            className="relative top-auto left-auto flex size-11 items-center justify-center"
+          />
+        </div>
+        <h1 className="text-center text-[25px] leading-[36.25px] font-bold tracking-[-0.5px]">
+          좋아하는 디저트를
+          <br />
+          선택해 주세요
+        </h1>
+        <p className="text-ink-sub text-[15px] leading-[22.5px]">
+          (복수 선택 가능)
+        </p>
+      </div>
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-[14px] pt-7">
         {DESSERTS.map(({ id, label, image }) => {
           const selected = interests.includes(id);
           return (
@@ -47,16 +57,16 @@ export default function InterestsPage() {
                 aria-pressed={selected}
                 onClick={() => toggleInterest(id)}
                 className={cn(
-                  'flex h-[106px] w-full cursor-pointer flex-col items-center rounded-[18px] pt-1 transition-colors',
-                  selected ? 'bg-mint-100' : 'bg-white',
+                  'flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-2xl border py-2 transition-colors',
+                  selected
+                    ? 'bg-mint-100 border-mint'
+                    : 'bg-field-bg border-field-line',
                 )}
               >
-                <span className="flex h-[60px] items-center justify-center">
+                <span className="flex h-16 w-full items-center justify-center">
                   <img src={image} alt="" className="block" />
                 </span>
-                <span className="mt-2.5 text-[15px] leading-6 font-bold">
-                  {label}
-                </span>
+                <span className="text-sm leading-6 font-bold">{label}</span>
               </button>
             </li>
           );
@@ -68,10 +78,10 @@ export default function InterestsPage() {
         size="xl"
         disabled={interests.length === 0}
         onClick={() => navigate('/signup/profile')}
-        className="mt-auto mb-10"
+        className="mt-7 h-[55px] rounded-[15px] pb-0 text-base"
       >
         다음
       </Button>
-    </main>
+    </AuthLayout>
   );
 }
