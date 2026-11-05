@@ -1,4 +1,5 @@
 import { api, type ApiResponse } from '@/lib/axios';
+import { toList } from './list';
 
 // TODO: 백엔드를 띄운 뒤 `npm run gen:api`로 생성되는 src/types/api.d.ts 타입으로 교체한다.
 // 아래 타입은 프론트엔드 연동 가이드 문서 기준이며, 가이드에 없는 필드는 선택(?)으로 두었다.
@@ -50,18 +51,6 @@ export const chatKeys = {
   rooms: ['chat', 'rooms'] as const,
   messages: (roomId: number) => ['chat', 'messages', roomId] as const,
 };
-
-/** 목록 응답이 배열이든, 페이지 객체로 감싸져 있든 배열만 꺼낸다 */
-function toList<T>(data: unknown, keys: string[]): T[] {
-  if (Array.isArray(data)) return data as T[];
-  if (data && typeof data === 'object') {
-    for (const key of keys) {
-      const value = (data as Record<string, unknown>)[key];
-      if (Array.isArray(value)) return value as T[];
-    }
-  }
-  return [];
-}
 
 export async function fetchChatRooms(): Promise<ChatRoom[]> {
   const { data } = await api.get<ApiResponse<unknown>>('/v1/chats/rooms');
