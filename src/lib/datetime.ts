@@ -16,6 +16,13 @@ export function formatClock(value: string): string {
   return `${period} ${hour12}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
+/** 24시간 형식의 시각(HH:mm)을 오전·오후 표시로 바꾼다. */
+export function formatTimeOfDay(value: string): string {
+  const [hour, minute] = value.split(':');
+  const hours = Number(hour);
+  return `${hours < 12 ? '오전' : '오후'} ${hours % 12 || 12}:${minute}`;
+}
+
 /** 방금 / 10분 전 / 1시간 전 / 어제 / 11월 3일 */
 export function formatRelativeTime(value: string, now = new Date()): string {
   const date = parseServerDate(value);

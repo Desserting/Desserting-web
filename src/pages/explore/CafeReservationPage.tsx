@@ -1,15 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { formatTimeOfDay } from '@/lib/datetime';
 import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
 import { findCafe } from './cafes';
@@ -21,7 +14,6 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const PREVIEW = {
   time: '16:00',
   guests: '2',
-  guestCounts: [1, 2, 3, 4, 5, 6],
 };
 const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   year: 'numeric',
@@ -49,9 +41,7 @@ export default function CafeReservationPage() {
   );
   const today = new Date().toDateString();
   const [time, setTime] = useState(savedReservation?.time ?? PREVIEW.time);
-  const [guests, setGuests] = useState(
-    savedReservation?.guests ?? PREVIEW.guests,
-  );
+  const guests = savedReservation?.guests ?? PREVIEW.guests;
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -109,11 +99,18 @@ export default function CafeReservationPage() {
 
           <div className="mt-[31px] min-h-[333px]">
             <div
-              className="grid h-[45px] grid-cols-7 items-center text-center text-[15px] leading-6 font-bold"
+              className="text-my-muted grid h-[45px] grid-cols-7 items-center text-center text-[15px] leading-6 font-bold"
               aria-hidden="true"
             >
-              {WEEKDAYS.map((day) => (
-                <span key={day}>{day}</span>
+              {WEEKDAYS.map((day, index) => (
+                <span
+                  key={day}
+                  className={
+                    index === 0 ? 'text-cafe-calendar-sunday' : undefined
+                  }
+                >
+                  {day}
+                </span>
               ))}
             </div>
             <div className="mt-2.5 grid grid-cols-7 gap-y-2.5">
@@ -134,15 +131,18 @@ export default function CafeReservationPage() {
                     aria-pressed={selected}
                     aria-current={isToday ? 'date' : undefined}
                     onClick={() => setDate(value)}
-                    className="focus-visible:outline-mint-deep flex h-[45px] cursor-pointer items-center justify-center rounded-full text-[15px] leading-6 focus-visible:outline-2 focus-visible:-outline-offset-2"
+                    className={cn(
+                      'focus-visible:outline-mint-deep flex h-[45px] cursor-pointer items-center justify-center rounded-full text-[15px] leading-6 focus-visible:outline-2 focus-visible:-outline-offset-2',
+                      index % 7 === 0 && 'text-cafe-calendar-sunday',
+                    )}
                   >
                     <span
                       className={cn(
-                        'inline-flex aspect-square w-full max-w-10 items-center justify-center rounded-full border',
+                        'inline-flex aspect-square w-full max-w-10 items-center justify-center rounded-full border-[1.5px]',
                         selected
-                          ? 'border-mint bg-mint font-bold'
+                          ? 'border-cafe-calendar-selected bg-cafe-calendar-selected text-ink font-bold'
                           : isToday
-                            ? 'border-mint-deep font-bold'
+                            ? 'border-mint-deep'
                             : 'hover:bg-mint-50 border-transparent',
                       )}
                     >
@@ -155,48 +155,25 @@ export default function CafeReservationPage() {
           </div>
         </section>
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="flex min-w-0 flex-col gap-2">
+        <div className="mt-3">
+          <div className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
             <label
               id="reservation-time-label"
               htmlFor="reservation-time"
-              className="text-base leading-6 font-bold"
+              className="text-sm leading-6 font-bold"
             >
               시간
             </label>
             <ReservationTimePicker value={time} onValueChange={setTime} />
           </div>
-
-          <div className="flex min-w-0 flex-col gap-2">
-            <label
-              id="guest-count-label"
-              htmlFor="guest-count"
-              className="text-base leading-6 font-bold"
-            >
-              인원
-            </label>
-            <Select value={guests} onValueChange={setGuests}>
-              <SelectTrigger
-                id="guest-count"
-                aria-labelledby="guest-count-label"
-                className="bg-cafe-field h-11 rounded-[10px] border-0 px-3 text-base"
-              >
-                <SelectValue />
-                <ChevronDown
-                  aria-hidden="true"
-                  className="text-ink-muted size-4 shrink-0"
-                  strokeWidth={1.8}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {PREVIEW.guestCounts.map((count) => (
-                  <SelectItem key={count} value={String(count)}>
-                    {count}명
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <p
+            aria-live="polite"
+            aria-atomic="true"
+            className="mt-2 text-center text-sm leading-6 font-bold"
+          >
+            {date.getMonth() + 1}월 {date.getDate()}일 {WEEKDAYS[date.getDay()]}
+            요일 · {formatTimeOfDay(time)}
+          </p>
         </div>
 
         <div className="mt-auto pt-8">

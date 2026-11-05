@@ -8,6 +8,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import TimeWheelColumn from './TimeWheelColumn';
+import { formatTimeOfDay } from '@/lib/datetime';
 
 const PERIODS = [
   { value: 'am', label: '오전' },
@@ -29,11 +30,6 @@ function toParts(value: string) {
     hour: String(Number(hour) % 12 || 12),
     minute,
   };
-}
-
-function formatTime(value: string) {
-  const { period, hour, minute } = toParts(value);
-  return `${period === 'am' ? '오전' : '오후'} ${hour}:${minute}`;
 }
 
 export default function ReservationTimePicker({
@@ -62,9 +58,9 @@ export default function ReservationTimePicker({
           type="button"
           id="reservation-time"
           aria-labelledby="reservation-time-label reservation-time-value"
-          className="bg-cafe-field focus-visible:ring-ring/50 flex h-11 w-full cursor-pointer items-center justify-between rounded-[10px] px-3 text-base outline-none focus-visible:ring-3"
+          className="bg-cafe-field focus-visible:ring-ring/50 flex h-[46px] w-full cursor-pointer items-center justify-between rounded-[14px] px-4 text-sm outline-none focus-visible:ring-3"
         >
-          <span id="reservation-time-value">{formatTime(value)}</span>
+          <span id="reservation-time-value">{formatTimeOfDay(value)}</span>
           <ChevronDown
             aria-hidden="true"
             className="text-ink-muted size-4 shrink-0"
