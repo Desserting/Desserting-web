@@ -24,7 +24,7 @@ const MINUTES = Array.from({ length: 60 }, (_, index) => ({
 }));
 
 function toParts(value: string) {
-  const [hour, minute] = value.split(':');
+  const [hour, minute] = (value || '12:00').split(':');
   return {
     period: Number(hour) < 12 ? 'am' : 'pm',
     hour: String(Number(hour) % 12 || 12),
@@ -35,9 +35,11 @@ function toParts(value: string) {
 export default function ReservationTimePicker({
   value,
   onValueChange,
+  disabled = false,
 }: {
   value: string;
   onValueChange: (value: string) => void;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(() => toParts(value));
@@ -56,11 +58,14 @@ export default function ReservationTimePicker({
       <SheetTrigger asChild>
         <button
           type="button"
+          disabled={disabled}
           id="reservation-time"
           aria-labelledby="reservation-time-label reservation-time-value"
           className="bg-cafe-field focus-visible:ring-ring/50 flex h-[46px] w-full cursor-pointer items-center justify-between rounded-[14px] px-4 text-sm outline-none focus-visible:ring-3"
         >
-          <span id="reservation-time-value">{formatTimeOfDay(value)}</span>
+          <span id="reservation-time-value">
+            {value ? formatTimeOfDay(value) : '시간 선택'}
+          </span>
           <ChevronDown
             aria-hidden="true"
             className="text-ink-muted size-4 shrink-0"

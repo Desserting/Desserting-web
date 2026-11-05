@@ -4,6 +4,7 @@ export type CafeNavigationState = {
   from?: string;
   /** 채팅에서 예약을 시작한 경우 돌아갈 채팅방 경로 */
   bookingFrom?: string;
+  reservationId?: number;
   reservation?: {
     date: number;
     time: string;

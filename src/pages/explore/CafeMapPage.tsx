@@ -1,11 +1,17 @@
 import BottomNav from '@/components/BottomNav';
+import { useQuery } from '@tanstack/react-query';
+import { cafeKeys, fetchCafeThemes } from '@/api/cafeBooking';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { CAFE_AREAS } from './cafeAreas';
+import CafeRequestState from './CafeRequestState';
 import CafePageHeader from './CafePageHeader';
 import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
 export default function CafeMapPage() {
+  const themes = useQuery({
+    queryKey: cafeKeys.themes,
+    queryFn: fetchCafeThemes,
+  });
   const bookingFrom = getBookingFrom(
     useLocation().state as CafeNavigationState | null,
   );
@@ -29,21 +35,33 @@ export default function CafeMapPage() {
         className="bg-surface min-h-0 flex-1 overflow-y-auto p-6"
       >
         <nav aria-label="카페 거리 선택" className="flex flex-wrap gap-2">
-          {CAFE_AREAS.map((area) => (
-            <Button
-              key={area.id}
-              asChild
-              variant="social"
-              className="h-11 rounded-xl px-4 text-sm font-bold"
-            >
-              <Link
-                to={`/explore/areas/${area.id}/cafes`}
-                state={{ bookingFrom }}
-              >
-                {area.name}
-              </Link>
-            </Button>
-          ))}
+          {themes.isPending || themes.isError ? (
+            <CafeRequestState
+              pending={themes.isPending}
+              error={themes.error}
+              onRetry={() => void themes.refetch()}
+            />
+          ) : themes.data.filter((area) => area.isActive).length === 0 ? (
+            <p className="text-my-muted text-sm">등록된 테마거리가 없어요.</p>
+          ) : (
+            themes.data
+              .filter((area) => area.isActive)
+              .map((area) => (
+                <Button
+                  key={area.id}
+                  asChild
+                  variant="social"
+                  className="h-11 rounded-xl px-4 text-sm font-bold"
+                >
+                  <Link
+                    to={`/explore/areas/${area.id}/cafes`}
+                    state={{ bookingFrom }}
+                  >
+                    {area.name}
+                  </Link>
+                </Button>
+              ))
+          )}
         </nav>
       </main>
 
