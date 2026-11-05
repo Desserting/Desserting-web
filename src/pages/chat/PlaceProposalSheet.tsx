@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CalendarDays, Loader2, MapPin, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type SVGProps } from 'react';
 import { requestAiRecommendation } from '@/api/chat';
 import { fetchStores, storeKeys } from '@/api/stores';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,22 @@ function isPastTime(date: Date, time: string) {
   return picked.getTime() < Date.now();
 }
 
+/** 시안의 '직접 고를래요' 아이콘. 안쪽·바깥쪽 두 겹의 원 */
+function ConcentricCircles(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      {...props}
+    >
+      <circle cx="12" cy="12" r="9.5" />
+      <circle cx="12" cy="12" r="5" />
+    </svg>
+  );
+}
+
 function MenuStep({
   loading,
   error,
@@ -100,7 +116,10 @@ function MenuStep({
           onClick={onAi}
           className="bg-mint-100 flex cursor-pointer items-start gap-3 rounded-2xl p-4 text-left"
         >
-          <Sparkles aria-hidden className="text-mint-deep mt-0.5 size-6" />
+          <Sparkles
+            aria-hidden
+            className="text-mint-deep mt-0.5 size-6 shrink-0"
+          />
           <span>
             <span className="block text-[17px] leading-6 font-bold">
               AI가 추천해 줘요
@@ -115,7 +134,10 @@ function MenuStep({
           onClick={onManual}
           className="border-field flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-left"
         >
-          <MapPin aria-hidden className="text-mint-deep mt-0.5 size-6" />
+          <ConcentricCircles
+            aria-hidden
+            className="text-mint-deep mt-0.5 size-6 shrink-0"
+          />
           <span>
             <span className="block text-[17px] leading-6 font-bold">
               직접 고를래요
@@ -362,10 +384,10 @@ export default function PlaceProposalSheet({
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
-        side="bottom"
+        side="top"
         showCloseButton={false}
         overlayClassName="bg-black/60 backdrop-blur-none"
-        className="text-ink mx-auto mb-4 max-h-[calc(100dvh-32px)] min-h-[300px] w-[calc(100%-32px)] max-w-[398px] gap-3 overflow-y-auto rounded-[28px] border-0 bg-white px-5 pt-6 pb-4"
+        className="text-ink mx-auto mt-14 max-h-[calc(100dvh-72px)] min-h-[300px] w-[calc(100%-32px)] max-w-[398px] gap-3 overflow-y-auto rounded-[28px] border-0 bg-white px-5 pt-6 pb-4 data-[side=top]:border-b-0"
       >
         {step === 'menu' ? (
           <>

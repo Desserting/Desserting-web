@@ -9,6 +9,7 @@ import {
   ArrowUp,
   CakeSlice,
   CalendarDays,
+  Clock,
   Loader2,
   LogOut,
   MessageCircle,
@@ -316,17 +317,17 @@ function ChatRoom({ roomId }: { roomId: number }) {
           onClick={() =>
             setProposal((prev) => ({ open: true, key: prev.key + 1 }))
           }
-          className="pointer-events-auto absolute top-3 right-6 flex h-11 w-fit cursor-pointer gap-2 rounded-full px-5 text-[15px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.12)] [&_svg:not([class*='size-'])]:size-5"
+          aria-label="카페 방문 제안하기"
+          className="bg-mint-100 text-mint-deep hover:bg-mint-100/80 border-mint-deep/30 pointer-events-auto absolute top-3 right-6 size-10 cursor-pointer rounded-full border p-0 [&_svg:not([class*='size-'])]:size-5"
         >
           <CalendarDays aria-hidden strokeWidth={1.8} />
-          카페 방문 제안하기
         </Button>
       </div>
 
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-6 pt-[68px] pb-4"
+        className="min-h-0 flex-1 overflow-y-auto px-6 pt-[64px] pb-[76px]"
       >
         {isFetchingNextPage && (
           <p
@@ -443,6 +444,24 @@ function ChatRoom({ roomId }: { roomId: number }) {
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* 입력창 바로 위에 떠 있는 예약 버튼. 버튼 말고는 배경이 투명해서 대화가 비쳐 보이고 클릭도 통과한다 */}
+      {/* TODO: 카페 방문 예약하기 동작은 아직 정해지지 않아 화면만 있다 */}
+      <div className="pointer-events-none relative z-10 h-0 px-6">
+        <Button
+          type="button"
+          variant="brand"
+          className="pointer-events-auto absolute bottom-4 left-6 flex h-11 w-fit cursor-pointer gap-2.5 rounded-[20px] py-0 pr-5 pl-1.5 text-[15px] font-normal shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
+        >
+          <span
+            aria-hidden
+            className="flex size-8 items-center justify-center rounded-full bg-white/60"
+          >
+            <Clock className="size-[18px]" strokeWidth={1.8} />
+          </span>
+          카페 방문 예약하기
+        </Button>
       </div>
 
       <footer className="shrink-0 px-6 pb-[max(24px,env(safe-area-inset-bottom))]">
