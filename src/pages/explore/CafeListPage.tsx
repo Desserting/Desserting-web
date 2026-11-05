@@ -132,7 +132,7 @@ export default function CafeListPage() {
                     <img
                       src={filter.image}
                       alt=""
-                      className="size-20 max-w-none shrink-0"
+                      className="size-12 max-w-none shrink-0"
                     />
                   ) : (
                     <LayoutGrid
