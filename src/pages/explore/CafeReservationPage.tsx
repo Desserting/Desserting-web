@@ -31,15 +31,20 @@ export default function CafeReservationPage() {
   const savedReservation = navigationState?.reservation;
   const backState =
     from?.startsWith('/') && !from.startsWith('//') ? { from } : undefined;
+  const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const [date, setDate] = useState(() => {
-    if (savedReservation) return new Date(savedReservation.date);
-    const now = new Date();
+    if (savedReservation) {
+      const savedDate = new Date(savedReservation.date);
+      if (savedDate >= currentMonth) return savedDate;
+    }
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   });
   const [month, setMonth] = useState(
     () => new Date(date.getFullYear(), date.getMonth(), 1),
   );
-  const today = new Date().toDateString();
+  const today = now.toDateString();
+  const canGoToPreviousMonth = month > currentMonth;
   const [time, setTime] = useState(savedReservation?.time ?? PREVIEW.time);
   const guests = savedReservation?.guests ?? PREVIEW.guests;
   const year = month.getFullYear();
@@ -49,8 +54,10 @@ export default function CafeReservationPage() {
 
   if (!cafe) return <CafeNotFound />;
 
-  const changeMonth = (offset: number) =>
-    setMonth(new Date(year, monthIndex + offset, 1));
+  const changeMonth = (offset: number) => {
+    const nextMonth = new Date(year, monthIndex + offset, 1);
+    if (nextMonth >= currentMonth) setMonth(nextMonth);
+  };
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const state = {
@@ -76,8 +83,9 @@ export default function CafeReservationPage() {
             <button
               type="button"
               aria-label="이전 달"
+              disabled={!canGoToPreviousMonth}
               onClick={() => changeMonth(-1)}
-              className="focus-visible:outline-mint-deep flex size-11 cursor-pointer items-center rounded-full pl-[6px] text-[28px] leading-none focus-visible:outline-2"
+              className="focus-visible:outline-mint-deep flex size-11 cursor-pointer items-center rounded-full pl-[6px] text-[28px] leading-none focus-visible:outline-2 disabled:cursor-default disabled:opacity-30"
             >
               <span aria-hidden="true">‹</span>
             </button>
@@ -156,15 +164,17 @@ export default function CafeReservationPage() {
         </section>
 
         <div className="mt-3">
-          <div className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
+          <div className="mx-3 grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
             <label
               id="reservation-time-label"
               htmlFor="reservation-time"
-              className="text-sm leading-6 font-bold"
+              className="text-lg leading-6 font-bold"
             >
               시간
             </label>
-            <ReservationTimePicker value={time} onValueChange={setTime} />
+            <div className="min-w-0">
+              <ReservationTimePicker value={time} onValueChange={setTime} />
+            </div>
           </div>
           <p
             aria-live="polite"
