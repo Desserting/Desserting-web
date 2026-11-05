@@ -7,11 +7,14 @@ export type ChatMessageType = 'TEXT' | 'IMAGE' | 'PLACE_PROPOSAL' | 'SYSTEM';
 
 export interface ChatRoom {
   roomId: number;
+  otherUserId?: number;
   otherUserNickname: string;
   otherUserAvatarUrl?: string | null;
   lastMessagePreview?: string | null;
   lastMessageAt?: string | null;
   unreadCount: number;
+  /** 상대가 방을 나갔으면 true. 이때는 메시지를 보낼 수 없다 */
+  otherUserLeft?: boolean;
 }
 
 export interface ChatMessage {
@@ -26,10 +29,17 @@ export interface ChatMessage {
   createdAt: string;
 }
 
-/** 받은 PLACE_PROPOSAL의 metadata. AI 추천 카드는 날짜·시간 없이(일시 미정) 올 수 있다 */
+/**
+ * 받은 PLACE_PROPOSAL의 metadata.
+ * 직접 제안은 proposedDate·proposedTime이 있고, AI 추천 카드는 날짜·시간 없이(일시 미정)
+ * storeAddress·recommendedMenus·reason을 담아 온다.
+ */
 export interface ReceivedProposal {
   storeId?: number;
   storeName: string;
+  storeAddress?: string;
+  recommendedMenus?: string[];
+  reason?: string;
   proposedDate?: string;
   proposedTime?: string;
 }
@@ -74,6 +84,11 @@ export async function leaveChatRoom(roomId: number): Promise<void> {
   await api.post(`/v1/chats/rooms/${roomId}/leave`);
 }
 
+/** 방을 보는 중 실시간으로 받은 메시지를 읽음 처리한다. 첫 페이지 조회는 서버가 자동으로 읽음 처리한다 */
+export async function markChatRoomRead(roomId: number): Promise<void> {
+  await api.post(`/v1/chats/rooms/${roomId}/read`);
+}
+
 /** PLACE_PROPOSAL metadata가 객체 또는 JSON 문자열로 올 수 있어 둘 다 처리한다 */
 export function parseProposal(metadata: unknown): ReceivedProposal | null {
   let value = metadata;
@@ -85,15 +100,32 @@ export function parseProposal(metadata: unknown): ReceivedProposal | null {
     }
   }
   if (!value || typeof value !== 'object') return null;
-  const { storeId, storeName, proposedDate, proposedTime } = value as Record<
-    string,
-    unknown
-  >;
+  const {
+    storeId,
+    storeName,
+    storeAddress,
+    recommendedMenus,
+    reason,
+    proposedDate,
+    proposedTime,
+  } = value as Record<string, unknown>;
   if (typeof storeName !== 'string') return null;
+
+  const text = (field: unknown) =>
+    typeof field === 'string' && field ? field : undefined;
+  const menus = Array.isArray(recommendedMenus)
+    ? recommendedMenus.filter(
+        (menu): menu is string => typeof menu === 'string',
+      )
+    : [];
+
   return {
     storeId: storeId === undefined ? undefined : Number(storeId),
     storeName,
-    proposedDate: typeof proposedDate === 'string' ? proposedDate : undefined,
-    proposedTime: typeof proposedTime === 'string' ? proposedTime : undefined,
+    storeAddress: text(storeAddress),
+    recommendedMenus: menus.length > 0 ? menus : undefined,
+    reason: text(reason),
+    proposedDate: text(proposedDate),
+    proposedTime: text(proposedTime),
   };
 }

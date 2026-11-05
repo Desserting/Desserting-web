@@ -31,9 +31,11 @@ import {
   fetchChatMessages,
   fetchChatRooms,
   leaveChatRoom,
+  markChatRoomRead,
   type ChatMessage,
   type ChatMessageType,
 } from '@/api/chat';
+import { fetchMe, userKeys } from '@/api/users';
 import BackButton from '@/components/BackButton';
 import Bubble from '@/components/Bubble';
 import { Button } from '@/components/ui/button';
@@ -98,6 +100,10 @@ function ChatRoom({ roomId }: { roomId: number }) {
   const rooms = useQuery({ queryKey: chatKeys.rooms, queryFn: fetchChatRooms });
   const room = rooms.data?.find((item) => item.roomId === roomId);
   const otherNickname = room?.otherUserNickname;
+  // 상대가 방을 나가면 서버가 메시지를 받지 않으므로 입력을 막는다
+  const otherLeft = room?.otherUserLeft === true;
+  const me = useQuery({ queryKey: userKeys.me, queryFn: fetchMe });
+  const myId = me.data?.userId;
 
   const history = useInfiniteQuery({
     queryKey: chatKeys.messages(roomId),
@@ -117,16 +123,20 @@ function ChatRoom({ roomId }: { roomId: number }) {
     [history.data],
   );
 
+  // 내 userId로 가려내고, 아직 모를 때만 상대 닉네임과 비교한다
   const isMine = useCallback(
     (message: ChatMessage) =>
-      otherNickname !== undefined && message.senderNickname !== otherNickname,
-    [otherNickname],
+      myId !== undefined
+        ? message.senderId === myId
+        : otherNickname !== undefined &&
+          message.senderNickname !== otherNickname,
+    [myId, otherNickname],
   );
 
-  const otherNicknameRef = useRef(otherNickname);
+  const isMineRef = useRef(isMine);
   const timersRef = useRef(new Set<number>());
   useEffect(() => {
-    otherNicknameRef.current = otherNickname;
+    isMineRef.current = isMine;
   });
   useEffect(() => {
     const timers = timersRef.current;
@@ -148,19 +158,22 @@ function ChatRoom({ roomId }: { roomId: number }) {
         },
       );
 
-      if (message.senderNickname === otherNicknameRef.current) {
-        setLiveIds((ids) => new Set(ids).add(message.messageId));
-      }
-
-      // 돌아온 내 메시지는 대기 중이던 같은 내용의 메시지와 맞바꾼다
-      // (대기 중일 때 이미 등장 애니메이션을 보여줬으므로 다시 튀어나오지 않게 한다)
-      if (message.senderNickname !== otherNicknameRef.current) {
+      if (message.messageType === 'SYSTEM') {
+        // 상대가 나갔다는 안내 등은 방 상태(otherUserLeft)도 바꾸므로 목록을 다시 불러온다
+        void queryClient.invalidateQueries({ queryKey: chatKeys.rooms });
+      } else if (isMineRef.current(message)) {
+        // 돌아온 내 메시지는 대기 중이던 같은 내용의 메시지와 맞바꾼다
+        // (대기 중일 때 이미 등장 애니메이션을 보여줬으므로 다시 튀어나오지 않게 한다)
         setPending((list) => {
           const index = list.findIndex(
             (item) => item.content === message.content,
           );
           return index === -1 ? list : list.filter((_, i) => i !== index);
         });
+      } else {
+        setLiveIds((ids) => new Set(ids).add(message.messageId));
+        // 방을 보는 중에 받은 상대 메시지는 바로 읽음 처리한다. 실패해도 대화에는 영향이 없다
+        markChatRoomRead(roomId).catch(() => undefined);
       }
     },
     [queryClient, roomId],
@@ -208,7 +221,7 @@ function ChatRoom({ roomId }: { roomId: number }) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const content = text.trim();
-    if (!content || !ensureConnected()) return;
+    if (!content || otherLeft || !ensureConnected()) return;
     setNotice(null);
     if (sendMessage(content)) setText('');
   };
@@ -429,16 +442,24 @@ function ChatRoom({ roomId }: { roomId: number }) {
         )}
         <form
           onSubmit={handleSubmit}
-          className="border-field focus-within:border-mint-deep flex h-[60px] items-center gap-2 rounded-full border pr-3 pl-[18px] transition-colors"
+          className={cn(
+            'border-field focus-within:border-mint-deep flex h-[60px] items-center gap-2 rounded-full border pr-3 pl-[18px] transition-colors',
+            otherLeft && 'bg-surface',
+          )}
         >
           <input
             value={text}
             onChange={(event) => setText(event.target.value)}
+            disabled={otherLeft}
             aria-label="메시지 입력"
-            placeholder="메시지 입력..."
+            placeholder={
+              otherLeft
+                ? '상대가 채팅방을 나가 메시지를 보낼 수 없어요'
+                : '메시지 입력...'
+            }
             className="placeholder:text-my-muted min-w-0 flex-1 bg-transparent text-[17px] outline-none"
           />
-          {text.trim() ? (
+          {text.trim() && !otherLeft ? (
             <button
               type="submit"
               aria-label="보내기"
