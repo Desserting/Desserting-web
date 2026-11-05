@@ -1,27 +1,28 @@
 import { useNavigate } from 'react-router-dom';
-import bakedGoods from '@/assets/signup/dessert-baked-goods.svg';
-import bakery from '@/assets/signup/dessert-bakery.svg';
-import cake from '@/assets/signup/dessert-cake.svg';
-import coffee from '@/assets/signup/dessert-coffee.svg';
-import shavedIce from '@/assets/signup/dessert-shaved-ice-icecream.svg';
-import tartPie from '@/assets/signup/dessert-tart-pie.svg';
-import tea from '@/assets/signup/dessert-tea.svg';
-import traditional from '@/assets/signup/dessert-traditional.svg';
 import { AuthLayout } from '@/components/AuthLayout';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSignupStore } from '@/stores/signupStore';
 
+// 이미지는 public/avatars 의 PNG. 매칭·채팅의 DessertAvatar 와 같은 파일을 쓴다
 const DESSERTS = [
-  { id: 'cake', label: '케이크', image: cake },
-  { id: 'bakery', label: '베이커리', image: bakery },
-  { id: 'baked-goods', label: '구움과자', image: bakedGoods },
-  { id: 'tart-pie', label: '타르트&파이', image: tartPie },
-  { id: 'shaved-ice-icecream', label: '빙수&아이스크림', image: shavedIce },
-  { id: 'coffee', label: '커피', image: coffee },
-  { id: 'tea', label: '차&논커피', image: tea },
-  { id: 'traditional', label: '전통 디저트', image: traditional },
+  { id: 'cake', label: '케이크', image: '/avatars/cake.png' },
+  { id: 'bakery', label: '베이커리', image: '/avatars/bakery.png' },
+  { id: 'baked-goods', label: '구움과자', image: '/avatars/cookie.png' },
+  { id: 'tart-pie', label: '타르트&파이', image: '/avatars/tart.png' },
+  {
+    id: 'shaved-ice-icecream',
+    label: '빙수&아이스크림',
+    image: '/avatars/bingsu.png',
+  },
+  { id: 'coffee', label: '커피', image: '/avatars/coffee.png' },
+  { id: 'tea', label: '차&논커피', image: '/avatars/tea.png' },
+  {
+    id: 'traditional',
+    label: '전통 디저트',
+    image: '/avatars/traditional.png',
+  },
 ];
 
 export default function InterestsPage() {
@@ -64,7 +65,12 @@ export default function InterestsPage() {
                 )}
               >
                 <span className="flex h-16 w-full items-center justify-center">
-                  <img src={image} alt="" className="block" />
+                  {/* PNG 는 512px 정사각 캔버스(아이콘 60%)라 Figma 크기(77x60)에 맞춰 키운다 */}
+                  <img
+                    src={image}
+                    alt=""
+                    className="block size-[128px] max-w-none shrink-0"
+                  />
                 </span>
                 <span className="text-sm leading-6 font-bold">{label}</span>
               </button>
