@@ -17,15 +17,39 @@ function ProposalCard({ message }: { message: ChatMessage }) {
     <div className="flex flex-col gap-2.5">
       {proposal && (
         <div className="text-ink rounded-2xl bg-white px-3.5 py-3 font-normal">
-          <p className="text-mint-deep flex items-center gap-1.5 text-[13px] font-bold">
-            <CalendarDays aria-hidden className="size-4" />
-            디저트 카페 만남 제안
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-mint-deep flex items-center gap-1.5 text-[13px] font-bold">
+              <CalendarDays aria-hidden className="size-4" />
+              디저트 카페 만남 제안
+            </p>
+            {/* 서버 상태가 아니라 화면 표시용 뱃지다 */}
+            <span className="bg-mint-100 text-mint-deep shrink-0 rounded-full px-2 py-0.5 text-[12px] font-bold">
+              제안됨
+            </span>
+          </div>
           <p className="mt-1.5 text-[17px] leading-6 font-bold">
             {proposal.storeName}
           </p>
-          <p className="text-ink-muted mt-0.5 text-[14px]">
-            약속 일시 · <span className="text-ink font-bold">{schedule}</span>
+          {proposal.storeAddress && (
+            <p className="text-ink-muted mt-0.5 text-[14px]">
+              {proposal.storeAddress}
+            </p>
+          )}
+          {proposal.recommendedMenus && (
+            <p className="mt-2 text-[14px] leading-5">
+              <span className="text-ink-muted">추천 메뉴 · </span>
+              <span className="font-bold">
+                {proposal.recommendedMenus.join(', ')}
+              </span>
+            </p>
+          )}
+          {proposal.reason && (
+            <p className="text-ink-muted mt-1 text-[14px] leading-5 break-words">
+              {proposal.reason}
+            </p>
+          )}
+          <p className="bg-mint-50 mt-2.5 rounded-lg px-2.5 py-1.5 text-[14px]">
+            약속 일시 · <span className="font-bold">{schedule}</span>
           </p>
         </div>
       )}
