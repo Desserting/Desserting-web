@@ -20,6 +20,7 @@ import CandidateProfilePage from '@/pages/profile/CandidateProfilePage';
 import MatchingCardsPage from '@/pages/matching/MatchingCardsPage';
 import MatchingSettingsPage from '@/pages/matching/MatchingSettingsPage';
 import ProfileExplorePage from '@/pages/profile/ProfileExplorePage';
+import LoginPage from '@/pages/login/LoginPage';
 import InterestsPage from '@/pages/signup/InterestsPage';
 import ProfilePage from '@/pages/signup/ProfilePage';
 import SignupPage from '@/pages/signup/SignupPage';
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/my/premium" element={<PremiumPassPage />} />
         <Route path="/my/hearts" element={<HeartPurchasePage />} />
         <Route path="/my/profile" element={<ProfilePage mode="edit" />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/signup/interests" element={<InterestsPage />} />
         <Route path="/signup/profile" element={<ProfilePage />} />
