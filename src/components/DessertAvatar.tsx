@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import fallbackAvatar from '@/assets/signup/avatar-cake.svg';
 import { cn } from '@/lib/utils';
+
+/** public/avatars 의 기본 케이크 PNG. 백엔드가 내려주는 아바타 주소와 같은 파일이다 */
+const FALLBACK_AVATAR = '/avatars/cake.png';
 
 /** 디저트 아바타. 주소가 없거나 불러오지 못하면 기본 케이크 아바타를 보여준다 */
 export default function DessertAvatar({
@@ -21,12 +23,10 @@ export default function DessertAvatar({
       )}
     >
       <img
-        src={useFallback ? fallbackAvatar : src}
+        src={useFallback ? FALLBACK_AVATAR : src}
         alt=""
         onError={() => setFailed(true)}
-        className={
-          useFallback ? 'size-3/5 object-contain' : 'size-full object-cover'
-        }
+        className="size-full object-cover"
       />
     </span>
   );
