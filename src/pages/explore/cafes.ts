@@ -32,7 +32,7 @@ const CAFES: Cafe[] = [
     photoAlt: '카페 올리브의 햇살이 들어오는 창가 좌석과 디저트 진열대',
     listPhoto: cakePhoto,
     areaId: 'apsan',
-    filters: ['dessert', 'cafe'],
+    filters: ['CAKE', 'COFFEE'],
     distanceKm: 0.8,
   },
   {
@@ -43,7 +43,7 @@ const CAFES: Cafe[] = [
     photoAlt: '접시에 담긴 크루아상',
     listPhoto: bakeRoomPhoto,
     areaId: 'apsan',
-    filters: ['dessert'],
+    filters: ['BAKERY'],
     distanceKm: 1.2,
     roundedThumbnail: true,
   },
@@ -55,7 +55,7 @@ const CAFES: Cafe[] = [
     photoAlt: '딸기가 올라간 생크림 케이크',
     listPhoto: cakePhoto,
     areaId: 'apsan',
-    filters: ['dessert'],
+    filters: ['CAKE'],
     distanceKm: 1.5,
   },
 ];

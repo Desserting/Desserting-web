@@ -1,4 +1,4 @@
-import { Heart } from 'lucide-react';
+import { Heart, LayoutGrid } from 'lucide-react';
 import {
   Link,
   useLocation,
@@ -20,14 +20,14 @@ function CafeCard({ cafe, from }: { cafe: Cafe; from: string }) {
   const toggleLike = useCafeStore((state) => state.toggleLike);
 
   return (
-    <li className="border-cafe-list-border relative h-28 rounded-[15px] border bg-white">
+    <li className="border-cafe-list-border relative h-[88px] rounded-[15px] border bg-white">
       <Link
         to={`/explore/cafes/${cafe.id}`}
         state={{ from }}
         aria-label={`${cafe.name} 상세 보기`}
-        className="focus-visible:outline-mint-deep flex h-full items-start gap-[14px] rounded-[15px] py-[13px] pr-11 pl-[9px] focus-visible:outline-2 focus-visible:-outline-offset-2"
+        className="focus-visible:outline-mint-deep flex h-full items-center gap-[14px] rounded-[15px] py-2.5 pr-10 pl-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
-        <div className="bg-cafe-bakery size-[83px] shrink-0 overflow-hidden rounded-2xl">
+        <div className="bg-cafe-bakery size-[66px] shrink-0 overflow-hidden rounded-2xl">
           <img
             src={cafe.listPhoto}
             alt={`${cafe.name} 대표 메뉴`}
@@ -37,7 +37,7 @@ function CafeCard({ cafe, from }: { cafe: Cafe; from: string }) {
             )}
           />
         </div>
-        <div className="min-w-0 flex-1 pt-2.5">
+        <div className="min-w-0 flex-1">
           <h2 className="truncate text-[19px] leading-7 font-bold">
             {cafe.name}
           </h2>
@@ -51,7 +51,7 @@ function CafeCard({ cafe, from }: { cafe: Cafe; from: string }) {
         aria-label={`${cafe.name} ${liked ? '좋아요 취소' : '좋아요'}`}
         aria-pressed={liked}
         onClick={() => toggleLike(cafe.id)}
-        className="focus-visible:outline-mint-deep absolute top-[27px] right-0.5 flex size-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2"
+        className="focus-visible:outline-mint-deep absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2"
       >
         {liked ? (
           <Heart
@@ -92,10 +92,13 @@ export default function CafeListPage() {
     <div className="text-ink flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <main className="flex min-h-0 flex-1 flex-col px-6 pt-[clamp(32px,8dvh,68px)]">
         <CafePageHeader
-          title={`${area.name} (${cafes.length})`}
+          title={`${area.name} (${cafes.length}) · 선택됨`}
           backTo="/explore"
-          titleClassName="px-8 text-[21px]"
+          titleClassName="w-full truncate pl-9 text-[20px] tracking-[-0.5px]"
         />
+        <p className="bg-premium-emblem text-mint-deep flex h-[21px] shrink-0 items-center rounded-full px-2.5 text-[10px] leading-[15px]">
+          지도에서 선택한 테마거리의 제휴매장 목록
+        </p>
         <Tabs
           value={selectedFilter}
           onValueChange={(value) =>
@@ -103,19 +106,48 @@ export default function CafeListPage() {
               replace: true,
             })
           }
-          className="mt-[23px] min-h-0 flex-1 gap-0"
+          className="mt-[9px] min-h-0 flex-1 [scrollbar-width:none] gap-0 overflow-y-auto [&::-webkit-scrollbar]:hidden"
         >
+          <h2
+            id="cafe-category-label"
+            className="shrink-0 text-xs leading-[18px] font-bold"
+          >
+            디저트 카테고리
+          </h2>
           <TabsList
-            aria-label="카페 카테고리"
-            className="grid w-full shrink-0 grid-cols-4 gap-2.5 bg-transparent p-0 group-data-horizontal/tabs:h-10"
+            aria-labelledby="cafe-category-label"
+            className="mt-[5px] grid w-full shrink-0 grid-cols-3 gap-1.5 bg-transparent p-0 group-data-horizontal/tabs:h-auto"
           >
             {CAFE_FILTERS.map((filter) => (
               <TabsTrigger
                 key={filter.id}
                 value={filter.id}
-                className="bg-chip text-ink data-[state=active]:bg-cafe-list-selected h-10 cursor-pointer rounded-xl text-sm font-bold shadow-none after:hidden"
+                className="bg-surface text-ink data-[state=active]:bg-premium-emblem flex h-[78px] cursor-pointer flex-col gap-1 rounded-[14px] border-0 p-1.5 text-[10px] leading-[15px] font-bold shadow-none after:hidden"
               >
-                {filter.label}
+                <span
+                  aria-hidden="true"
+                  className="flex h-[42px] shrink-0 items-center justify-center"
+                >
+                  {filter.image ? (
+                    <img
+                      src={filter.image}
+                      alt=""
+                      className="size-20 max-w-none shrink-0"
+                    />
+                  ) : (
+                    <LayoutGrid
+                      className="text-mint-deep !size-8 fill-current"
+                      strokeWidth={0}
+                    />
+                  )}
+                </span>
+                <span
+                  className={
+                    filter.id === 'all' ? 'text-sm leading-5' : undefined
+                  }
+                >
+                  {filter.label}
+                </span>
               </TabsTrigger>
             ))}
           </TabsList>
@@ -128,8 +160,14 @@ export default function CafeListPage() {
               <TabsContent
                 key={filter.id}
                 value={filter.id}
-                className="mt-8 min-h-0 [scrollbar-width:none] overflow-y-auto pb-6 [&::-webkit-scrollbar]:hidden"
+                className="mt-3 flex-none pb-6"
               >
+                <h2
+                  aria-live="polite"
+                  className="mb-[5px] text-sm leading-5 font-bold"
+                >
+                  제휴매장 {items.length}곳
+                </h2>
                 {items.length > 0 ? (
                   <ul
                     aria-label={`${area.name} ${filter.label} 카페 목록`}
