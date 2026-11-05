@@ -1,14 +1,27 @@
 import { useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
+import {
+  cafeKeys,
+  fetchCafeDetail,
+  fetchCafeReservation,
+  positiveId,
+} from '@/api/cafeBooking';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
-import { findCafe } from './cafes';
+import CafeRequestState from './CafeRequestState';
+import CafeImage from './CafeImage';
 import type { CafeNavigationState } from './cafeNavigation';
 import {
   formatMenuPrice,
-  getCafeMenu,
+  toCafeMenu,
   getMenuQuantities,
   getMenuTotals,
   MENU_CATEGORIES,
@@ -27,26 +40,17 @@ function MenuItem({
 }) {
   return (
     <li className="grid min-h-[108px] grid-cols-[82px_minmax(0,1fr)] gap-4">
-      {item.imageType === 'photo' ? (
-        <img
-          src={item.image}
-          alt={item.name}
-          width={82}
-          height={88}
-          className="h-[88px] w-[82px] rounded-xl object-cover"
-        />
-      ) : (
-        <div className="bg-cafe-menu-image relative h-[88px] w-[82px] overflow-hidden rounded-xl">
-          <img
-            src={item.image}
-            alt={item.name}
-            className="absolute top-2.5 left-0"
-          />
-        </div>
-      )}
+      <CafeImage
+        src={item.image}
+        alt={item.name}
+        className="h-[88px] w-[82px] rounded-xl object-cover"
+      />
       <div className="min-w-0 pt-[3px]">
         <h2 className="text-lg leading-[27px] font-bold break-words">
           {item.name}
+          {item.soldOut && (
+            <span className="text-my-muted ml-2 text-xs">품절</span>
+          )}
         </h2>
         <p className="mt-[5px] text-base leading-6">
           {formatMenuPrice(item.price)}
@@ -59,7 +63,7 @@ function MenuItem({
           <button
             type="button"
             aria-label={`${item.name} 수량 줄이기`}
-            disabled={quantity === 0}
+            disabled={quantity === 0 || item.soldOut}
             onClick={() => onQuantityChange(Math.max(0, quantity - 1))}
             className="focus-visible:outline-mint-deep h-full cursor-pointer rounded-[9px] focus-visible:outline-2 disabled:cursor-default disabled:opacity-30"
           >
@@ -71,6 +75,7 @@ function MenuItem({
           <button
             type="button"
             aria-label={`${item.name} 수량 늘리기`}
+            disabled={item.soldOut || quantity >= 20}
             onClick={() => onQuantityChange(quantity + 1)}
             className="focus-visible:outline-mint-deep h-full cursor-pointer rounded-[9px] focus-visible:outline-2"
           >
@@ -84,22 +89,39 @@ function MenuItem({
 
 export default function CafeMenuPage() {
   const { cafeId } = useParams();
-  const cafe = findCafe(cafeId);
-  const menu = getCafeMenu(cafeId ?? '');
+  const storeId = positiveId(cafeId);
+  const detail = useQuery({
+    queryKey: cafeKeys.detail(storeId),
+    queryFn: () => fetchCafeDetail(storeId),
+    enabled: !!storeId,
+  });
+  const cafe = detail.data;
+  const menu = toCafeMenu(cafe?.menus ?? []);
   const location = useLocation();
   const navigate = useNavigate();
   const navigationState = location.state as CafeNavigationState | null;
+  const [searchParams] = useSearchParams();
+  const reservationId = positiveId(
+    searchParams.get('reservationId') ?? navigationState?.reservationId,
+  );
+  const currentReservation = useQuery({
+    queryKey: cafeKeys.reservation(reservationId),
+    queryFn: () => fetchCafeReservation(reservationId),
+    enabled: !!reservationId,
+  });
   const from = navigationState?.from;
   const reservation = navigationState?.reservation;
   const backState = {
+    reservationId: reservationId || undefined,
     bookingFrom: navigationState?.bookingFrom,
     ...(from?.startsWith('/') && !from.startsWith('//') ? { from } : {}),
     ...(reservation ? { reservation } : {}),
     ...(navigationState?.order ? { order: navigationState.order } : {}),
   } satisfies CafeNavigationState;
-  const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    getMenuQuantities(menu, navigationState?.order?.quantities),
+  const [draftQuantities, setQuantities] = useState<Record<string, number>>(
+    navigationState?.order?.quantities ?? {},
   );
+  const quantities = getMenuQuantities(menu, draftQuantities);
   const [category, setCategory] = useState<MenuCategory>(
     navigationState?.order?.category ?? 'dessert',
   );
@@ -108,15 +130,60 @@ export default function CafeMenuPage() {
     quantities,
   );
 
-  if (!cafe) return <CafeNotFound />;
+  if (!storeId) return <CafeNotFound />;
+  if (
+    detail.isPending ||
+    detail.isError ||
+    (reservationId &&
+      (currentReservation.isPending || currentReservation.isError))
+  )
+    return (
+      <main className="min-h-dvh px-6 pt-16">
+        <CafePageHeader
+          title="메뉴 선택"
+          backTo={`/explore/cafes/${storeId}`}
+          backState={backState}
+        />
+        <CafeRequestState
+          pending={
+            detail.isPending ||
+            (!!reservationId && currentReservation.isPending)
+          }
+          error={detail.error ?? currentReservation.error}
+          onRetry={() => {
+            void detail.refetch();
+            if (reservationId) void currentReservation.refetch();
+          }}
+        />
+      </main>
+    );
+  if (
+    !cafe ||
+    (currentReservation.data && currentReservation.data.storeId !== storeId)
+  )
+    return <CafeNotFound />;
+  const blocked =
+    currentReservation.data?.status === 'CANCELLED' ||
+    currentReservation.data?.status === 'COMPLETED';
+  const itemCount = Object.values(quantities).filter(
+    (count) => count > 0,
+  ).length;
 
   const goToPayment = () => {
     const state = {
       ...backState,
       order: { quantities, category },
     } satisfies CafeNavigationState;
-    navigate(location.pathname, { replace: true, state });
-    navigate(`/explore/cafes/${cafe.id}/payment`, { state });
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state,
+    });
+    navigate(
+      reservationId
+        ? `/explore/cafes/${cafe.storeId}/payment?reservationId=${reservationId}`
+        : `/explore/cafes/${cafe.storeId}/reservation`,
+      { state },
+    );
   };
 
   return (
@@ -124,9 +191,9 @@ export default function CafeMenuPage() {
       <CafePageHeader
         title="메뉴 선택"
         backTo={
-          reservation
-            ? `/explore/cafes/${cafe.id}/reservation`
-            : `/explore/cafes/${cafe.id}`
+          reservationId
+            ? `/explore/cafes/${cafe.storeId}/reservation?reservationId=${reservationId}`
+            : `/explore/cafes/${cafe.storeId}`
         }
         backState={{ ...backState, order: { quantities, category } }}
       />
@@ -201,12 +268,22 @@ export default function CafeMenuPage() {
           type="button"
           variant="brand"
           size="xl"
-          disabled={totalCount === 0}
+          disabled={totalCount === 0 || itemCount > 20 || blocked}
           onClick={goToPayment}
           className="mt-6 cursor-pointer rounded-[13px] pb-0 text-lg"
         >
-          주문하기
+          {reservationId ? '주문하기' : '날짜·시간 선택'}
         </Button>
+        {itemCount > 20 && (
+          <p role="alert" className="text-destructive mt-2 text-sm">
+            메뉴는 한 번에 20종류까지 주문할 수 있어요.
+          </p>
+        )}
+        {blocked && (
+          <p role="alert" className="text-destructive mt-2 text-sm">
+            취소되었거나 완료된 예약은 주문할 수 없어요.
+          </p>
+        )}
       </div>
     </main>
   );

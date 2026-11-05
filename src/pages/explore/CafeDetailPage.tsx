@@ -1,23 +1,50 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { cafeKeys, fetchCafeDetail, positiveId } from '@/api/cafeBooking';
+import { dessertLabel } from '@/lib/dessert';
 import { Button } from '@/components/ui/button';
-import { findCafe } from './cafes';
+import CafeImage from './CafeImage';
+import CafeRequestState from './CafeRequestState';
 import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
 import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
 export default function CafeDetailPage() {
   const { cafeId } = useParams();
+  const storeId = positiveId(cafeId);
+  const detail = useQuery({
+    queryKey: cafeKeys.detail(storeId),
+    queryFn: () => fetchCafeDetail(storeId),
+    enabled: !!storeId,
+  });
   const location = useLocation();
   const navigationState = location.state as CafeNavigationState | null;
   const from = navigationState?.from;
   const bookingFrom = getBookingFrom(navigationState);
   const backTo =
     from?.startsWith('/') && !from.startsWith('//') ? from : '/home';
-  const cafe = findCafe(cafeId);
+  const cafe = detail.data;
 
-  if (!cafe) {
+  if (!storeId) {
     return <CafeNotFound backTo={backTo} />;
   }
+
+  if (detail.isPending || detail.isError)
+    return (
+      <main className="text-ink min-h-dvh px-6 pt-16">
+        <CafePageHeader
+          title="매장 상세"
+          backTo={backTo}
+          backState={{ bookingFrom }}
+        />
+        <CafeRequestState
+          pending={detail.isPending}
+          error={detail.error}
+          onRetry={() => void detail.refetch()}
+        />
+      </main>
+    );
+  if (!cafe) return <CafeNotFound backTo={backTo} />;
 
   return (
     <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
@@ -28,9 +55,9 @@ export default function CafeDetailPage() {
       />
 
       <section aria-labelledby="cafe-name" className="mt-[33px]">
-        <img
-          src={cafe.photo}
-          alt={cafe.photoAlt}
+        <CafeImage
+          src={cafe.coverImageUrl}
+          alt={`${cafe.name} 매장`}
           className="aspect-[345/245] w-full rounded-[17px] object-cover"
         />
         <h2
@@ -39,31 +66,24 @@ export default function CafeDetailPage() {
         >
           {cafe.name}
         </h2>
-        <p className="mt-1.5 text-base leading-6">{cafe.category}</p>
-        <p
-          className="mt-[25px] text-lg leading-[27px] font-bold"
-          aria-label={
-            cafe.rating !== undefined && cafe.reviewCount !== undefined
-              ? `평점 5점 만점에 ${cafe.rating}점, 리뷰 ${cafe.reviewCount.toLocaleString('ko-KR')}개`
-              : undefined
-          }
-        >
-          <span
-            aria-hidden={
-              cafe.rating !== undefined && cafe.reviewCount !== undefined
-                ? true
-                : undefined
-            }
-          >
-            {cafe.rating !== undefined && cafe.reviewCount !== undefined
-              ? `★ ${cafe.rating.toFixed(1)} (${cafe.reviewCount.toLocaleString('ko-KR')})`
-              : '평점 정보를 준비 중이에요.'}
-          </span>
+        <p className="mt-1.5 text-base leading-6">
+          {cafe.dessertTypes.map(dessertLabel).join(' · ')}
         </p>
         <p className="mt-[13px] text-base leading-6">
           <span aria-hidden="true">⌖ </span>
           {cafe.address ?? '주소 정보를 준비 중이에요.'}
         </p>
+        {cafe.businessHours && (
+          <p className="mt-3 text-base">영업시간 · {cafe.businessHours}</p>
+        )}
+        {cafe.contact && (
+          <p className="mt-3 text-base">전화 · {cafe.contact}</p>
+        )}
+        {cafe.partnerDiscountNotice && (
+          <p className="text-mint-deep mt-4 text-sm">
+            {cafe.partnerDiscountNotice}
+          </p>
+        )}
       </section>
 
       {bookingFrom && (
@@ -75,7 +95,7 @@ export default function CafeDetailPage() {
             className="cursor-pointer rounded-[13px] pb-0 text-lg"
           >
             <Link
-              to={`/explore/cafes/${cafe.id}/reservation`}
+              to={`/explore/cafes/${cafe.storeId}/reservation`}
               state={{ from: backTo, bookingFrom }}
             >
               예약하기

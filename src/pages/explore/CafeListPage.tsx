@@ -1,4 +1,11 @@
 import { Heart, LayoutGrid } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  cafeKeys,
+  fetchCafeThemes,
+  fetchAreaStores,
+  type CafeStore,
+} from '@/api/cafeBooking';
 import {
   Link,
   useLocation,
@@ -9,11 +16,12 @@ import heart from '@/assets/cafes/list-heart.svg';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 import { useCafeStore } from '@/stores/cafeStore';
 import CafePageHeader from './CafePageHeader';
 import { CAFE_FILTERS, findCafeArea } from './cafeAreas';
-import { getCafesByArea, type Cafe } from './cafes';
+import { dessertLabel } from '@/lib/dessert';
+import CafeImage from './CafeImage';
+import CafeRequestState from './CafeRequestState';
 import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
 function CafeCard({
@@ -21,29 +29,27 @@ function CafeCard({
   from,
   bookingFrom,
 }: {
-  cafe: Cafe;
+  cafe: CafeStore;
   from: string;
   bookingFrom?: string;
 }) {
-  const liked = useCafeStore((state) => state.likedIds.includes(cafe.id));
+  const cafeId = String(cafe.storeId);
+  const liked = useCafeStore((state) => state.likedIds.includes(cafeId));
   const toggleLike = useCafeStore((state) => state.toggleLike);
 
   return (
     <li className="border-cafe-list-border relative h-[88px] rounded-[15px] border bg-white">
       <Link
-        to={`/explore/cafes/${cafe.id}`}
+        to={`/explore/cafes/${cafe.storeId}`}
         state={{ from, bookingFrom }}
         aria-label={`${cafe.name} 상세 보기`}
         className="focus-visible:outline-mint-deep flex h-full items-center gap-[14px] rounded-[15px] py-2.5 pr-10 pl-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
         <div className="bg-cafe-bakery size-[66px] shrink-0 overflow-hidden rounded-2xl">
-          <img
-            src={cafe.listPhoto}
+          <CafeImage
+            src={cafe.coverImageUrl}
             alt={`${cafe.name} 대표 메뉴`}
-            className={cn(
-              'size-full object-cover',
-              cafe.roundedThumbnail && 'rounded-[36px]',
-            )}
+            className="size-full"
           />
         </div>
         <div className="min-w-0 flex-1">
@@ -51,7 +57,8 @@ function CafeCard({
             {cafe.name}
           </h2>
           <p className="mt-2 truncate text-[13px] leading-5">
-            {cafe.category} · {cafe.distanceKm.toFixed(1)}km
+            {cafe.dessertTypes.map(dessertLabel).join(' · ')}
+            {cafe.distanceKm != null && ` · ${cafe.distanceKm.toFixed(1)}km`}
           </p>
         </div>
       </Link>
@@ -59,7 +66,7 @@ function CafeCard({
         type="button"
         aria-label={`${cafe.name} ${liked ? '좋아요 취소' : '좋아요'}`}
         aria-pressed={liked}
-        onClick={() => toggleLike(cafe.id)}
+        onClick={() => toggleLike(cafeId)}
         className="focus-visible:outline-mint-deep absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2"
       >
         {liked ? (
@@ -78,7 +85,23 @@ function CafeCard({
 
 export default function CafeListPage() {
   const { areaId } = useParams();
-  const area = findCafeArea(areaId);
+  const themes = useQuery({
+    queryKey: cafeKeys.themes,
+    queryFn: fetchCafeThemes,
+  });
+  const legacyArea = findCafeArea(areaId);
+  const area = themes.data?.find(
+    (theme) =>
+      String(theme.id) === areaId ||
+      (legacyArea &&
+        theme.name.replaceAll(' ', '').replaceAll('카페', '') ===
+          legacyArea.name.replaceAll(' ', '').replaceAll('카페', '')),
+  );
+  const stores = useQuery({
+    queryKey: cafeKeys.stores(area?.id ?? 0),
+    queryFn: () => fetchAreaStores(area!.id),
+    enabled: !!area,
+  });
   const location = useLocation();
   const bookingFrom = getBookingFrom(
     location.state as CafeNavigationState | null,
@@ -87,7 +110,23 @@ export default function CafeListPage() {
   const selectedFilter =
     CAFE_FILTERS.find((filter) => filter.id === searchParams.get('category'))
       ?.id ?? 'all';
-  const cafes = area ? getCafesByArea(area.id) : [];
+  const cafes = stores.data ?? [];
+
+  if (themes.isPending || themes.isError)
+    return (
+      <main className="text-ink min-h-dvh px-6 pt-16">
+        <CafePageHeader
+          title="매장 목록"
+          backTo="/explore"
+          backState={{ bookingFrom }}
+        />
+        <CafeRequestState
+          pending={themes.isPending}
+          error={themes.error}
+          onRetry={() => void themes.refetch()}
+        />
+      </main>
+    );
 
   if (!area) {
     return (
@@ -169,7 +208,7 @@ export default function CafeListPage() {
             const items =
               filter.id === 'all'
                 ? cafes
-                : cafes.filter((cafe) => cafe.filters.includes(filter.id));
+                : cafes.filter((cafe) => cafe.dessertTypes.includes(filter.id));
             return (
               <TabsContent
                 key={filter.id}
@@ -182,14 +221,20 @@ export default function CafeListPage() {
                 >
                   제휴매장 {items.length}곳
                 </h2>
-                {items.length > 0 ? (
+                {stores.isPending || stores.isError ? (
+                  <CafeRequestState
+                    pending={stores.isPending}
+                    error={stores.error}
+                    onRetry={() => void stores.refetch()}
+                  />
+                ) : items.length > 0 ? (
                   <ul
                     aria-label={`${area.name} ${filter.label} 카페 목록`}
                     className="grid gap-[18px]"
                   >
                     {items.map((cafe) => (
                       <CafeCard
-                        key={cafe.id}
+                        key={cafe.storeId}
                         cafe={cafe}
                         from={`${location.pathname}${location.search}`}
                         bookingFrom={bookingFrom}

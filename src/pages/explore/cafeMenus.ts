@@ -1,5 +1,4 @@
-import cake from '@/assets/cafes/strawberry-cake.png';
-import americano from '@/assets/cafes/americano.svg';
+import type { StoreMenu } from '@/api/cafeBooking';
 
 export const MENU_CATEGORIES = [
   { id: 'dessert', label: '디저트' },
@@ -13,37 +12,24 @@ export type CafeMenuItem = {
   name: string;
   category: MenuCategory;
   price: number;
-  image: string;
-  imageType: 'photo' | 'illustration';
-  initialQuantity: number;
+  image: string | null;
+  soldOut: boolean;
 };
 
-// Figma preview values, not live menu availability or an existing order.
-const CAFE_MENUS: Record<string, CafeMenuItem[]> = {
-  olive: [
-    {
-      id: 'strawberry-cake',
-      name: '딸기케이크',
-      category: 'dessert',
-      price: 7500,
-      image: cake,
-      imageType: 'photo',
-      initialQuantity: 1,
-    },
-    {
-      id: 'americano',
-      name: '아메리카노',
-      category: 'drink',
-      price: 4500,
-      image: americano,
-      imageType: 'illustration',
-      initialQuantity: 2,
-    },
-  ],
-};
-
-export function getCafeMenu(cafeId: string) {
-  return CAFE_MENUS[cafeId] ?? [];
+export function toCafeMenu(menus: StoreMenu[]): CafeMenuItem[] {
+  const categories = {
+    DESSERT: 'dessert',
+    DRINK: 'drink',
+    SET: 'set',
+  } as const;
+  return menus.map((item) => ({
+    id: String(item.menuId),
+    name: item.name,
+    price: item.price,
+    category: categories[item.category],
+    image: item.imageUrl,
+    soldOut: item.soldOut,
+  }));
 }
 
 export function formatMenuPrice(price: number) {
@@ -56,10 +42,12 @@ export function getMenuQuantities(
 ) {
   return Object.fromEntries(
     menu.map((item) => {
-      const quantity = saved ? (saved[item.id] ?? 0) : item.initialQuantity;
+      const quantity = saved?.[item.id] ?? 0;
       return [
         item.id,
-        Number.isSafeInteger(quantity) && quantity >= 0 ? quantity : 0,
+        !item.soldOut && Number.isSafeInteger(quantity) && quantity >= 0
+          ? Math.min(20, quantity)
+          : 0,
       ];
     }),
   );
