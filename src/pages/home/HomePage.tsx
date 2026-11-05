@@ -126,15 +126,10 @@ export default function HomePage() {
             aria-hidden
             className="absolute -bottom-12 -left-10 size-[130px] rounded-full bg-white/20"
           />
-          <p className="absolute top-[34px] left-6 text-[23px] leading-7 font-bold">
+          <p className="absolute top-1/2 left-6 -translate-y-1/2 text-[23px] leading-7 font-bold">
             디저트로 연결되는
             <br />
             특별한 만남
-          </p>
-          <p className="absolute bottom-5 left-6 text-[13px] leading-[1.45] text-black/60">
-            취향이 닮은 사람과
-            <br />
-            달콤한 약속을 잡아요
           </p>
           <img
             src={bannerCake}
