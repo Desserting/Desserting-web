@@ -3,9 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart, Send } from 'lucide-react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { heartKeys } from '@/api/hearts';
-import { sendChatRequest } from '@/api/matches';
+import { REQUEST_HEART_COST, sendChatRequest } from '@/api/matches';
 import { toggleLike as sendLike } from '@/api/matching';
-import { fetchMe, userKeys } from '@/api/users';
+import { fetchMe, fetchProfile, userKeys } from '@/api/users';
 import BackButton from '@/components/BackButton';
 import Bubble from '@/components/Bubble';
 import DessertAvatar from '@/components/DessertAvatar';
@@ -20,21 +20,19 @@ import {
 import { getApiError } from '@/lib/axios';
 import { dessertLabel } from '@/lib/dessert';
 import { cn } from '@/lib/utils';
-import { REQUEST_HEART_COST, useHeartStore } from '@/stores/heartStore';
 import { serverCandidateKey, useMatchingStore } from '@/stores/matchingStore';
-import { findCandidate } from '@/pages/matching/candidates';
 
 const TOAST_DURATION_MS = 2000;
 
 type RequestStep = 'confirm' | 'sent';
 
-/** 화면에 보여줄 프로필. 서버 후보(랜덤 매칭)와 목업 후보(프로필 탐색)를 같은 모양으로 맞춘다 */
+/** 화면에 보여줄 프로필. 랜덤 매칭 후보와 프로필 탐색의 상세 응답을 같은 모양으로 맞춘다 */
 interface ProfileView {
-  /** 좋아요·요청 상태를 기억하는 키. 서버 후보와 목업 후보가 섞이지 않게 구분한다 */
+  /** 좋아요·요청 상태를 기억하는 키 */
   key: string;
-  /** 서버 후보만 있다. 대화 요청의 receiverId로 쓴다 */
-  userId?: number;
-  /** 서버가 false로 알려주면 요청 버튼을 막는다 */
+  /** 대화 요청의 receiverId로 쓴다 */
+  userId: number;
+  /** 서버가 false로 알려주면 요청 버튼을 막는다. 매칭 후보만 알려준다 */
   canRequest?: boolean;
   nickname: string;
   age: number;
@@ -42,10 +40,7 @@ interface ProfileView {
   place: string;
   interests: string[];
   bio: string;
-  /** 서버 후보는 사진이 없어서 아바타를 보여준다 */
-  photo?: string;
   avatarUrl?: string | null;
-  gallery: string[];
 }
 
 interface SendErrorView {
@@ -90,40 +85,51 @@ export default function CandidateProfilePage() {
   // 랜덤 매칭에서 온 경우에만 "매칭"이라고 부른다
   const fromMatching = backTo.startsWith('/matching');
 
-  // 랜덤 매칭에서 왔으면 서버 후보를, 프로필 탐색에서 왔으면 목업 후보를 보여준다
+  // 랜덤 매칭에서 왔으면 방금 받은 후보를, 프로필 탐색에서 왔으면 상세 API로 불러온다
+  const userId = Number(id);
   const matched = useMatchingStore((state) => state.current?.candidate);
-  const mock = fromMatching ? undefined : findCandidate(Number(id));
+  const matchedCandidate =
+    fromMatching && matched?.userId === userId ? matched : undefined;
+  const detail = useQuery({
+    queryKey: userKeys.profile(userId),
+    queryFn: () => fetchProfile(userId),
+    enabled: !fromMatching && Number.isInteger(userId),
+    refetchOnMount: 'always',
+  });
+  const syncLiked = useMatchingStore((state) => state.syncLiked);
+  useEffect(() => {
+    if (detail.data) syncLiked([detail.data]);
+  }, [detail.data, syncLiked]);
+
   let profile: ProfileView | null = null;
-  if (fromMatching && matched && matched.userId === Number(id)) {
+  if (matchedCandidate) {
     profile = {
-      key: serverCandidateKey(matched.userId),
-      userId: matched.userId,
-      canRequest: matched.canRequest,
-      nickname: matched.nickname,
-      age: matched.age,
+      key: serverCandidateKey(matchedCandidate.userId),
+      userId: matchedCandidate.userId,
+      canRequest: matchedCandidate.canRequest,
+      nickname: matchedCandidate.nickname,
+      age: matchedCandidate.age,
       place:
-        matched.approxDistanceKm != null
-          ? `${matched.region} · ${matched.approxDistanceKm}km 이내`
-          : matched.region,
-      interests: matched.dessertTags.map(dessertLabel),
-      bio: matched.bio ?? '',
-      avatarUrl: matched.dessertAvatarUrl,
-      gallery: [],
+        matchedCandidate.approxDistanceKm != null
+          ? `${matchedCandidate.region} · ${matchedCandidate.approxDistanceKm}km 이내`
+          : matchedCandidate.region,
+      interests: matchedCandidate.dessertTags.map(dessertLabel),
+      bio: matchedCandidate.bio ?? '',
+      avatarUrl: matchedCandidate.dessertAvatarUrl,
     };
-  } else if (mock) {
+  } else if (!fromMatching && detail.data) {
     profile = {
-      key: `mock-${mock.id}`,
-      nickname: mock.nickname,
-      age: mock.age,
-      place: `${mock.location} · ${mock.distanceKm}km`,
-      interests: mock.interests,
-      bio: mock.bio,
-      photo: mock.photo,
-      gallery: mock.gallery,
+      key: serverCandidateKey(detail.data.userId),
+      userId: detail.data.userId,
+      nickname: detail.data.nickname,
+      age: detail.data.age,
+      place: detail.data.region,
+      interests: detail.data.dessertTags.map(dessertLabel),
+      bio: detail.data.bio ?? '',
+      avatarUrl: detail.data.dessertAvatarUrl,
     };
   }
 
-  const isServer = profile?.userId !== undefined;
   const liked = useMatchingStore((state) =>
     profile ? state.likedIds.includes(profile.key) : false,
   );
@@ -133,18 +139,14 @@ export default function CandidateProfilePage() {
   const toggleLike = useMatchingStore((state) => state.toggleLike);
   const requestChat = useMatchingStore((state) => state.requestChat);
 
-  // 서버 후보는 서버의 하트·프리미엄 값을, 목업 후보는 임시 값을 쓴다
   const me = useQuery({
     queryKey: userKeys.me,
     queryFn: fetchMe,
-    enabled: isServer,
+    enabled: profile !== null,
   });
-  const mockHeartCount = useHeartStore((state) => state.heartCount);
-  const mockIsPremium = useHeartStore((state) => state.isPremium);
-  const spendForRequest = useHeartStore((state) => state.spendForRequest);
-  const heartCount = isServer ? (me.data?.heartCount ?? 0) : mockHeartCount;
-  const isPremium = isServer ? (me.data?.isPremium ?? false) : mockIsPremium;
-  const heartsKnown = !isServer || me.isSuccess;
+  const heartCount = me.data?.heartCount ?? 0;
+  const isPremium = me.data?.isPremium ?? false;
+  const heartsKnown = me.isSuccess;
 
   const [spent, setSpent] = useState<'deducted' | 'free'>('deducted');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -185,7 +187,46 @@ export default function CandidateProfilePage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  if (!profile) return <Navigate to={backTo} replace />;
+  if (!profile) {
+    // 매칭 카드에서 온 프로필이 스토어에 없거나, 없는 사용자(U001)면 돌아간다
+    const notFound = getApiError(detail.error)?.code === 'U001';
+    if (fromMatching || notFound || !Number.isInteger(userId)) {
+      return <Navigate to={backTo} replace />;
+    }
+    return (
+      <main className="text-ink flex flex-1 flex-col bg-white px-6 pt-[34px] pb-[35px]">
+        <BackButton to={backTo} />
+        <h1 className="text-center text-[19px] leading-6 font-bold">
+          상대 프로필
+        </h1>
+        {detail.isError ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 pb-24">
+            <p className="text-ink-muted text-[16px] leading-6">
+              프로필을 불러오지 못했어요.
+            </p>
+            <Button
+              type="button"
+              variant="brand"
+              onClick={() => void detail.refetch()}
+              className="h-11 cursor-pointer rounded-[12px] px-6 text-[16px] font-bold"
+            >
+              다시 시도
+            </Button>
+          </div>
+        ) : (
+          <div role="status" className="mt-[30px] animate-pulse">
+            <span className="sr-only">프로필을 불러오는 중이에요</span>
+            <div
+              aria-hidden
+              className="bg-chip aspect-[345/248] w-full rounded-[22px]"
+            />
+            <div aria-hidden className="bg-chip mt-6 h-8 w-1/2 rounded-full" />
+            <div aria-hidden className="bg-chip mt-3 h-5 w-2/3 rounded-full" />
+          </div>
+        )}
+      </main>
+    );
+  }
 
   const like = () => {
     const nextLiked = !liked;
@@ -198,15 +239,16 @@ export default function CandidateProfilePage() {
         key: Date.now(),
       });
     }
-    if (profile.userId !== undefined) {
-      likeOnServer.mutate(profile.userId, {
-        // 서버에 반영하지 못하면 화면도 원래대로 돌린다
-        onError: () => {
-          toggleLike(profile.key);
-          setToast({ message: '좋아요를 처리하지 못했어요', key: Date.now() });
-        },
-      });
-    }
+    likeOnServer.mutate(profile.userId, {
+      // 서버에 반영하지 못하면 화면도 원래대로 돌린다
+      onError: () => {
+        toggleLike(profile.key);
+        setToast({ message: '좋아요를 처리하지 못했어요', key: Date.now() });
+      },
+      onSettled: () => {
+        void queryClient.invalidateQueries({ queryKey: userKeys.likesSent });
+      },
+    });
   };
 
   const openRequest = () => {
@@ -222,16 +264,7 @@ export default function CandidateProfilePage() {
   const sendRequest = () => {
     // 이미 보낸 상대에게는 하트를 다시 차감하지 않는다
     if (requested) return;
-    if (profile.userId !== undefined) {
-      send.mutate(profile.userId);
-      return;
-    }
-    // 프로필 탐색의 목업 후보는 아직 서버 연동 전이라 임시 흐름을 쓴다
-    const result = spendForRequest(profile.nickname);
-    if (result === 'insufficient') return;
-    requestChat(profile.key);
-    setSpent(result);
-    setStep('sent');
+    send.mutate(profile.userId);
   };
 
   // 서버가 요청할 수 없다고 알려준 상대는 눌러 보기 전에 막는다.
@@ -240,7 +273,7 @@ export default function CandidateProfilePage() {
 
   const sendError = send.isError ? describeSendError(send.error) : null;
   // 남은 하트 수가 갱신되는 동안에는 옛 숫자를 보여주지 않는다
-  const heartsRefreshing = isServer && me.isFetching;
+  const heartsRefreshing = me.isFetching;
   const bioLines = profile.bio.split('\n').filter((line) => line.trim());
 
   return (
@@ -250,20 +283,12 @@ export default function CandidateProfilePage() {
         상대 프로필
       </h1>
 
-      {profile.photo ? (
-        <img
-          src={profile.photo}
-          alt={`${profile.nickname}의 대표 사진`}
-          className="mt-[30px] aspect-[345/248] w-full rounded-[22px] object-cover"
+      <div className="bg-mint-100 mt-[30px] flex aspect-[345/248] w-full items-center justify-center rounded-[22px]">
+        <DessertAvatar
+          src={profile.avatarUrl}
+          className="size-[170px] bg-white"
         />
-      ) : (
-        <div className="bg-mint-100 mt-[30px] flex aspect-[345/248] w-full items-center justify-center rounded-[22px]">
-          <DessertAvatar
-            src={profile.avatarUrl}
-            className="size-[170px] bg-white"
-          />
-        </div>
-      )}
+      </div>
 
       <section className="mt-[22px]">
         <h2 className="text-[28px] leading-10 font-bold">
@@ -298,20 +323,6 @@ export default function CandidateProfilePage() {
           </div>
         )}
       </section>
-
-      {profile.gallery.length > 0 && (
-        <ul className="mt-9 grid grid-cols-2 gap-[15px]">
-          {profile.gallery.map((photo, photoIndex) => (
-            <li key={photoIndex}>
-              <img
-                src={photo}
-                alt=""
-                className="aspect-[165/120] w-full rounded-[20px] object-cover"
-              />
-            </li>
-          ))}
-        </ul>
-      )}
 
       <div className="relative mt-auto flex gap-3 pt-6">
         <Button

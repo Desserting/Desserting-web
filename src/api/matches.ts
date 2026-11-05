@@ -27,6 +27,9 @@ export interface AcceptedRequest {
   message?: string;
 }
 
+/** 대화 요청 1건당 차감되는 하트 수 (프리미엄은 무료) */
+export const REQUEST_HEART_COST = 1;
+
 export const matchKeys = {
   received: ['matches', 'received'] as const,
 };
