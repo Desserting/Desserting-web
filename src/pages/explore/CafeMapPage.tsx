@@ -32,9 +32,7 @@ export default function CafeMapPage() {
       </main>
 
       <div aria-hidden="true" className="h-3 shrink-0" />
-      <div className="shrink-0 pb-[max(25px,env(safe-area-inset-bottom,0px))]">
-        <BottomNav />
-      </div>
+      <BottomNav />
     </div>
   );
 }

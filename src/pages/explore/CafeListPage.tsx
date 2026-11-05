@@ -155,9 +155,7 @@ export default function CafeListPage() {
           })}
         </Tabs>
       </main>
-      <div className="shrink-0 pb-[max(25px,env(safe-area-inset-bottom,0px))]">
-        <BottomNav activePath="/explore" />
-      </div>
+      <BottomNav activePath="/explore" />
     </div>
   );
 }
