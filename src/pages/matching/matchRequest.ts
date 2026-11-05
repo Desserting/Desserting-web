@@ -1,15 +1,24 @@
 import { updateMyLocation, type RandomMatchParams } from '@/api/matching';
-import type { MatchingFilter } from '@/stores/matchingStore';
+import { LIVING_AREAS, type MatchingFilter } from '@/stores/matchingStore';
 
 /**
- * 매칭 설정을 랜덤 매칭 API 파라미터로 바꾼다.
- * 서버 region은 지역명 앞부분 하나라서 시·도(`대구`/`경북`)만 보내고,
- * 화면의 생활권(대구 중부 등)은 서버에 보낼 방법이 없어 아직 반영되지 않는다.
+ * 생활권을 서버 region으로 바꾼다. 서버는 쉼표로 여러 지역을 받아 그중 하나에 속하면 찾는다.
+ * 대구 생활권은 구·군으로 풀어 보내고(`대구 중구,대구 남구`),
+ * 구·군 정보가 없는 경북 생활권은 시·도(`경북`)만 보낸다.
  */
+export function toRegionParam(filter: MatchingFilter): string {
+  const districts = LIVING_AREAS[filter.region]
+    .find((area) => area.id === filter.area)
+    ?.districts?.split('·');
+  if (!districts) return filter.region;
+  return districts.map((district) => `${filter.region} ${district}`).join(',');
+}
+
+/** 매칭 설정을 랜덤 매칭 API 파라미터로 바꾼다. */
 export function toMatchParams(filter: MatchingFilter): RandomMatchParams {
   return {
     matchType: filter.type === 'same' ? 'SAME_TASTE' : 'DIFFERENT_TASTE',
-    region: filter.region,
+    region: toRegionParam(filter),
     // 무제한이면 반경을 보내지 않는다
     radiusKm:
       filter.distance === 'unlimited'

@@ -71,6 +71,33 @@ interface MatchingState {
   requestChat: (key: string) => void;
 }
 
+/** 좋아요·요청 상태를 기억하는 키. 서버 후보와 목업 후보가 섞이지 않게 구분한다 */
+export const serverCandidateKey = (userId: number) => `user-${userId}`;
+
+const withKey = (keys: string[], key: string, on: boolean) =>
+  on
+    ? keys.includes(key)
+      ? keys
+      : [...keys, key]
+    : keys.filter((existing) => existing !== key);
+
+/** 서버가 알려준 좋아요·요청 여부를 화면 상태에 맞춘다. 새로고침 뒤에도 서버 값이 기준이다 */
+function syncServerFlags(state: MatchingState, result: RandomMatchResult) {
+  const candidate = result.found ? result.candidate : null;
+  if (!candidate) return {};
+  const key = serverCandidateKey(candidate.userId);
+  return {
+    likedIds:
+      candidate.liked === undefined
+        ? state.likedIds
+        : withKey(state.likedIds, key, candidate.liked),
+    requestedIds:
+      candidate.requested === undefined
+        ? state.requestedIds
+        : withKey(state.requestedIds, key, candidate.requested),
+  };
+}
+
 export const useMatchingStore = create<MatchingState>((set) => ({
   filter: {
     type: 'same',
@@ -89,9 +116,15 @@ export const useMatchingStore = create<MatchingState>((set) => ({
   likedIds: [],
   requestedIds: [],
   startMatching: (first) =>
-    set({ current: first, shownCount: first.found ? 1 : 0, dealt: false }),
+    set((state) => ({
+      ...syncServerFlags(state, first),
+      current: first,
+      shownCount: first.found ? 1 : 0,
+      dealt: false,
+    })),
   showNextMatch: (next) =>
     set((state) => ({
+      ...syncServerFlags(state, next),
       current: next,
       shownCount: next.found ? state.shownCount + 1 : state.shownCount,
     })),

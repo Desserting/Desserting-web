@@ -14,7 +14,21 @@ export interface RandomCandidate {
   commonDessertTags: string[];
   /** 정수 km 올림. 1은 1km 이내 */
   approxDistanceKm?: number | null;
+  gender?: 'MALE' | 'FEMALE';
+  /** 내가 이미 대화 요청을 보낸 상대면 true. 새로고침해도 요청 상태를 유지하는 데 쓴다 */
+  requested?: boolean;
+  /** 내가 이미 좋아요를 누른 상대면 true */
+  liked?: boolean;
+  /**
+   * 대화 요청을 보낼 수 있는지. false면 차단, 하트 부족, 일반 회원의 24시간 외 미노출 중 하나다
+   * (이유는 응답에 없다).
+   */
+  canRequest?: boolean;
 }
+
+/** 서버가 실제로 적용한 조건. 서버에 새 값이 생길 수 있어 문자열도 허용한다 */
+export type AppliedFilter =
+  'DISTANCE' | 'REGION' | 'DISTANCE_AND_REGION' | (string & {});
 
 export interface RandomMatchResult {
   found: boolean;
@@ -23,14 +37,14 @@ export interface RandomMatchResult {
   guide?: string | null;
   /** 오늘 본 상대를 다 봐서 처음부터 다시 보여주는 중이면 true */
   recycled?: boolean;
-  appliedFilter?: string;
+  appliedFilter?: AppliedFilter;
 }
 
 export interface RandomMatchParams {
   matchType: MatchType;
-  /** 1~100. 내 좌표가 없으면 서버가 활동 지역 기준으로 대신한다 */
+  /** 1~100. 내 좌표가 없으면 거리 조건은 빠지고 지역 조건만 적용된다 */
   radiusKm?: number;
-  /** 지역명 앞부분 (`대구`, `대구 남구`) */
+  /** 지역명 앞부분 (`대구`, `대구 남구`). 쉼표로 여러 개 보내면 그중 하나에 속하는 상대를 찾는다 */
   region?: string;
 }
 
