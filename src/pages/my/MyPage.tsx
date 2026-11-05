@@ -33,7 +33,7 @@ const MENUS = [
     to: '/my/premium',
   },
   { label: '좋아요한 사람', icon: heart },
-  { label: '예약 · 주문 내역', icon: calendar, to: '/my/orders' },
+  { label: '예약 · 주문 내역', icon: calendar },
   { label: '설정', icon: settings },
 ];
 
