@@ -49,6 +49,8 @@ npm run dev
 
 개인 환경에서만 값을 바꾸고 싶다면 `.env.development.local`을 만들어 사용하세요. `*.local` 파일은 Git에 올라가지 않습니다.
 
+개발 환경의 `/api`는 Vite 개발 서버 프록시용이라 배포(Vercel)에서는 쓸 수 없습니다. 배포 환경에서는 Vercel 프로젝트의 환경 변수에 `VITE_API_BASE_URL`을 백엔드 전체 주소(예: `https://{백엔드 호스트}/api`)로 설정하세요. 실시간 채팅(WebSocket) 주소는 이 값의 호스트를 기준으로 `wss://{백엔드 호스트}/ws`로 만들어집니다.
+
 ### 개발 서버 프록시
 
 `vite.config.ts`에 다음 경로가 `http://localhost:8080`으로 프록시되도록 설정되어 있습니다.
