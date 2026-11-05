@@ -59,7 +59,7 @@ export default function CafeDetailPage() {
         </p>
       </section>
 
-      <div className="mt-auto flex flex-col gap-3 pt-8">
+      <div className="mt-auto pt-8">
         <Button
           asChild
           variant="brand"
@@ -71,16 +71,6 @@ export default function CafeDetailPage() {
             state={{ from: backTo }}
           >
             예약하기
-          </Link>
-        </Button>
-        <Button
-          asChild
-          variant="secondary"
-          size="xl"
-          className="bg-cafe-action text-ink hover:bg-cafe-action/80 cursor-pointer rounded-[13px] pb-0 text-lg"
-        >
-          <Link to={`/explore/cafes/${cafe.id}/menu`} state={{ from: backTo }}>
-            메뉴 주문하기
           </Link>
         </Button>
       </div>
