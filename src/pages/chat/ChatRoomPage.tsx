@@ -49,7 +49,7 @@ import {
 import { formatDayLabel, getDayKey } from '@/lib/datetime';
 import { getApiError } from '@/lib/axios';
 import { cn } from '@/lib/utils';
-import ChatAvatar from './ChatAvatar';
+import DessertAvatar from '@/components/DessertAvatar';
 import MessageItem from './MessageItem';
 import { useChatSocket } from './useChatSocket';
 
@@ -284,7 +284,7 @@ function ChatRoom({ roomId }: { roomId: number }) {
       <header className="relative shrink-0 px-6 pt-[34px] pb-4">
         <BackButton to="/chat" />
         <h1 className="flex items-center justify-center gap-2 px-9 text-[19px] leading-6 font-bold">
-          <ChatAvatar src={room?.otherUserAvatarUrl} className="size-6" />
+          <DessertAvatar src={room?.otherUserAvatarUrl} className="size-6" />
           <span className="truncate">{otherNickname}</span>
         </h1>
         <button

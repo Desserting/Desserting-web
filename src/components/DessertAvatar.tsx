@@ -3,7 +3,7 @@ import fallbackAvatar from '@/assets/signup/avatar-cake.svg';
 import { cn } from '@/lib/utils';
 
 /** 디저트 아바타. 주소가 없거나 불러오지 못하면 기본 케이크 아바타를 보여준다 */
-export default function ChatAvatar({
+export default function DessertAvatar({
   src,
   className,
 }: {
