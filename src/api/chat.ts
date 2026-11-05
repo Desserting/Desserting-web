@@ -78,6 +78,36 @@ export async function markChatRoomRead(roomId: number): Promise<void> {
   await api.post(`/v1/chats/rooms/${roomId}/read`);
 }
 
+/** 로컬 AI(Ollama)가 느리면 15초 가까이 걸릴 수 있어 넉넉하게 기다린다 */
+const AI_RECOMMENDATION_TIMEOUT_MS = 40_000;
+
+/**
+ * AI가 추천한 카페. 같은 내용이 PLACE_PROPOSAL 카드로 채팅방(STOMP)에도 양쪽에 전달되므로,
+ * 화면에 카드를 그릴 때는 이 응답이 아니라 소켓으로 받은 메시지를 쓴다.
+ */
+export interface AiRecommendation {
+  roomId: number;
+  storeId: number;
+  storeName: string;
+  storeAddress?: string;
+  recommendedMenus?: string[];
+  reason?: string;
+  /** 추천을 만든 엔진 (`OLLAMA_LOCAL_QWEN` 또는 `SMART_KEYWORD_FALLBACK`) */
+  source?: string;
+}
+
+/** 대화 내용을 보고 어울리는 제휴 카페를 골라 채팅방에 카드로 보낸다 */
+export async function requestAiRecommendation(
+  roomId: number,
+): Promise<AiRecommendation> {
+  const { data } = await api.post<ApiResponse<AiRecommendation>>(
+    `/v1/chats/rooms/${roomId}/ai-recommendation`,
+    undefined,
+    { timeout: AI_RECOMMENDATION_TIMEOUT_MS },
+  );
+  return data.data;
+}
+
 /** PLACE_PROPOSAL metadata가 객체 또는 JSON 문자열로 올 수 있어 둘 다 처리한다 */
 export function parseProposal(metadata: unknown): ReceivedProposal | null {
   let value = metadata;

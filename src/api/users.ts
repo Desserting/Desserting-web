@@ -3,6 +3,8 @@ import { toList } from './list';
 
 export interface MyProfile {
   userId: number;
+  nickname: string;
+  dessertAvatarUrl: string | null;
   heartCount: number;
   isPremium: boolean;
 }
@@ -29,7 +31,7 @@ export const userKeys = {
   likesSent: ['users', 'me', 'likes', 'sent'] as const,
 };
 
-/** 내 정보. 채팅에서 내 메시지를 가려내는 userId, 보유 하트와 프리미엄 여부를 준다 */
+/** 내 프로필과 계정 상태. 채팅에서는 userId로 내 메시지를 구분한다. */
 export async function fetchMe(): Promise<MyProfile> {
   const { data } = await api.get<ApiResponse<MyProfile>>('/v1/users/me');
   return data.data;
