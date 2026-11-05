@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import bannerCake from '@/assets/home/banner-cake.svg';
 import iconBell from '@/assets/home/icon-bell.svg';
@@ -8,11 +9,10 @@ import menuSameTaste from '@/assets/home/menu-same-taste.svg';
 import menuStore from '@/assets/home/menu-store.svg';
 import BottomNav from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
-import {
-  selectPendingCount,
-  useChatRequestStore,
-} from '@/stores/chatRequestStore';
-import { selectUnreadHeartCount, useHeartStore } from '@/stores/heartStore';
+import { fetchHeartHistory, heartKeys } from '@/api/hearts';
+import { countPending, fetchReceivedRequests, matchKeys } from '@/api/matches';
+import { useAuthStore } from '@/stores/authStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 const MENUS = [
   {
@@ -42,8 +42,24 @@ const MENUS = [
 ];
 
 export default function HomePage() {
-  const unreadCount = useHeartStore(selectUnreadHeartCount);
-  const pendingCount = useChatRequestStore(selectPendingCount);
+  // 로그인 전에도 홈 화면은 볼 수 있어야 하므로, 토큰이 있을 때만 배지 정보를 불러온다
+  const loggedIn = useAuthStore((state) => state.accessToken !== null);
+  const lastSeenHeartId = useNotificationStore(
+    (state) => state.lastSeenHeartHistoryId,
+  );
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: matchKeys.received,
+    queryFn: fetchReceivedRequests,
+    enabled: loggedIn,
+    select: countPending,
+  });
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: heartKeys.history,
+    queryFn: fetchHeartHistory,
+    enabled: loggedIn,
+    select: (history) =>
+      history.filter((item) => item.id > lastSeenHeartId).length,
+  });
 
   return (
     <>
