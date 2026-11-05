@@ -164,7 +164,10 @@ function PickStep({
   onBack: () => void;
   onSubmit: (proposal: PlaceProposal) => boolean;
 }) {
-  const stores = useQuery({ queryKey: storeKeys.list, queryFn: fetchStores });
+  const stores = useQuery({
+    queryKey: storeKeys.search({}),
+    queryFn: () => fetchStores(),
+  });
   const [stage, setStage] = useState<'store' | 'when'>('store');
   const [storeId, setStoreId] = useState<number | null>(null);
   const [date, setDate] = useState<Date | null>(null);
