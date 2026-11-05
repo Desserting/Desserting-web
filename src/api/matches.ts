@@ -57,6 +57,20 @@ export async function rejectRequest(requestId: number): Promise<void> {
   await api.post(`/v1/matches/requests/${requestId}/reject`);
 }
 
+/**
+ * 대화 요청을 보낸다. 하트 1개가 차감되고(프리미엄은 무료), 응답에는 남은 하트 수가
+ * 없으므로 보낸 뒤 GET /users/me를 다시 불러야 한다.
+ */
+export async function sendChatRequest(
+  receiverId: number,
+): Promise<ReceivedRequest> {
+  const { data } = await api.post<ApiResponse<ReceivedRequest>>(
+    '/v1/matches/requests',
+    { receiverId },
+  );
+  return data.data;
+}
+
 /** 수락·거절 실패 코드별 안내 문구 */
 export const REQUEST_ERROR_MESSAGES: Record<string, string> = {
   H003: '요청을 찾을 수 없어요.',
