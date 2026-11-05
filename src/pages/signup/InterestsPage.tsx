@@ -65,11 +65,11 @@ export default function InterestsPage() {
                 )}
               >
                 <span className="flex h-16 w-full items-center justify-center">
-                  {/* PNG 는 512px 정사각 캔버스(아이콘 60%)라 Figma 크기(77x60)에 맞춰 키운다 */}
+                  {/* PNG 는 300px 정사각 캔버스(아이콘 77%)라 Figma 크기(77x60)에 맞춰 맞춘다 */}
                   <img
                     src={image}
                     alt=""
-                    className="block size-[128px] max-w-none shrink-0"
+                    className="block size-[75px] max-w-none shrink-0"
                   />
                 </span>
                 <span className="text-sm leading-6 font-bold">{label}</span>
