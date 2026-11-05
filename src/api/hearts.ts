@@ -22,7 +22,50 @@ export interface HeartHistoryItem {
 
 export const heartKeys = {
   history: ['hearts', 'history'] as const,
+  packages: ['hearts', 'packages'] as const,
+  purchases: ['hearts', 'purchases'] as const,
 };
+
+export type HeartPackageCode = 'HEARTS_5' | 'HEARTS_10' | 'HEARTS_30';
+export type HeartPaymentMethod = 'CARD' | 'EASY_PAY';
+
+export interface HeartPackage {
+  packageCode: HeartPackageCode;
+  quantity: number;
+  unitPrice: number;
+  price: number;
+}
+
+export interface HeartPurchase {
+  purchaseId: number;
+  packageCode: HeartPackageCode;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  paymentMethod: HeartPaymentMethod;
+  paymentKey: string;
+  heartCountAfter: number;
+  paidAt: string;
+}
+
+export async function fetchHeartPackages(): Promise<HeartPackage[]> {
+  const { data } = await api.get<ApiResponse<HeartPackage[]>>(
+    '/v1/hearts/packages',
+  );
+  return data.data;
+}
+
+/** 실제 청구 없이 하트를 충전하는 모의 결제. 자동 재시도하지 않는다. */
+export async function purchaseHearts(request: {
+  packageCode: HeartPackageCode;
+  paymentMethod: HeartPaymentMethod;
+}): Promise<HeartPurchase> {
+  const { data } = await api.post<ApiResponse<HeartPurchase>>(
+    '/v1/hearts/purchase',
+    request,
+  );
+  return data.data;
+}
 
 export async function fetchHeartHistory(): Promise<HeartHistoryItem[]> {
   const { data } = await api.get<ApiResponse<unknown>>('/v1/hearts/history');

@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchMe, userKeys } from '@/api/users';
 import avatar from '@/assets/my/avatar.png';
 import calendar from '@/assets/my/calendar.svg';
 import chevron from '@/assets/my/chevron.svg';
@@ -16,21 +18,18 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useSignupStore } from '@/stores/signupStore';
 
 const MENUS = [
   { label: '내 프로필 관리', icon: profileIcon, to: '/my/profile' },
   {
     label: '하트 구매',
     icon: heart,
-    detail: '5개 보유',
     accent: true,
     to: '/my/hearts',
   },
   {
     label: '프리미엄 패스',
     icon: premium,
-    detail: '미보유',
     to: '/my/premium',
   },
   { label: '좋아요한 사람', icon: heart },
@@ -38,27 +37,36 @@ const MENUS = [
   { label: '설정', icon: settings },
 ];
 
-// Balance and membership use the design's preview values until account API integration.
-function ProfileAvatar({ file }: { file: File | null | undefined }) {
-  const [url] = useState(() => (file ? URL.createObjectURL(file) : avatar));
-  useEffect(
-    () => () => {
-      if (file) URL.revokeObjectURL(url);
-    },
-    [file, url],
-  );
+function ProfileAvatar({ src }: { src?: string | null }) {
+  const [failed, setFailed] = useState(false);
   return (
     <img
-      src={url}
+      src={!src || failed ? avatar : src}
       alt="내 프로필 사진"
+      onError={() => setFailed(true)}
       className="my-page-avatar rounded-full object-cover"
     />
   );
 }
 
 export default function MyPage() {
-  const profile = useSignupStore((state) => state.profile);
+  const {
+    data: profile,
+    isPending,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: userKeys.me,
+    queryFn: fetchMe,
+    refetchOnMount: 'always',
+  });
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  const details: Record<string, string> = {
+    '/my/hearts': profile && !isError ? `${profile.heartCount}개 보유` : '—',
+    '/my/premium':
+      profile && !isError ? (profile.isPremium ? '이용 중' : '미보유') : '—',
+  };
 
   return (
     <div className="my-page flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
@@ -70,23 +78,51 @@ export default function MyPage() {
           aria-label="내 프로필"
           className="my-page-profile flex min-h-0 flex-col items-center"
         >
-          <ProfileAvatar file={profile?.avatar} />
-          <h2 className="mt-3 max-w-full truncate text-center text-[22px] leading-8 font-bold">
-            {profile?.nickname || '디저트러버'}님 ♡
-          </h2>
+          <ProfileAvatar
+            key={isError ? 'error' : profile?.dessertAvatarUrl}
+            src={isError ? null : profile?.dessertAvatarUrl}
+          />
+          <div className="mt-3 min-h-8 max-w-full text-center">
+            {isPending ? (
+              <div role="status" className="flex h-8 items-center">
+                <span className="sr-only">내 정보를 불러오는 중이에요</span>
+                <span
+                  aria-hidden="true"
+                  className="bg-chip h-6 w-36 animate-pulse rounded"
+                />
+              </div>
+            ) : isError ? (
+              <div role="alert" className="text-my-muted text-sm leading-5">
+                <p>내 정보를 불러오지 못했어요.</p>
+                <button
+                  type="button"
+                  disabled={isFetching}
+                  onClick={() => void refetch()}
+                  className="text-mint-deep cursor-pointer rounded px-2 py-1 font-bold underline underline-offset-2 disabled:opacity-50"
+                >
+                  {isFetching ? '불러오는 중…' : '다시 시도'}
+                </button>
+              </div>
+            ) : (
+              <h2 className="truncate text-[22px] leading-8 font-bold">
+                {profile.nickname}님 ♡
+              </h2>
+            )}
+          </div>
         </section>
         <ul
           aria-label="마이페이지 메뉴"
           className="my-page-menu grid min-h-0 grid-rows-6"
         >
           {MENUS.map((menu) => {
+            const detail = menu.to ? details[menu.to] : undefined;
             const content = (
               <>
                 <img src={menu.icon} alt="" className="shrink-0" />
                 <span className="flex-1 text-[17px] font-bold">
                   {menu.label}
                 </span>
-                {menu.detail ? (
+                {detail ? (
                   <span
                     className={
                       menu.accent
@@ -94,7 +130,7 @@ export default function MyPage() {
                         : 'text-my-muted text-sm'
                     }
                   >
-                    {menu.detail}
+                    {detail}
                   </span>
                 ) : (
                   <img src={chevron} alt="" className="shrink-0" />
