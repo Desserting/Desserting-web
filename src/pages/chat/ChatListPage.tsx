@@ -3,6 +3,7 @@ import { MessageCircleOff } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { chatKeys, fetchChatRooms, type ChatRoom } from '@/api/chat';
 import BottomNav from '@/components/BottomNav';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
@@ -88,8 +89,8 @@ export default function ChatListPage() {
 
   return (
     <>
-      <main className="text-ink flex flex-1 flex-col bg-white px-6 pt-[34px]">
-        <h1 className="text-center text-[27px] leading-9 font-bold">채팅</h1>
+      <main className="text-ink flex flex-1 flex-col bg-white px-6">
+        <PageHeader title="채팅" />
 
         <div role="tablist" className="mt-5 grid grid-cols-2 gap-2">
           {TABS.map(({ id, label }) => {

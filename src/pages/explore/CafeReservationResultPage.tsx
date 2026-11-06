@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { getApiError } from '@/lib/axios';
 import { formatClock, formatTimeOfDay, parseServerDate } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
-import CafePageHeader from './CafePageHeader';
+import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import { useBookingFlow } from '@/lib/bookingFlow';
 import type { CafeNavigationState } from './cafeNavigation';
@@ -228,8 +228,8 @@ export default function CafeReservationResultPage({
   }
   if (!order || !booking || receipt.isError || reservation.isError) {
     return (
-      <main className="text-ink min-h-dvh bg-white px-6 pt-[clamp(32px,8dvh,68px)]">
-        <CafePageHeader title={title} backTo={chatPath} />
+      <main className="text-ink min-h-dvh bg-white px-6">
+        <PageHeader title={title} backTo={chatPath} />
         <CafeRequestState
           pending={receipt.isPending || reservation.isPending}
           error={receipt.error ?? reservation.error}
@@ -247,8 +247,8 @@ export default function CafeReservationResultPage({
     return <Navigate to={orderPath} state={backState} replace />;
 
   return (
-    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
-      <CafePageHeader
+    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]">
+      <PageHeader
         title={title}
         backTo={
           view === 'order' && !cancelled ? `${resultPath}/complete` : chatPath

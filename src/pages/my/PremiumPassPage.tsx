@@ -9,9 +9,9 @@ import {
   type PremiumSubscription,
 } from '@/api/premium';
 import { userKeys, type MyProfile } from '@/api/users';
-import back from '@/assets/premium/back.svg';
 import check from '@/assets/premium/check.svg';
 import crown from '@/assets/premium/crown.svg';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -91,16 +91,11 @@ export default function PremiumPassPage() {
 
   return (
     <main className="premium-page text-ink flex min-h-dvh flex-col bg-white px-6">
-      <header className="relative flex h-8 shrink-0 items-center justify-center">
-        <Link
-          to="/my"
-          aria-label="마이페이지로 돌아가기"
-          className="focus-visible:outline-mint-deep absolute -left-2 flex size-11 items-center justify-center rounded-full focus-visible:outline-2"
-        >
-          <img src={back} alt="" />
-        </Link>
-        <h1 className="text-[23px] leading-8 font-bold">프리미엄 패스</h1>
-      </header>
+      <PageHeader
+        title="프리미엄 패스"
+        backTo="/my"
+        backLabel="마이페이지로 돌아가기"
+      />
       <div className="premium-emblem bg-premium-emblem flex shrink-0 items-center justify-center self-center rounded-full">
         <img src={crown} alt="" />
       </div>

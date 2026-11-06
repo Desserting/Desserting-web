@@ -6,7 +6,7 @@ import { heartKeys } from '@/api/hearts';
 import { REQUEST_HEART_COST, matchKeys, sendChatRequest } from '@/api/matches';
 import { toggleLike as sendLike } from '@/api/matching';
 import { fetchMe, fetchProfile, userKeys } from '@/api/users';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import Bubble from '@/components/Bubble';
 import DessertAvatar from '@/components/DessertAvatar';
 import { Button } from '@/components/ui/button';
@@ -196,11 +196,8 @@ export default function CandidateProfilePage() {
       return <Navigate to={backTo} replace />;
     }
     return (
-      <main className="text-ink flex flex-1 flex-col bg-white px-6 pt-[34px] pb-[35px]">
-        <BackButton to={backTo} />
-        <h1 className="text-center text-[19px] leading-6 font-bold">
-          상대 프로필
-        </h1>
+      <main className="text-ink flex flex-1 flex-col bg-white px-6 pb-[35px]">
+        <PageHeader title="상대 프로필" backTo={backTo} />
         {detail.isError ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 pb-24">
             <p className="text-ink-muted text-[16px] leading-6">
@@ -279,11 +276,8 @@ export default function CandidateProfilePage() {
   const bioLines = profile.bio.split('\n').filter((line) => line.trim());
 
   return (
-    <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-[35px]">
-      <BackButton to={backTo} />
-      <h1 className="text-center text-[19px] leading-6 font-bold">
-        상대 프로필
-      </h1>
+    <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pb-[35px]">
+      <PageHeader title="상대 프로필" backTo={backTo} />
 
       <div className="bg-mint-100 mt-[30px] flex aspect-[345/248] w-full items-center justify-center rounded-[22px]">
         <DessertAvatar

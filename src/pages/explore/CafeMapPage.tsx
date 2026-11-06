@@ -15,7 +15,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import CafeRequestState from './CafeRequestState';
-import CafePageHeader from './CafePageHeader';
+import PageHeader from '@/components/PageHeader';
 import CafeThemeMap from './CafeThemeMap';
 import { useBookingFlow } from '@/lib/bookingFlow';
 
@@ -63,21 +63,14 @@ export default function CafeMapPage() {
 
   return (
     <div className="text-ink flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
-      <header className="flex h-[clamp(88px,14dvh,112px)] shrink-0 items-end justify-center px-6 pb-5">
-        {bookingFrom ? (
-          <div className="w-full">
-            <CafePageHeader
-              title="카페 지도"
-              backTo={bookingFrom}
-              onBack={exitBooking}
-            />
-          </div>
-        ) : (
-          <h1 className="text-center text-[23px] leading-[34px] font-bold">
-            카페 지도
-          </h1>
-        )}
-      </header>
+      <div className="shrink-0 px-6">
+        <PageHeader
+          className="pb-4"
+          title="카페 지도"
+          backTo={bookingFrom}
+          onBack={exitBooking}
+        />
+      </div>
       <main
         aria-label="카페 지도 영역"
         className="flex min-h-0 flex-1 flex-col"

@@ -9,7 +9,7 @@ import {
 } from '@/api/hearts';
 import { fetchMe, userKeys } from '@/api/users';
 import heart from '@/assets/hearts/heart.svg';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
@@ -79,9 +79,8 @@ export default function NotificationsPage() {
   }, [history, markSeen]);
 
   return (
-    <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-10">
-      <BackButton to="/home" />
-      <h1 className="text-center text-[19px] leading-6 font-bold">알림</h1>
+    <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pb-10">
+      <PageHeader title="알림" backTo="/home" />
       {me.data && (
         <p className="text-ink-muted mt-6 text-center text-[14px] leading-5">
           보유 하트 {me.data.heartCount}개{me.data.isPremium && ' · 프리미엄'}

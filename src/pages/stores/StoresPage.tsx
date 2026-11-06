@@ -7,7 +7,7 @@ import {
   storeKeys,
   type StoreCard,
 } from '@/api/stores';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { DESSERT_LABELS, dessertLabel } from '@/lib/dessert';
@@ -146,12 +146,9 @@ export default function StoresPage() {
 
   return (
     <>
-      <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-6">
-        <BackButton to="/home" />
-        <h1 className="mt-[46px] text-[23px] leading-[34px] font-bold">
-          제휴매장 보기
-        </h1>
-        <p className="text-ink-muted mt-1 text-[14px] leading-5">
+      <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pb-6">
+        <PageHeader title="제휴매장 보기" backTo="/home" />
+        <p className="text-ink-muted mt-4 text-center text-[14px] leading-5">
           디저팅과 제휴한 카페만 모아 보여드려요
         </p>
 

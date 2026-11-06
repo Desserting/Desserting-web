@@ -17,7 +17,7 @@ import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCafeStore } from '@/stores/cafeStore';
-import CafePageHeader from './CafePageHeader';
+import PageHeader from '@/components/PageHeader';
 import { CAFE_FILTERS, findCafeArea } from './cafeAreas';
 import { dessertLabel } from '@/lib/dessert';
 import CafeImage from './CafeImage';
@@ -102,8 +102,8 @@ export default function CafeListPage() {
 
   if (themes.isPending || themes.isError)
     return (
-      <main className="text-ink min-h-dvh px-6 pt-16">
-        <CafePageHeader
+      <main className="text-ink min-h-dvh px-6">
+        <PageHeader
           title="매장 목록"
           backTo={area ? `/explore?theme=${area.id}` : '/explore'}
         />
@@ -128,11 +128,11 @@ export default function CafeListPage() {
 
   return (
     <div className="text-ink flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
-      <main className="flex min-h-0 flex-1 flex-col px-6 pt-[clamp(32px,8dvh,68px)]">
-        <CafePageHeader
+      <main className="flex min-h-0 flex-1 flex-col px-6">
+        <PageHeader
           title={`${area.name} (${cafes.length}) · 선택됨`}
           backTo={`/explore?theme=${area.id}`}
-          titleClassName="w-full truncate pl-9 text-[20px] tracking-[-0.5px]"
+          className="pb-3"
         />
         <p className="bg-premium-emblem text-mint-deep flex h-[21px] shrink-0 items-center rounded-full px-2.5 text-[10px] leading-[15px]">
           지도에서 선택한 테마거리의 제휴매장 목록

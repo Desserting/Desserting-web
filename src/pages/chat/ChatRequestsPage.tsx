@@ -11,7 +11,7 @@ import {
   rejectRequest,
   type ReceivedRequest,
 } from '@/api/matches';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { getApiError } from '@/lib/axios';
 import { cn } from '@/lib/utils';
@@ -194,9 +194,8 @@ export default function ChatRequestsPage() {
   );
 
   return (
-    <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-10">
-      <BackButton to={backTo} />
-      <h1 className="text-center text-[19px] leading-6 font-bold">대화 요청</h1>
+    <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pb-10">
+      <PageHeader title="대화 요청" backTo={backTo} />
 
       {isPending && (
         <p role="status" className="text-ink-muted mt-24 text-center">

@@ -10,6 +10,7 @@ import premium from '@/assets/my/premium.svg';
 import profileIcon from '@/assets/my/profile.svg';
 import settings from '@/assets/my/settings.svg';
 import BottomNav from '@/components/BottomNav';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -76,9 +77,7 @@ export default function MyPage() {
   return (
     <div className="my-page flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <main className="my-page-content text-ink grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] px-6">
-        <h1 className="text-center text-[23px] leading-[30px] font-bold">
-          마이페이지
-        </h1>
+        <PageHeader title="마이페이지" />
         <section
           aria-label="내 프로필"
           className="my-page-profile flex min-h-0 flex-col items-center"

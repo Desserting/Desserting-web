@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CafeNotFound from './CafeNotFound';
-import CafePageHeader from './CafePageHeader';
+import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import CafeImage from './CafeImage';
 import type { CafeNavigationState } from './cafeNavigation';
@@ -137,8 +137,8 @@ export default function CafeMenuPage() {
       (currentReservation.isPending || currentReservation.isError))
   )
     return (
-      <main className="min-h-dvh px-6 pt-16">
-        <CafePageHeader
+      <main className="min-h-dvh px-6">
+        <PageHeader
           title="메뉴 선택"
           backTo={`/explore/cafes/${storeId}`}
           backState={backState}
@@ -186,8 +186,8 @@ export default function CafeMenuPage() {
   };
 
   return (
-    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
-      <CafePageHeader
+    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]">
+      <PageHeader
         title="메뉴 선택"
         backTo={
           reservationId

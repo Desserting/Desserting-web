@@ -3,7 +3,7 @@ import { isAxiosError } from 'axios';
 import { Store } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { fetchStoreDetail, storeKeys, type StoreMenu } from '@/api/stores';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import StoreDetailInfo from '@/components/StoreDetailInfo';
@@ -120,9 +120,8 @@ export default function StoreDetailPage({
 
   return (
     <>
-      <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-6">
-        <BackButton to={backTo} />
-        <h1 className="sr-only">매장 상세</h1>
+      <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pb-6">
+        <PageHeader title="매장 상세" hideTitle backTo={backTo} />
 
         {store.isPending && (
           <div role="status" className="mt-[46px] animate-pulse space-y-4">

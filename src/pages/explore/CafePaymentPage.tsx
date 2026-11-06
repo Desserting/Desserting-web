@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { getApiError } from '@/lib/axios';
 import CafeNotFound from './CafeNotFound';
-import CafePageHeader from './CafePageHeader';
+import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import { formatMenuPrice, toCafeMenu, getMenuQuantities } from './cafeMenus';
 import type { CafeNavigationState } from './cafeNavigation';
@@ -126,12 +126,8 @@ export default function CafePaymentPage() {
     reservation.isError
   )
     return (
-      <main className="min-h-dvh px-6 pt-16">
-        <CafePageHeader
-          title="결제하기"
-          backTo={menuPath}
-          backState={backState}
-        />
+      <main className="min-h-dvh px-6">
+        <PageHeader title="결제하기" backTo={menuPath} backState={backState} />
         <CafeRequestState
           pending={detail.isPending || reservation.isPending}
           error={detail.error ?? reservation.error}
@@ -162,12 +158,8 @@ export default function CafePaymentPage() {
     amount === undefined ? '—' : formatMenuPrice(amount);
 
   return (
-    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
-      <CafePageHeader
-        title="결제하기"
-        backTo={menuPath}
-        backState={backState}
-      />
+    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]">
+      <PageHeader title="결제하기" backTo={menuPath} backState={backState} />
       {blocked ? (
         <p role="alert" className="text-destructive mt-8">
           취소되었거나 완료된 예약은 결제할 수 없어요.

@@ -9,8 +9,8 @@ import {
   type HeartPaymentMethod,
 } from '@/api/hearts';
 import { fetchMe, userKeys, type MyProfile } from '@/api/users';
-import back from '@/assets/hearts/back.svg';
 import heart from '@/assets/hearts/heart.svg';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -76,17 +76,12 @@ export default function HeartPurchasePage() {
   };
 
   return (
-    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,9dvh,76px)] pb-[max(24px,env(safe-area-inset-bottom))]">
-      <header className="relative flex h-8 shrink-0 items-center justify-center">
-        <Link
-          to="/my"
-          aria-label="마이페이지로 돌아가기"
-          className="focus-visible:outline-mint-deep absolute -left-2 flex size-11 items-center justify-center rounded-full focus-visible:outline-2"
-        >
-          <img src={back} alt="" />
-        </Link>
-        <h1 className="text-[23px] leading-8 font-bold">하트 구매</h1>
-      </header>
+    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(24px,env(safe-area-inset-bottom))]">
+      <PageHeader
+        title="하트 구매"
+        backTo="/my"
+        backLabel="마이페이지로 돌아가기"
+      />
 
       <fieldset
         disabled={purchase.isPending}
