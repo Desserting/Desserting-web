@@ -20,6 +20,21 @@ export interface ReceivedRequest {
   chatRoomId: number | null;
 }
 
+/** 내가 보낸 대화 요청 */
+export interface SentRequest {
+  requestId: number;
+  receiverId: number;
+  receiverNickname: string;
+  receiverAvatarUrl?: string | null;
+  receiverAge?: number;
+  receiverRegion?: string;
+  status: RequestStatus;
+  createdAt: string;
+  expiredAt?: string;
+  /** 수락된 요청이면 만들어진 채팅방 id */
+  chatRoomId?: number | null;
+}
+
 export interface AcceptedRequest {
   requestId: number;
   chatRoomId: number;
@@ -32,7 +47,20 @@ export const REQUEST_HEART_COST = 1;
 
 export const matchKeys = {
   received: ['matches', 'received'] as const,
+  sent: ['matches', 'sent'] as const,
 };
+
+/**
+ * 내가 대화 요청을 보낸 상대 목록. 받은 요청과 같은 방식으로 최근 처리 결과까지 함께 온다.
+ * TODO: 백엔드 경로가 다르면 여기만 고친다.
+ */
+export async function fetchSentRequests(): Promise<SentRequest[]> {
+  const { data } = await api.get<ApiResponse<unknown>>(
+    '/v1/matches/requests/sent',
+    { params: { includeProcessed: true } },
+  );
+  return toList<SentRequest>(data.data, ['requests', 'content', 'items']);
+}
 
 /**
  * 받은 요청 목록. 기본은 PENDING만 오고, includeProcessed를 주면 최근 7일의
