@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -35,6 +36,14 @@ export default function ProfilePage() {
   const setProfile = useSignupStore((state) => state.setProfile);
   const resetSignup = useSignupStore((state) => state.reset);
   const setTokens = useAuthStore((state) => state.setTokens);
+  const completed = useRef(false);
+  // 입력값은 화면을 떠난 뒤에 비운다. 이동 전에 비우면 아래 가드가 홈 이동을 가로챈다
+  useEffect(
+    () => () => {
+      if (completed.current) resetSignup();
+    },
+    [resetSignup],
+  );
   const {
     register,
     handleSubmit,
@@ -69,9 +78,9 @@ export default function ProfilePage() {
     },
     retry: false,
     onSuccess: () => {
+      completed.current = true;
       // 이전 계정의 캐시가 새 계정에 보이지 않게 한다
       queryClient.clear();
-      resetSignup();
       navigate('/home', { replace: true });
     },
   });
