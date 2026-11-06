@@ -117,7 +117,7 @@ export default function CafeListPage() {
       <main className="text-ink min-h-dvh px-6 pt-16">
         <CafePageHeader
           title="매장 목록"
-          backTo="/explore"
+          backTo={area ? `/explore?theme=${area.id}` : '/explore'}
           backState={{ bookingFrom }}
         />
         <CafeRequestState
@@ -144,7 +144,7 @@ export default function CafeListPage() {
       <main className="flex min-h-0 flex-1 flex-col px-6 pt-[clamp(32px,8dvh,68px)]">
         <CafePageHeader
           title={`${area.name} (${cafes.length}) · 선택됨`}
-          backTo="/explore"
+          backTo={`/explore?theme=${area.id}`}
           backState={{ bookingFrom }}
           titleClassName="w-full truncate pl-9 text-[20px] tracking-[-0.5px]"
         />
