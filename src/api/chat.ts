@@ -4,7 +4,8 @@ import { toList } from './list';
 // TODO: 백엔드를 띄운 뒤 `npm run gen:api`로 생성되는 src/types/api.d.ts 타입으로 교체한다.
 // 아래 타입은 프론트엔드 연동 가이드 문서 기준이며, 가이드에 없는 필드는 선택(?)으로 두었다.
 
-export type ChatMessageType = 'TEXT' | 'IMAGE' | 'PLACE_PROPOSAL' | 'SYSTEM';
+export type ChatMessageType =
+  'TEXT' | 'IMAGE' | 'PLACE_PROPOSAL' | 'RESERVATION_CARD' | 'SYSTEM';
 
 export interface ChatRoom {
   roomId: number;
@@ -32,7 +33,8 @@ export interface ChatMessage {
 
 /**
  * 받은 PLACE_PROPOSAL의 metadata.
- * 직접 제안은 proposedDate·proposedTime이 있고, AI 추천 카드는 날짜·시간 없이(일시 미정)
+ * 직접 제안은 proposedDate가 있고, 예전 제안에는 proposedTime도 있다.
+ * AI 추천 카드는 날짜·시간 없이(일시 미정)
  * storeAddress·recommendedMenus·reason을 담아 온다.
  */
 export interface ReceivedProposal {
@@ -43,6 +45,54 @@ export interface ReceivedProposal {
   reason?: string;
   proposedDate?: string;
   proposedTime?: string;
+}
+
+export interface ReceivedReservationCard {
+  storeName: string;
+  reservationDate: string;
+  reservationTime: string;
+  guestCount: number;
+  finalAmount: number;
+  orderedItems: { menuName: string; quantity: number }[];
+}
+
+export function parseReservationCard(
+  metadata: unknown,
+): ReceivedReservationCard | null {
+  let value = metadata;
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  if (!value || typeof value !== 'object') return null;
+  const card = value as Record<string, unknown>;
+  if (
+    typeof card.storeName !== 'string' ||
+    typeof card.reservationDate !== 'string' ||
+    typeof card.reservationTime !== 'string' ||
+    typeof card.guestCount !== 'number' ||
+    typeof card.finalAmount !== 'number'
+  )
+    return null;
+  return {
+    storeName: card.storeName,
+    reservationDate: card.reservationDate,
+    reservationTime: card.reservationTime.slice(0, 5),
+    guestCount: card.guestCount,
+    finalAmount: card.finalAmount,
+    orderedItems: Array.isArray(card.orderedItems)
+      ? card.orderedItems.filter(
+          (item): item is { menuName: string; quantity: number } =>
+            !!item &&
+            typeof item === 'object' &&
+            typeof item.menuName === 'string' &&
+            typeof item.quantity === 'number',
+        )
+      : [],
+  };
 }
 
 export const MESSAGE_PAGE_SIZE = 30;
@@ -71,6 +121,18 @@ export async function fetchChatMessages(
 
 export async function leaveChatRoom(roomId: number): Promise<void> {
   await api.post(`/v1/chats/rooms/${roomId}/leave`);
+}
+
+/** 서버가 예약·결제 데이터를 확인해 공유 카드를 생성하고 양쪽 채팅방에 보낸다. */
+export async function shareCafeReservation(
+  roomId: number,
+  reservationId: number,
+) {
+  const { data } = await api.post<ApiResponse<ChatMessage>>(
+    `/v1/chats/rooms/${roomId}/share-reservation`,
+    { reservationId },
+  );
+  return data.data;
 }
 
 /** 방을 보는 중 실시간으로 받은 메시지를 읽음 처리한다. 첫 페이지 조회는 서버가 자동으로 읽음 처리한다 */
