@@ -57,6 +57,8 @@ interface MatchingState {
   current: RandomMatchResult | null;
   /** 이번 매칭에서 지금까지 본 상대 수 */
   shownCount: number;
+  /** 이번 매칭에서 보여준 상대의 userId. 같은 사람이 또 오면 후보를 다 본 것으로 본다 */
+  seenIds: number[];
   /** 위치 사용 안내를 이미 보여줬는지. 한 번 답했으면 매칭마다 다시 묻지 않는다 */
   locationPrompted: boolean;
   setLocationPrompted: () => void;
@@ -112,6 +114,7 @@ export const useMatchingStore = create<MatchingState>((set) => ({
 
   current: null,
   shownCount: 0,
+  seenIds: [],
   locationPrompted: false,
   setLocationPrompted: () => set({ locationPrompted: true }),
   dealt: false,
@@ -122,6 +125,7 @@ export const useMatchingStore = create<MatchingState>((set) => ({
       ...syncServerFlags(state, first),
       current: first,
       shownCount: first.found ? 1 : 0,
+      seenIds: first.found && first.candidate ? [first.candidate.userId] : [],
       dealt: false,
     })),
   showNextMatch: (next) =>
@@ -129,6 +133,10 @@ export const useMatchingStore = create<MatchingState>((set) => ({
       ...syncServerFlags(state, next),
       current: next,
       shownCount: next.found ? state.shownCount + 1 : state.shownCount,
+      seenIds:
+        next.found && next.candidate
+          ? [...state.seenIds, next.candidate.userId]
+          : state.seenIds,
     })),
   markDealt: () => set({ dealt: true }),
   toggleLike: (id) =>

@@ -1,4 +1,11 @@
-import { updateMyLocation, type RandomMatchParams } from '@/api/matching';
+import type { QueryClient } from '@tanstack/react-query';
+import { chatKeys, fetchChatRooms } from '@/api/chat';
+import {
+  fetchRandomMatch,
+  updateMyLocation,
+  type RandomMatchParams,
+  type RandomMatchResult,
+} from '@/api/matching';
 import { LIVING_AREAS, type MatchingFilter } from '@/stores/matchingStore';
 
 /**
@@ -25,6 +32,61 @@ export function toMatchParams(filter: MatchingFilter): RandomMatchParams {
         ? undefined
         : Number.parseInt(filter.distance, 10),
   };
+}
+
+/** 채팅 중인 상대를 건너뛰며 다음 상대를 찾는 최대 횟수 */
+const MAX_CHATTING_SKIPS = 10;
+
+/** 더 보여줄 후보가 없을 때 카드 화면에 띄우는 안내 */
+export const ALL_CANDIDATES_SEEN_GUIDE = '추천 후보를 모두 확인했어요.';
+
+/**
+ * 랜덤 매칭 상대를 받는다.
+ * - 이미 채팅 중인 상대(상대가 나가지 않은 채팅방)는 후보에서 빼고, 서버에 다음 상대를 다시 요청한다.
+ * - 서버가 본 상대를 처음부터 다시 돌려주거나(`recycled`) 이번 매칭에서 이미 본 상대가 또 오면,
+ *   같은 사람을 반복해서 보여주지 않고 후보를 모두 본 것으로 처리한다.
+ * seenIds는 이번 매칭에서 이미 보여준 상대의 userId다.
+ */
+export async function fetchRandomMatchExcludingChats(
+  params: RandomMatchParams,
+  queryClient: QueryClient,
+  seenIds: number[] = [],
+): Promise<RandomMatchResult> {
+  const chattingIds = new Set<number>();
+  try {
+    const rooms = await queryClient.fetchQuery({
+      queryKey: chatKeys.rooms,
+      queryFn: fetchChatRooms,
+      staleTime: 0,
+    });
+    for (const room of rooms) {
+      if (room.otherUserId !== undefined && !room.otherUserLeft) {
+        chattingIds.add(room.otherUserId);
+      }
+    }
+  } catch {
+    // 채팅 목록을 못 불러와도 매칭은 계속한다
+  }
+
+  const allSeen: RandomMatchResult = {
+    found: false,
+    candidate: null,
+    guide: ALL_CANDIDATES_SEEN_GUIDE,
+  };
+  const seen = new Set(seenIds);
+
+  for (let attempt = 0; attempt <= MAX_CHATTING_SKIPS; attempt += 1) {
+    const result = await fetchRandomMatch(params);
+    const candidate = result.found ? result.candidate : null;
+    // 후보가 없다는 서버 응답은 그대로 전달한다
+    if (!candidate) return result;
+    if (result.recycled || seen.has(candidate.userId)) return allSeen;
+    seen.add(candidate.userId);
+    if (!chattingIds.has(candidate.userId)) return result;
+  }
+
+  // 계속 채팅 중인 상대만 오면 더 보여줄 사람이 없는 것으로 본다
+  return allSeen;
 }
 
 export type LocationPermission =
