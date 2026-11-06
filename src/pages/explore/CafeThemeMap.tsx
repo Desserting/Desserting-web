@@ -48,6 +48,7 @@ export default function CafeThemeMap({
   from: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
   const map = useRef<NaverMap | null>(null);
   const [readyMap, setReadyMap] = useState<NaverMap | null>(null);
   const clearLayers = useRef<(() => void) | null>(null);
@@ -64,10 +65,10 @@ export default function CafeThemeMap({
 
   useEffect(() => {
     const element = container.current;
+    // 지도 div는 SDK가 스타일을 바꾸므로 크기는 바깥 래퍼(viewport) 기준으로 맞춘다.
+    const frame = viewport.current;
     const maps = sdk.data;
-    if (!element || !maps) return;
-    // 지도 크기는 패널 위쪽에 남는 캔버스 영역(container) 기준으로 맞춘다.
-    const frame = element;
+    if (!element || !frame || !maps) return;
     const instance = new maps.Map(element, {
       center: new maps.LatLng(
         DAEGU_DEFAULT_CAMERA.center.lat,
@@ -320,7 +321,9 @@ export default function CafeThemeMap({
       aria-label="테마거리 지도"
     >
       {/* 아래 20px은 테마거리 패널이 겹치는 자리라 비워 두어 네이버 로고·저작권 표기가 가려지지 않게 한다. */}
-      <div ref={container} className="absolute inset-x-0 top-0 bottom-5" />
+      <div ref={viewport} className="absolute inset-x-0 top-0 bottom-5">
+        <div ref={container} className="absolute inset-0" />
+      </div>
       {(sdk.isPending || sdk.isFetching || (sdk.isSuccess && !readyMap)) &&
         !authError && (
           <p
