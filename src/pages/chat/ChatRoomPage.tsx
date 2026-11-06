@@ -51,6 +51,7 @@ import { formatDayLabel, getDayKey } from '@/lib/datetime';
 import { getApiError } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 import DessertAvatar from '@/components/DessertAvatar';
+import { rememberBookingOrigin } from '@/pages/explore/cafeNavigation';
 import MessageItem from './MessageItem';
 import PlaceProposalSheet, { type PlaceProposal } from './PlaceProposalSheet';
 import { useChatSocket } from './useChatSocket';
@@ -451,9 +452,10 @@ function ChatRoom({ roomId }: { roomId: number }) {
         <Button
           type="button"
           variant="brand"
-          onClick={() =>
-            navigate('/explore', { state: { bookingFrom: `/chat/${roomId}` } })
-          }
+          onClick={() => {
+            rememberBookingOrigin();
+            navigate('/explore', { state: { bookingFrom: `/chat/${roomId}` } });
+          }}
           className="pointer-events-auto absolute bottom-4 left-6 flex h-11 w-fit cursor-pointer gap-2.5 rounded-[20px] py-0 pr-5 pl-1.5 text-[15px] font-normal shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
         >
           <span

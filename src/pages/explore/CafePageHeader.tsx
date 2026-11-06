@@ -8,17 +8,25 @@ export default function CafePageHeader({
   backTo,
   backState,
   titleClassName,
+  onBack,
 }: {
   title: string;
   backTo: string;
   backState?: CafeNavigationState;
   titleClassName?: string;
+  /** 있으면 링크 이동 대신 이 동작을 실행한다. 링크는 새 탭·fallback용으로 남는다 */
+  onBack?: () => void;
 }) {
   return (
     <header className="relative flex h-11 shrink-0 items-center justify-center">
       <Link
         to={backTo}
         state={backState}
+        onClick={(event) => {
+          if (!onBack) return;
+          event.preventDefault();
+          onBack();
+        }}
         aria-label="뒤로 가기"
         className="focus-visible:outline-mint-deep absolute -left-[10px] flex size-11 items-center justify-center rounded-full focus-visible:outline-2"
       >

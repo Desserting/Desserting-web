@@ -253,7 +253,7 @@ export default function CafeListPage() {
           })}
         </Tabs>
       </main>
-      <BottomNav activePath="/explore" />
+      {!bookingFrom && <BottomNav activePath="/explore" />}
     </div>
   );
 }

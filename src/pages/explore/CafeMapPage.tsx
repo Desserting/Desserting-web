@@ -11,18 +11,24 @@ import {
 import {
   Link,
   useLocation,
+  useNavigate,
   useNavigationType,
   useSearchParams,
 } from 'react-router-dom';
 import CafeRequestState from './CafeRequestState';
 import CafePageHeader from './CafePageHeader';
 import CafeThemeMap from './CafeThemeMap';
-import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
+import {
+  bookingOriginDelta,
+  getBookingFrom,
+  type CafeNavigationState,
+} from './cafeNavigation';
 
 const EMPTY_STORES: CafeStore[] = [];
 
 export default function CafeMapPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const navigationType = useNavigationType();
   const mapPath = `${location.pathname}${location.search}`;
   const [params, setParams] = useSearchParams();
@@ -68,7 +74,15 @@ export default function CafeMapPage() {
       <header className="flex h-[clamp(88px,14dvh,112px)] shrink-0 items-end justify-center px-6 pb-5">
         {bookingFrom ? (
           <div className="w-full">
-            <CafePageHeader title="카페 지도" backTo={bookingFrom} />
+            <CafePageHeader
+              title="카페 지도"
+              backTo={bookingFrom}
+              onBack={() => {
+                const delta = bookingOriginDelta();
+                if (delta === null) navigate(bookingFrom);
+                else navigate(delta);
+              }}
+            />
           </div>
         ) : (
           <h1 className="text-center text-[23px] leading-[34px] font-bold">
@@ -156,7 +170,8 @@ export default function CafeMapPage() {
           )}
         </section>
       </main>
-      <BottomNav />
+      {/* 채팅에서 시작한 예약 흐름에서는 헤더 뒤로가기만 남겨 사용자의 경로를 고정한다 */}
+      {!bookingFrom && <BottomNav />}
     </div>
   );
 }
