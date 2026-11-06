@@ -124,6 +124,17 @@ html {
   margin-top: 30px;
 }
 
+/* 영수증 종이: 위아래 가장자리를 톱니 모양으로 오려낸다 (톱니 12×6px) */
+.receipt-paper {
+  background: #fff;
+  mask:
+    conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top
+      left / 12px 6px repeat-x,
+    linear-gradient(#000 0 0) 0 6px / 100% calc(100% - 12px) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg)
+      bottom left / 12px 6px repeat-x;
+}
+
 @media (max-height: 760px) {
   .premium-page {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
@@ -154,6 +165,8 @@ html {
   --color-cafe-payment-divider: #e5e9e9;
   --color-cafe-order-border: #e8ebed;
   --color-cafe-order-line: #bdeddd;
+  --color-receipt-bg: #f1f3f2;
+  --color-receipt-dash: #c9cfcd;
   --color-cafe-list-border: #e9ecee;
   --color-cafe-list-selected: #dff7ee;
   --color-cafe-bakery: #f5eee6;
