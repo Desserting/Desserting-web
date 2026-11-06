@@ -14,7 +14,6 @@ import {
   fetchCafeOrder,
   fetchCafeReservation,
   positiveId,
-  type CafeOrder,
 } from '@/api/cafeBooking';
 import { chatKeys, shareCafeReservation, type ChatMessage } from '@/api/chat';
 import { Button } from '@/components/ui/button';
@@ -26,10 +25,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { getApiError } from '@/lib/axios';
-import { formatClock, formatTimeOfDay, parseServerDate } from '@/lib/datetime';
+import { formatTimeOfDay } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
+import OrderReceipt from './OrderReceipt';
 import { useBookingFlow } from '@/lib/bookingFlow';
 import type { CafeNavigationState } from './cafeNavigation';
 
@@ -38,104 +38,6 @@ const ACTION_BUTTON_CLASS = 'cursor-pointer rounded-[13px] pb-0 text-base';
 function reservationDay(value: string) {
   const date = new Date(`${value}T00:00:00`);
   return `${value.replaceAll('-', '.')} (${['일', '월', '화', '수', '목', '금', '토'][date.getDay()]})`;
-}
-
-function OrderProgress({ order }: { order: CafeOrder }) {
-  const refunded =
-    order.orderStatus === 'REFUNDED' || order.reservationStatus === 'CANCELLED';
-  const steps = [
-    { label: '주문 접수', at: order.paidAt, done: true },
-    {
-      label: '주문 준비 예정',
-      at: `${order.reservationDate}T${order.reservationTime.slice(0, 5)}:00`,
-      done: false,
-    },
-  ];
-  return (
-    <section
-      aria-labelledby="order-cafe-name"
-      className="border-cafe-order-border mt-9 flex min-h-[455px] flex-col rounded-[17px] border px-[17px] pt-[19px] pb-[22px]"
-    >
-      <h2
-        id="order-cafe-name"
-        className="text-center text-2xl leading-9 font-bold"
-      >
-        {order.storeName}
-      </h2>
-      <dl className="mt-6 flex items-center justify-between gap-3 leading-[26px]">
-        <dt className="text-base">주문 번호</dt>
-        <dd className="text-[17px] font-bold">#{order.orderId}</dd>
-      </dl>
-      {refunded ? (
-        <p
-          role="status"
-          className="text-my-muted my-auto py-12 text-center font-bold"
-        >
-          {order.orderStatusDescription || order.reservationStatusDescription}
-        </p>
-      ) : (
-        <ol
-          aria-label="주문 처리 상태"
-          className="mt-[41px] flex flex-col gap-[58px] pl-[3px]"
-        >
-          {steps.map((step, index) => (
-            <li
-              key={step.label}
-              aria-current={step.done ? 'step' : undefined}
-              className="relative flex min-h-8 items-center gap-4"
-            >
-              {index < steps.length - 1 && (
-                <span
-                  aria-hidden
-                  className={cn(
-                    'absolute top-8 -bottom-[58px] left-[15px] w-0.5',
-                    steps[index + 1].done ? 'bg-cafe-order-line' : 'bg-line',
-                  )}
-                />
-              )}
-              <span
-                aria-hidden
-                className={cn(
-                  'relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full',
-                  step.done ? 'bg-mint' : 'bg-cafe-field text-my-muted',
-                )}
-              >
-                {step.done ? (
-                  <Check className="size-5" strokeWidth={2.2} />
-                ) : (
-                  <span className="size-2 rounded-full bg-current" />
-                )}
-              </span>
-              <span
-                className={cn(
-                  'text-[19px] leading-7 font-bold',
-                  !step.done && 'text-my-muted',
-                )}
-              >
-                {step.label}
-              </span>
-              {step.at ? (
-                <time
-                  dateTime={step.at}
-                  className="ml-auto shrink-0 text-right text-[11px] leading-[18px]"
-                >
-                  {new Intl.DateTimeFormat('sv-SE')
-                    .format(parseServerDate(step.at))
-                    .replaceAll('-', '.')}
-                  <br />
-                  {formatClock(step.at)}
-                </time>
-              ) : (
-                <span className="text-my-muted ml-auto text-[11px]">
-                  {step.done ? '시각 미제공' : '대기 중'}
-                </span>
-              )}
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
-  );
 }
 
 export default function CafeReservationResultPage({
@@ -267,7 +169,12 @@ export default function CafeReservationResultPage({
     return <Navigate to={orderPath} state={backState} replace />;
 
   return (
-    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]">
+    <main
+      className={cn(
+        'text-ink flex min-h-dvh flex-col px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]',
+        view === 'order' ? 'bg-receipt-bg' : 'bg-white',
+      )}
+    >
       <PageHeader
         title={title}
         backTo={chatPath}
@@ -322,7 +229,7 @@ export default function CafeReservationResultPage({
         </>
       ) : (
         <>
-          <OrderProgress order={order} />
+          <OrderReceipt order={order} />
           <div className="mt-auto pt-8">
             {cancelled && (
               <p
@@ -348,7 +255,7 @@ export default function CafeReservationResultPage({
                   ? () => navigate(chatPath, { replace: true })
                   : returnToChat
               }
-              className={ACTION_BUTTON_CLASS}
+              className={cn(ACTION_BUTTON_CLASS, 'h-[60px] rounded-[15px]')}
             >
               {share.isPending
                 ? '공유 중…'
