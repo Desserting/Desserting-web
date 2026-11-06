@@ -36,6 +36,11 @@ import {
   type ChatMessage,
   type ChatMessageType,
 } from '@/api/chat';
+import {
+  matchKeys,
+  type ReceivedRequest,
+  type SentRequest,
+} from '@/api/matches';
 import { fetchMe, userKeys } from '@/api/users';
 import PageHeader from '@/components/PageHeader';
 import Bubble from '@/components/Bubble';
@@ -249,6 +254,13 @@ function ChatRoom({ roomId }: { roomId: number }) {
     mutationFn: () => leaveChatRoom(roomId),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) });
+      // 나간 방에서 시작된 요청은 보낸·받은 요청 목록에서도 바로 지운다
+      queryClient.setQueryData<SentRequest[]>(matchKeys.sent, (list) =>
+        list?.filter((request) => request.chatRoomId !== roomId),
+      );
+      queryClient.setQueryData<ReceivedRequest[]>(matchKeys.received, (list) =>
+        list?.filter((request) => request.chatRoomId !== roomId),
+      );
       void queryClient.invalidateQueries({ queryKey: chatKeys.rooms });
       navigate('/chat', { replace: true });
     },

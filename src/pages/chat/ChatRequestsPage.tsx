@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BellOff } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { chatKeys } from '@/api/chat';
+import { chatKeys, fetchChatRooms } from '@/api/chat';
 import {
   REQUEST_ERROR_MESSAGES,
   acceptRequest,
   fetchReceivedRequests,
+  hideLeftRooms,
   matchKeys,
   rejectRequest,
   type ReceivedRequest,
@@ -182,22 +183,32 @@ export default function ChatRequestsPage() {
     refetchOnMount: 'always',
   });
 
+  // 서버가 수락된 요청을 계속 내려줘도, 내가 나가서 목록에 없는 채팅방의 요청은 숨긴다
+  const roomsQuery = useQuery({
+    queryKey: chatKeys.rooms,
+    queryFn: fetchChatRooms,
+  });
+  const rooms = roomsQuery.data;
+  // 채팅방 목록이 오기 전에 보여주면 나간 방의 요청이 잠깐 보였다 사라진다
+  const loading = isPending || roomsQuery.isPending;
+
   // 처리 대기 중인 요청을 위에, 나머지는 최근 순으로 보여준다
-  const requests = useMemo(
-    () =>
-      (received ?? []).slice().sort((a, b) => {
+  const requests = useMemo(() => {
+    const roomIds = rooms && new Set(rooms.map((room) => room.roomId));
+    return hideLeftRooms(received ?? [], roomIds)
+      .slice()
+      .sort((a, b) => {
         const aPending = a.status === 'PENDING' ? 0 : 1;
         const bPending = b.status === 'PENDING' ? 0 : 1;
         return aPending - bPending || b.createdAt.localeCompare(a.createdAt);
-      }),
-    [received],
-  );
+      });
+  }, [received, rooms]);
 
   return (
     <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pb-10">
       <PageHeader title="대화 요청" backTo={backTo} />
 
-      {isPending && (
+      {loading && (
         <p role="status" className="text-ink-muted mt-24 text-center">
           대화 요청을 불러오는 중이에요...
         </p>
@@ -219,7 +230,7 @@ export default function ChatRequestsPage() {
         </div>
       )}
 
-      {received && requests.length === 0 && (
+      {!loading && received && requests.length === 0 && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 pb-24">
           <div className="bg-mint-100 flex size-20 items-center justify-center rounded-full">
             <BellOff
@@ -233,7 +244,7 @@ export default function ChatRequestsPage() {
         </div>
       )}
 
-      {requests.length > 0 && (
+      {!loading && requests.length > 0 && (
         <ul className="divide-hairline mt-6 divide-y">
           {requests.map((request) => (
             <RequestItem key={request.requestId} request={request} />

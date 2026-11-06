@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Send } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { chatKeys, fetchChatRooms } from '@/api/chat';
 import {
   fetchSentRequests,
+  hideLeftRooms,
   matchKeys,
   type RequestStatus,
   type SentRequest,
@@ -117,18 +119,27 @@ export default function SentRequestsPanel() {
     refetchOnMount: 'always',
   });
 
+  // 서버가 수락된 요청을 계속 내려줘도, 내가 나가서 목록에 없는 채팅방의 요청은 숨긴다
+  const roomsQuery = useQuery({
+    queryKey: chatKeys.rooms,
+    queryFn: fetchChatRooms,
+  });
+  const rooms = roomsQuery.data;
+
   // 대기 중인 요청을 위에, 나머지는 최근 순으로 보여준다
-  const requests = useMemo(
-    () =>
-      (sent ?? []).slice().sort((a, b) => {
+  const requests = useMemo(() => {
+    const roomIds = rooms && new Set(rooms.map((room) => room.roomId));
+    return hideLeftRooms(sent ?? [], roomIds)
+      .slice()
+      .sort((a, b) => {
         const aPending = a.status === 'PENDING' ? 0 : 1;
         const bPending = b.status === 'PENDING' ? 0 : 1;
         return aPending - bPending || b.createdAt.localeCompare(a.createdAt);
-      }),
-    [sent],
-  );
+      });
+  }, [sent, rooms]);
 
-  if (isPending) {
+  // 채팅방 목록이 오기 전에 보여주면 나간 방의 요청이 잠깐 보였다 사라진다
+  if (isPending || roomsQuery.isPending) {
     return (
       <div role="status" className="mt-3">
         <span className="sr-only">보낸 요청을 불러오는 중이에요</span>

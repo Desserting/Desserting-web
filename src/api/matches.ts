@@ -109,5 +109,22 @@ export const REQUEST_ERROR_MESSAGES: Record<string, string> = {
   H006: '만료된 요청이에요.',
 };
 
-export const countPending = (requests: ReceivedRequest[]) =>
+/**
+ * 내가 나가서 채팅 목록에 없는 방의 수락된 요청을 뺀다. 서버가 처리된 요청을 계속
+ * 내려줘도 나간 방의 이력은 보이지 않게 한다. 채팅방 목록을 아직 모르면(roomIds가
+ * undefined) 아무것도 빼지 않는다.
+ */
+export function hideLeftRooms<
+  T extends { status: RequestStatus; chatRoomId?: number | null },
+>(requests: T[], roomIds: ReadonlySet<number> | undefined): T[] {
+  if (!roomIds) return requests;
+  return requests.filter(
+    (request) =>
+      request.status !== 'ACCEPTED' ||
+      request.chatRoomId == null ||
+      roomIds.has(request.chatRoomId),
+  );
+}
+
+export const countPending =(requests: ReceivedRequest[]) =>
   requests.filter((request) => request.status === 'PENDING').length;
