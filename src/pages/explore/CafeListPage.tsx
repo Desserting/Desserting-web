@@ -1,4 +1,4 @@
-import { Heart, LayoutGrid } from 'lucide-react';
+import { ChevronRight, LayoutGrid } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   cafeKeys,
@@ -12,11 +12,9 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import heart from '@/assets/cafes/list-heart.svg';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useCafeStore } from '@/stores/cafeStore';
 import PageHeader from '@/components/PageHeader';
 import { CAFE_FILTERS, findCafeArea } from './cafeAreas';
 import { dessertLabel } from '@/lib/dessert';
@@ -24,19 +22,15 @@ import CafeImage from './CafeImage';
 import CafeRequestState from './CafeRequestState';
 
 function CafeCard({ cafe, from }: { cafe: CafeStore; from: string }) {
-  const cafeId = String(cafe.storeId);
-  const liked = useCafeStore((state) => state.likedIds.includes(cafeId));
-  const toggleLike = useCafeStore((state) => state.toggleLike);
-
   return (
-    <li className="border-cafe-list-border relative h-[88px] rounded-[15px] border bg-white">
+    <li className="border-cafe-list-border rounded-[15px] border bg-white transition-colors active:bg-surface">
       <Link
         to={`/explore/cafes/${cafe.storeId}`}
         state={{ from }}
         aria-label={`${cafe.name} 상세 보기`}
-        className="focus-visible:outline-mint-deep flex h-full items-center gap-[14px] rounded-[15px] py-2.5 pr-10 pl-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2"
+        className="focus-visible:outline-mint-deep flex min-h-[92px] items-center gap-[14px] rounded-[15px] py-3 pr-3 pl-3 focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
-        <div className="bg-cafe-bakery size-[66px] shrink-0 overflow-hidden rounded-2xl">
+        <div className="bg-cafe-bakery size-[68px] shrink-0 overflow-hidden rounded-2xl">
           <CafeImage
             src={cafe.coverImageUrl}
             alt={`${cafe.name} 대표 메뉴`}
@@ -44,32 +38,19 @@ function CafeCard({ cafe, from }: { cafe: CafeStore; from: string }) {
           />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[19px] leading-7 font-bold">
+          <h2 className="line-clamp-2 text-[17px] leading-6 font-bold break-keep">
             {cafe.name}
           </h2>
-          <p className="mt-2 truncate text-[13px] leading-5">
+          <p className="text-ink-muted mt-1 truncate text-[13px] leading-5">
             {cafe.dessertTypes.map(dessertLabel).join(' · ')}
             {cafe.distanceKm != null && ` · ${cafe.distanceKm.toFixed(1)}km`}
           </p>
         </div>
+        <ChevronRight
+          aria-hidden="true"
+          className="text-ink-muted size-5 shrink-0"
+        />
       </Link>
-      <button
-        type="button"
-        aria-label={`${cafe.name} ${liked ? '좋아요 취소' : '좋아요'}`}
-        aria-pressed={liked}
-        onClick={() => toggleLike(cafeId)}
-        className="focus-visible:outline-mint-deep absolute top-1/2 right-0.5 flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2"
-      >
-        {liked ? (
-          <Heart
-            aria-hidden="true"
-            className="fill-mint-deep text-mint-deep size-[23px]"
-            strokeWidth={1.8}
-          />
-        ) : (
-          <img src={heart} alt="" />
-        )}
-      </button>
     </li>
   );
 }
@@ -130,11 +111,11 @@ export default function CafeListPage() {
     <div className="text-ink flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <main className="flex min-h-0 flex-1 flex-col px-6">
         <PageHeader
-          title={`${area.name} (${cafes.length}) · 선택됨`}
+          title={area.name}
           backTo={`/explore?theme=${area.id}`}
           className="pb-3"
         />
-        <p className="bg-premium-emblem text-mint-deep flex h-[21px] shrink-0 items-center rounded-full px-2.5 text-[10px] leading-[15px]">
+        <p className="bg-premium-emblem text-mint-deep flex h-6 shrink-0 items-center rounded-full px-3 text-[11px] leading-4">
           지도에서 선택한 테마거리의 제휴매장 목록
         </p>
         <Tabs
@@ -148,7 +129,7 @@ export default function CafeListPage() {
         >
           <h2
             id="cafe-category-label"
-            className="shrink-0 text-xs leading-[18px] font-bold"
+            className="shrink-0 text-[13px] leading-5 font-bold"
           >
             디저트 카테고리
           </h2>
@@ -160,7 +141,7 @@ export default function CafeListPage() {
               <TabsTrigger
                 key={filter.id}
                 value={filter.id}
-                className="bg-surface text-ink data-[state=active]:bg-premium-emblem flex h-[78px] cursor-pointer flex-col gap-1 rounded-[14px] border-0 p-1.5 text-[10px] leading-[15px] font-bold shadow-none after:hidden"
+                className="bg-surface text-ink data-[state=active]:bg-premium-emblem flex h-[84px] cursor-pointer flex-col gap-1 rounded-[14px] border-0 p-1.5 text-[11px] leading-4 font-bold break-keep shadow-none after:hidden"
               >
                 <span
                   aria-hidden="true"
@@ -202,7 +183,7 @@ export default function CafeListPage() {
               >
                 <h2
                   aria-live="polite"
-                  className="mb-[5px] text-sm leading-5 font-bold"
+                  className="mb-2 text-[15px] leading-6 font-bold"
                 >
                   제휴매장 {items.length}곳
                 </h2>
@@ -215,7 +196,7 @@ export default function CafeListPage() {
                 ) : items.length > 0 ? (
                   <ul
                     aria-label={`${area.name} ${filter.label} 카페 목록`}
-                    className="grid gap-[18px]"
+                    className="grid gap-3"
                   >
                     {items.map((cafe) => (
                       <CafeCard
