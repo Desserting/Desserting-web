@@ -63,7 +63,12 @@ export default function MyPage() {
   });
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
   const details: Record<string, string> = {
-    '/my/hearts': profile && !isError ? `${profile.heartCount}개 보유` : '—',
+    '/my/hearts':
+      profile && !isError
+        ? profile.isPremium
+          ? '무제한'
+          : `${profile.heartCount}개 보유`
+        : '—',
     '/my/premium':
       profile && !isError ? (profile.isPremium ? '이용 중' : '미보유') : '—',
   };
