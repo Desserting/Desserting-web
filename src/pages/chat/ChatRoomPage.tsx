@@ -37,7 +37,7 @@ import {
   type ChatMessageType,
 } from '@/api/chat';
 import { fetchMe, userKeys } from '@/api/users';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import Bubble from '@/components/Bubble';
 import { Button } from '@/components/ui/button';
 import {
@@ -294,21 +294,31 @@ function ChatRoom({ roomId }: { roomId: number }) {
 
   return (
     <main className="text-ink flex h-dvh flex-col bg-white">
-      <header className="relative shrink-0 px-6 pt-[34px] pb-4">
-        <BackButton to="/chat" />
-        <h1 className="flex items-center justify-center gap-2 px-9 text-[19px] leading-6 font-bold">
-          <DessertAvatar src={room?.otherUserAvatarUrl} className="size-6" />
-          <span className="truncate">{otherNickname}</span>
-        </h1>
-        <button
-          type="button"
-          aria-label="채팅방 나가기"
-          onClick={() => setLeaveOpen(true)}
-          className="absolute top-[34px] right-[26px] block size-6 cursor-pointer"
-        >
-          <LogOut aria-hidden className="size-6" strokeWidth={1.8} />
-        </button>
-      </header>
+      <div className="shrink-0 px-6">
+        <PageHeader
+          className="pb-4"
+          backTo="/chat"
+          title={
+            <>
+              <DessertAvatar
+                src={room?.otherUserAvatarUrl}
+                className="size-6 shrink-0"
+              />
+              <span className="truncate">{otherNickname}</span>
+            </>
+          }
+          right={
+            <button
+              type="button"
+              aria-label="채팅방 나가기"
+              onClick={() => setLeaveOpen(true)}
+              className="block size-6 cursor-pointer"
+            >
+              <LogOut aria-hidden className="size-6" strokeWidth={1.8} />
+            </button>
+          }
+        />
+      </div>
 
       {/* 헤더 바로 밑에 떠 있는 제안 버튼. 버튼 말고는 배경이 투명해서 대화가 비쳐 보이고 클릭도 통과한다 */}
       <div className="pointer-events-none relative z-10 h-0 px-6">

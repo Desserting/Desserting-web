@@ -9,7 +9,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { Check, Info, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -200,9 +200,8 @@ export default function MatchingSettingsPage() {
   const isUnlimited = filter.distance === 'unlimited';
 
   return (
-    <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px]">
-      <BackButton to="/home" />
-      <h1 className="text-center text-[23px] leading-6 font-bold">매칭 설정</h1>
+    <main className="text-ink relative flex flex-1 flex-col bg-white px-6">
+      <PageHeader title="매칭 설정" backTo="/home" />
 
       <section className="mt-5">
         <SectionTitle step={1}>지역</SectionTitle>

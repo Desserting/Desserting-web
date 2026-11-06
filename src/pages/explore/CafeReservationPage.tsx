@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatTimeOfDay, toDateKey } from '@/lib/datetime';
 import CafeNotFound from './CafeNotFound';
-import CafePageHeader from './CafePageHeader';
+import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import ReservationTimeSlots from './ReservationTimeSlots';
 import { useBookingFlow } from '@/lib/bookingFlow';
@@ -171,8 +171,8 @@ export default function CafeReservationPage() {
     (reservationId && (existing.isPending || existing.isError))
   )
     return (
-      <main className="min-h-dvh px-6 pt-16">
-        <CafePageHeader
+      <main className="min-h-dvh px-6">
+        <PageHeader
           title="예약하기"
           backTo={`/explore/cafes/${storeId}`}
           backState={backState}
@@ -215,8 +215,8 @@ export default function CafeReservationPage() {
   };
 
   return (
-    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pt-[clamp(32px,8dvh,68px)] pb-[max(47px,env(safe-area-inset-bottom,0px))]">
-      <CafePageHeader
+    <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]">
+      <PageHeader
         title="예약하기"
         backTo={`/explore/cafes/${cafe.storeId}`}
         backState={backState}

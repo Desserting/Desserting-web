@@ -1,10 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import iconClose from '@/assets/matching/icon-close.svg';
 import iconProfile from '@/assets/matching/icon-profile.svg';
 import DessertAvatar from '@/components/DessertAvatar';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -44,8 +45,7 @@ export default function MatchingCardsPage() {
 
   // 서버는 호출할 때마다 다음 상대를 주므로, 넘기기를 누를 때 다시 부른다
   const next = useMutation({
-    mutationFn: () =>
-      fetchNextCandidate(toMatchParams(filter), seenIds),
+    mutationFn: () => fetchNextCandidate(toMatchParams(filter), seenIds),
   });
 
   useEffect(() => {
@@ -109,18 +109,20 @@ export default function MatchingCardsPage() {
       : null;
 
   return (
-    <main className="text-ink relative flex flex-1 flex-col overflow-x-clip bg-white px-6 pt-[34px] pb-[98px]">
-      <button
-        type="button"
-        aria-label="랜덤 매칭 종료"
-        onClick={() => setExitOpen(true)}
-        className="absolute top-[34px] left-[26px] block size-6 cursor-pointer"
-      >
-        <ChevronLeft className="size-6" strokeWidth={3} aria-hidden />
-      </button>
-      <h1 className="text-center text-[20px] leading-6 font-bold">
-        {isSameTaste ? '같은' : '다른'} 취향 랜덤
-      </h1>
+    <main className="text-ink relative flex flex-1 flex-col overflow-x-clip bg-white px-6 pb-[98px]">
+      <PageHeader
+        title={`${isSameTaste ? '같은' : '다른'} 취향 랜덤`}
+        left={
+          <button
+            type="button"
+            aria-label="랜덤 매칭 종료"
+            onClick={() => setExitOpen(true)}
+            className="block size-6 cursor-pointer"
+          >
+            <ArrowLeft className="size-6" aria-hidden />
+          </button>
+        }
+      />
       <p className="text-my-muted mt-[15px] text-right text-[13px] leading-[18px]">
         오늘의 추천 {shownCount}번째
       </p>

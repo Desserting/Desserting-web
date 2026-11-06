@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import logo from '@/assets/signup/splash-logo.svg';
 import myAvatar from '@/assets/my/avatar.png';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,11 +62,11 @@ export default function ProfilePage({
   };
 
   return (
-    <main className="text-ink relative flex flex-1 flex-col bg-white px-8 pt-[55px]">
-      <BackButton to={isEditing ? '/my' : '/signup/interests'} />
-      <h1 className="text-center text-[25px] leading-[30px] font-bold">
-        {isEditing ? '내 프로필 관리' : '프로필을 완성해요'}
-      </h1>
+    <main className="text-ink relative flex flex-1 flex-col bg-white px-6">
+      <PageHeader
+        title={isEditing ? '내 프로필 관리' : '프로필을 완성해요'}
+        backTo={isEditing ? '/my' : '/signup/interests'}
+      />
       <div className="relative mt-[66px] size-[176px] self-center">
         <div className="bg-cream size-full overflow-hidden rounded-full">
           {avatar ? (

@@ -9,7 +9,7 @@ import {
   fetchProfiles,
   userKeys,
 } from '@/api/users';
-import BackButton from '@/components/BackButton';
+import PageHeader from '@/components/PageHeader';
 import BottomNav from '@/components/BottomNav';
 import DessertAvatar from '@/components/DessertAvatar';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { serverCandidateKey, useMatchingStore } from '@/stores/matchingStore';
 
 const TABS = [
-  { id: 'explore', label: '프로필 탐색' },
+  { id: 'explore', label: '내 주변 프로필' },
   { id: 'liked', label: '좋아요 누른 프로필 보기' },
 ] as const;
 
@@ -97,11 +97,10 @@ export default function ProfileExplorePage() {
 
   return (
     <>
-      <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-6">
-        <BackButton to="/home" />
-        <h1 className="sr-only">프로필 보기</h1>
+      <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pb-6">
+        <PageHeader title="프로필 보기" backTo="/home" />
 
-        <div role="tablist" className="mt-[46px] grid grid-cols-2 gap-2">
+        <div role="tablist" className="mt-5 grid grid-cols-2 gap-2">
           {TABS.map(({ id, label }) => {
             const selected = id === tab;
             return (
