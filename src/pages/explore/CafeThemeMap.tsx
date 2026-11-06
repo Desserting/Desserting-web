@@ -300,7 +300,7 @@ export default function CafeThemeMap({
     } else {
       instance.fitBounds(
         points.map(({ lat, lng }) => new maps.LatLng(lat, lng)),
-        { top: 80, right: 40, bottom: 60, left: 40, maxZoom: 17 },
+        { top: 80, right: 40, bottom: 80, left: 40, maxZoom: 17 },
       );
     }
   }, [sdk.data, readyMap, selected, stores]);
@@ -353,7 +353,7 @@ export default function CafeThemeMap({
         </div>
       )}
       {sdk.isSuccess && readyMap && !authError && !sdk.isFetching && (
-        <div className="absolute right-3 bottom-8 z-10 flex flex-col gap-2">
+        <div className="absolute right-3 bottom-[76px] z-10 flex flex-col gap-2">
           <div className="flex flex-col overflow-hidden rounded-xl bg-white shadow-md">
             <button
               type="button"
