@@ -331,7 +331,7 @@ export default function CafeReservationResultPage({
                   ? () => navigate(chatPath, { replace: true })
                   : returnToChat
               }
-              className="h-auto min-h-20 cursor-pointer rounded-[15px] px-3 py-5 text-base leading-6 whitespace-normal"
+              className="cursor-pointer rounded-[13px] pb-0 text-base"
             >
               {share.isPending
                 ? '공유 중…'
