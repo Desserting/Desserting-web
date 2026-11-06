@@ -51,7 +51,7 @@ import { formatDayLabel, getDayKey } from '@/lib/datetime';
 import { getApiError } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 import DessertAvatar from '@/components/DessertAvatar';
-import { rememberBookingOrigin } from '@/pages/explore/cafeNavigation';
+import { useBookingFlow } from '@/lib/bookingFlow';
 import MessageItem from './MessageItem';
 import PlaceProposalSheet, { type PlaceProposal } from './PlaceProposalSheet';
 import { useChatSocket } from './useChatSocket';
@@ -99,6 +99,7 @@ function ChatRoom({ roomId }: { roomId: number }) {
   // 열 때마다 key를 바꿔 제안 시트를 처음 단계부터 새로 시작한다
   const [proposal, setProposal] = useState({ open: false, key: 0 });
   const navigate = useNavigate();
+  const { startBooking } = useBookingFlow();
   // 이 화면에 있는 동안 실시간으로 도착한 메시지. 이 메시지들만 등장 애니메이션을 준다
   const [liveIds, setLiveIds] = useState<ReadonlySet<string>>(new Set());
 
@@ -452,10 +453,7 @@ function ChatRoom({ roomId }: { roomId: number }) {
         <Button
           type="button"
           variant="brand"
-          onClick={() => {
-            rememberBookingOrigin();
-            navigate('/explore', { state: { bookingFrom: `/chat/${roomId}` } });
-          }}
+          onClick={() => startBooking(`/chat/${roomId}`)}
           className="pointer-events-auto absolute bottom-4 left-6 flex h-11 w-fit cursor-pointer gap-2.5 rounded-[20px] py-0 pr-5 pl-1.5 text-[15px] font-normal shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
         >
           <span

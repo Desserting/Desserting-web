@@ -20,7 +20,7 @@ import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
 import CafeRequestState from './CafeRequestState';
 import { formatMenuPrice, toCafeMenu, getMenuQuantities } from './cafeMenus';
-import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
+import type { CafeNavigationState } from './cafeNavigation';
 
 const PAYMENT_METHODS = [
   { id: 'card', label: '카드 결제 (모의)' },
@@ -105,7 +105,6 @@ export default function CafePaymentPage() {
     return (
       <Navigate
         to={`/explore/cafes/${storeId}/reservations/${reservationId}/complete`}
-        state={{ bookingFrom: getBookingFrom(state) }}
         replace
       />
     );

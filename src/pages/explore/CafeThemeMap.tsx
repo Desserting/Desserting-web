@@ -38,7 +38,6 @@ export default function CafeThemeMap({
   stores,
   onSelect,
   from,
-  bookingFrom,
 }: {
   entryKey: string;
   areas: ThemeStreet[];
@@ -47,7 +46,6 @@ export default function CafeThemeMap({
   stores: CafeStore[];
   onSelect: (id: number) => void;
   from: string;
-  bookingFrom?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
@@ -199,7 +197,7 @@ export default function CafeThemeMap({
       marker.append(image, name);
       marker.onclick = () => {
         navigate(`/explore/cafes/${store.storeId}`, {
-          state: { from, bookingFrom },
+          state: { from },
         });
       };
       layers.push(
@@ -277,7 +275,6 @@ export default function CafeThemeMap({
     onSelect,
     navigate,
     from,
-    bookingFrom,
   ]);
 
   const fitSelected = useCallback(() => {

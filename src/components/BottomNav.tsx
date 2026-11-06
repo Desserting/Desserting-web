@@ -2,6 +2,7 @@ import { House, MessageSquare, Search, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useBookingFlow } from '@/lib/bookingFlow';
 import { naverMapsQueryOptions } from '@/lib/naverMaps';
 
 const TABS = [
@@ -18,11 +19,15 @@ export default function BottomNav({
   activePath?: string;
 }) {
   const queryClient = useQueryClient();
+  const { bookingFrom } = useBookingFlow();
 
   useEffect(() => {
     // 홈에 머무는 동안 SDK만 준비한다. 실제 지도는 탐색에서 생성한다.
     void queryClient.prefetchQuery(naverMapsQueryOptions);
   }, [queryClient]);
+
+  // 채팅에서 시작한 예약 흐름에서는 헤더 뒤로가기만 남겨 사용자의 경로를 고정한다
+  if (bookingFrom) return null;
 
   return (
     <nav

@@ -7,10 +7,8 @@ import BackButton from '@/components/BackButton';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import StoreDetailInfo from '@/components/StoreDetailInfo';
-import {
-  getBookingFrom,
-  type CafeNavigationState,
-} from '@/pages/explore/cafeNavigation';
+import { useBookingFlow } from '@/lib/bookingFlow';
+import type { CafeNavigationState } from '@/pages/explore/cafeNavigation';
 import { cn } from '@/lib/utils';
 
 const priceFormatter = new Intl.NumberFormat('ko-KR');
@@ -77,7 +75,7 @@ export default function StoreDetailPage({
   const location = useLocation();
   const navigationState = location.state as CafeNavigationState | null;
   const from = navigationState?.from;
-  const bookingFrom = getBookingFrom(navigationState);
+  const { bookingFrom } = useBookingFlow();
   const backTo =
     from?.startsWith('/') && !from.startsWith('//')
       ? from
@@ -103,9 +101,7 @@ export default function StoreDetailPage({
         <h1 className="text-[23px] font-bold">매장을 찾을 수 없어요</h1>
         <p>매장 주소를 다시 확인해 주세요.</p>
         <Button asChild variant="brand">
-          <Link to={backTo} state={{ bookingFrom }}>
-            돌아가기
-          </Link>
+          <Link to={backTo}>돌아가기</Link>
         </Button>
       </main>
     );
@@ -125,7 +121,7 @@ export default function StoreDetailPage({
   return (
     <>
       <main className="text-ink relative flex flex-1 flex-col bg-white px-6 pt-[34px] pb-6">
-        <BackButton to={backTo} state={{ bookingFrom }} />
+        <BackButton to={backTo} />
         <h1 className="sr-only">매장 상세</h1>
 
         {store.isPending && (
@@ -204,7 +200,7 @@ export default function StoreDetailPage({
                 >
                   <Link
                     to={`/explore/cafes/${data.storeId}/reservation`}
-                    state={{ from: backTo, bookingFrom }}
+                    state={{ from: backTo }}
                   >
                     예약하기
                   </Link>
@@ -214,9 +210,7 @@ export default function StoreDetailPage({
           </>
         )}
       </main>
-      {!bookingFrom && (
-        <BottomNav activePath={showMenus ? '/home' : '/explore'} />
-      )}
+      <BottomNav activePath={showMenus ? '/home' : '/explore'} />
     </>
   );
 }
