@@ -195,7 +195,7 @@ export default function StoreDetailPage({
               </section>
             )}
             {!showMenus && bookingFrom && (
-              <div className="mt-auto pt-8">
+              <div className="sticky bottom-0 mt-auto -mb-6 bg-white pt-4 pb-6">
                 <Button
                   asChild
                   variant="brand"
@@ -214,7 +214,9 @@ export default function StoreDetailPage({
           </>
         )}
       </main>
-      <BottomNav activePath={showMenus ? '/home' : '/explore'} />
+      {!bookingFrom && (
+        <BottomNav activePath={showMenus ? '/home' : '/explore'} />
+      )}
     </>
   );
 }
