@@ -138,7 +138,7 @@ export default function HomePage() {
           />
         </section>
 
-        <h2 className="mt-7 mb-3.5 text-xl leading-6 font-bold">디저팅 매칭</h2>
+        <h2 className="mt-6 mb-3.5 text-xl leading-6 font-bold">디저팅 매칭</h2>
         <ul className="grid grid-cols-2 gap-3.5">
           {MATCHING_MENUS.map(
             ({
@@ -185,29 +185,29 @@ export default function HomePage() {
           )}
         </ul>
 
-        <h2 className="mt-7 mb-3.5 text-xl leading-6 font-bold">바로가기</h2>
+        <h2 className="mt-6 mb-3.5 text-xl leading-6 font-bold">바로가기</h2>
         <ul className="grid grid-cols-2 gap-3.5">
           {SHORTCUTS.map(({ to, label, Icon }) => (
             <li key={to}>
               <Link
                 to={to}
-                className="border-line flex h-[97px] flex-col justify-between rounded-[18px] border bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                className="border-line flex h-[122px] flex-col justify-between rounded-[18px] border bg-white p-[18px] shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
               >
-                <span className="bg-mint-100 text-mint-deep flex size-[34px] items-center justify-center rounded-full">
+                <span className="bg-mint-100 text-mint-deep flex size-[46px] items-center justify-center rounded-full">
                   <Icon
                     aria-hidden="true"
                     strokeWidth={1.8}
-                    className="size-5"
+                    className="size-6"
                   />
                 </span>
                 <span className="flex items-center justify-between gap-1">
-                  <span className="text-[15px] leading-none font-bold whitespace-nowrap">
+                  <span className="text-base leading-none font-bold whitespace-nowrap">
                     {label}
                   </span>
                   <ChevronRight
                     aria-hidden="true"
                     strokeWidth={1.8}
-                    className="text-ink-sub size-[18px] shrink-0"
+                    className="text-ink-sub size-5 shrink-0"
                   />
                 </span>
               </Link>
