@@ -16,6 +16,7 @@ import CafeReservationResultPage from '@/pages/explore/CafeReservationResultPage
 import StoreDetailPage from '@/pages/stores/StoreDetailPage';
 import StoresPage from '@/pages/stores/StoresPage';
 import MyPage from '@/pages/my/MyPage';
+import MyProfilePage from '@/pages/my/MyProfilePage';
 import PremiumPassPage from '@/pages/my/PremiumPassPage';
 import HeartPurchasePage from '@/pages/my/HeartPurchasePage';
 import CandidateProfilePage from '@/pages/profile/CandidateProfilePage';
@@ -74,7 +75,7 @@ export default function App() {
         <Route path="/my/orders" element={<Navigate to="/my" replace />} />
         <Route path="/my/premium" element={<PremiumPassPage />} />
         <Route path="/my/hearts" element={<HeartPurchasePage />} />
-        <Route path="/my/profile" element={<ProfilePage mode="edit" />} />
+        <Route path="/my/profile" element={<MyProfilePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/signup/interests" element={<InterestsPage />} />
