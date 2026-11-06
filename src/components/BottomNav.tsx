@@ -1,5 +1,8 @@
 import { House, MessageSquare, Search, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { naverMapsQueryOptions } from '@/lib/naverMaps';
 
 const TABS = [
   { to: '/home', label: '홈', Icon: House },
@@ -14,6 +17,13 @@ export default function BottomNav({
   /** 홈의 하위 화면처럼 URL이 탭 경로와 다를 때 활성화할 탭 경로 */
   activePath?: string;
 }) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // 홈에 머무는 동안 SDK만 준비한다. 실제 지도는 탐색에서 생성한다.
+    void queryClient.prefetchQuery(naverMapsQueryOptions);
+  }, [queryClient]);
+
   return (
     <nav
       aria-label="메인 메뉴"

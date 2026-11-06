@@ -1,205 +1,400 @@
-import { useLayoutEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { CafeStore, ThemeStreet } from '@/api/cafeBooking';
-import mapImage from '@/assets/explore/map/theme-map.svg';
-import streetPin from '@/assets/explore/map/street-pin.svg';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { Minus, Plus } from 'lucide-react';
+import {
+  isMapCoordinate,
+  type CafeStore,
+  type MapCoordinate,
+  type ThemeStreet,
+} from '@/api/cafeBooking';
+import {
+  naverMapsQueryOptions,
+  NAVER_MAP_AUTH_ERROR,
+  type NaverEventListener,
+  type NaverLayer,
+  type NaverMap,
+} from '@/lib/naverMaps';
+import { Button } from '@/components/ui/button';
 import storePin from '@/assets/explore/map/store-pin.svg';
 import recenter from '@/assets/explore/map/recenter.svg';
-import oliveLabel from '@/assets/explore/map/olive-label.svg';
-import bakeryLabel from '@/assets/explore/map/bakeroom-label.svg';
+import {
+  cafeMapName,
+  mapLabelsOverlap,
+  type MapLabelRect,
+} from './cafeMapLabels';
+import { DAEGU_DEFAULT_CAMERA, showDefaultMap } from './cafeMapCamera';
 
-const STREETS = [
-  {
-    match: '앞산',
-    label: '앞산 카페거리',
-    x: 24,
-    y: 174,
-    width: 235,
-    pin: null,
-  },
-  {
-    match: '수성못',
-    label: '수성못 거리',
-    x: 240,
-    y: 78,
-    width: 140,
-    pin: { x: 295, y: 112 },
-  },
-  {
-    match: '동성로',
-    label: '동성로 거리',
-    x: 248,
-    y: 458,
-    width: 140,
-    pin: { x: 303, y: 493 },
-  },
-] as const;
+const storeCoordinate = (store: CafeStore) => {
+  const point = { lat: store.latitude, lng: store.longitude };
+  return isMapCoordinate(point) ? point : null;
+};
 
-/** 피그마의 개념 지도 좌표계. 실제 GPS 위치를 나타내는 지도는 아니다. */
 export default function CafeThemeMap({
+  entryKey,
   areas,
   selected,
+  focusSelected = false,
   stores,
   onSelect,
-  onReset,
   from,
   bookingFrom,
 }: {
+  entryKey: string;
   areas: ThemeStreet[];
   selected?: ThemeStreet;
+  focusSelected?: boolean;
   stores: CafeStore[];
   onSelect: (id: number) => void;
-  onReset: () => void;
   from: string;
   bookingFrom?: string;
 }) {
+  const container = useRef<HTMLDivElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  useLayoutEffect(() => {
-    const element = viewport.current;
-    if (!element) return;
+  const map = useRef<NaverMap | null>(null);
+  const [readyMap, setReadyMap] = useState<NaverMap | null>(null);
+  const clearLayers = useRef<(() => void) | null>(null);
+  const [authError, setAuthError] = useState(false);
+  const navigate = useNavigate();
+  const sdk = useQuery(naverMapsQueryOptions);
+
+  useEffect(() => {
+    const handleAuthError = () => setAuthError(true);
+    window.addEventListener(NAVER_MAP_AUTH_ERROR, handleAuthError);
+    return () =>
+      window.removeEventListener(NAVER_MAP_AUTH_ERROR, handleAuthError);
+  }, []);
+
+  useEffect(() => {
+    const element = container.current;
+    const frame = viewport.current;
+    const maps = sdk.data;
+    if (!element || !frame || !maps) return;
+    const instance = new maps.Map(element, {
+      center: new maps.LatLng(
+        DAEGU_DEFAULT_CAMERA.center.lat,
+        DAEGU_DEFAULT_CAMERA.center.lng,
+      ),
+      zoom: DAEGU_DEFAULT_CAMERA.zoom,
+      minZoom: 7,
+      maxZoom: 20,
+      keyboardShortcuts: true,
+    });
+    map.current = instance;
+    let initialized = false;
+    const resize = () => {
+      const { width, height } = frame.getBoundingClientRect();
+      if (width > 0 && height > 0)
+        instance.setSize(new maps.Size(width, height));
+    };
+    // SDK의 메타데이터와 좌표 투영 초기화가 끝난 뒤 오버레이를 만든다.
+    const initListener = maps.Event.addListener(instance, 'init', () => {
+      initialized = true;
+      resize();
+      setReadyMap(instance);
+    });
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setScale(Math.max(0.1, Math.min(width / 393, height / 449)));
+      if (initialized && width > 0 && height > 0)
+        instance.setSize(new maps.Size(width, height));
     });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+    observer.observe(frame);
+    return () => {
+      observer.disconnect();
+      maps.Event.removeListener(initListener);
+      clearLayers.current?.();
+      map.current = null;
+      instance.destroy();
+    };
+  }, [sdk.data]);
+
+  useEffect(() => {
+    const maps = sdk.data;
+    const instance = readyMap;
+    if (!maps || !instance || map.current !== instance) return;
+    const layers: NaverLayer[] = [];
+    const listeners: NaverEventListener[] = [];
+    const streetLabels: { element: HTMLButtonElement; marker: NaverLayer }[] =
+      [];
+    const storeLabels: { label: HTMLSpanElement; pin: HTMLImageElement }[] = [];
+    const theme = getComputedStyle(container.current!);
+    const mintDeep =
+      theme.getPropertyValue('--color-mint-deep').trim() || '#258f77';
+    const mint = theme.getPropertyValue('--color-mint').trim() || '#8ce2d0';
+    for (const area of areas) {
+      const active = area.id === selected?.id;
+      if (area.boundary.length >= 3) {
+        const polygon = new maps.Polygon({
+          map: instance,
+          paths: [
+            area.boundary.map(({ lat, lng }) => new maps.LatLng(lat, lng)),
+          ],
+          strokeWeight: active ? 3 : 2,
+          strokeColor: mintDeep,
+          strokeOpacity: active ? 0.95 : 0.55,
+          strokeStyle: 'solid',
+          fillColor: mint,
+          fillOpacity: active ? 0.28 : 0.1,
+          clickable: true,
+        });
+        listeners.push(
+          maps.Event.addListener(polygon, 'click', () => onSelect(area.id)),
+        );
+        layers.push(polygon);
+      }
+      if (area.center) {
+        const label = document.createElement('button');
+        label.type = 'button';
+        label.setAttribute('aria-pressed', String(active));
+        label.className = `relative inline-flex h-11 max-w-60 cursor-pointer items-center gap-2 rounded-full border py-1.5 pr-4 pl-1.5 text-sm font-bold whitespace-nowrap shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mint-deep ${active ? 'border-mint-deep bg-mint-deep text-white' : 'border-mint-deep/30 bg-white text-mint-deep'}`;
+        const iconCircle = document.createElement('span');
+        iconCircle.className = `grid size-8 shrink-0 place-items-center rounded-full ${active ? 'bg-white' : 'bg-mint-100'}`;
+        const icon = document.createElement('img');
+        icon.src = storePin;
+        icon.alt = '';
+        icon.width = 20;
+        icon.height = 26;
+        iconCircle.append(icon);
+        const text = document.createElement('span');
+        text.textContent = area.name;
+        text.className = 'min-w-0 truncate';
+        const tail = document.createElement('span');
+        tail.setAttribute('aria-hidden', 'true');
+        tail.className = `absolute -bottom-1.5 left-4 size-3 rotate-45 rounded-[2px] border-r border-b ${active ? 'border-mint-deep bg-mint-deep' : 'border-mint-deep/30 bg-white'}`;
+        label.append(tail, iconCircle, text);
+        label.onclick = () => onSelect(area.id);
+        const streetMarker = new maps.Marker({
+          map: instance,
+          position: new maps.LatLng(area.center.lat, area.center.lng),
+          icon: { content: label, anchor: new maps.Point(22, 50) },
+          zIndex: active ? 6 : 5,
+        });
+        streetLabels.push({ element: label, marker: streetMarker });
+        layers.push(streetMarker);
+      }
+    }
+    for (const store of stores) {
+      const point = storeCoordinate(store);
+      if (!point) continue;
+      const marker = document.createElement('button');
+      marker.type = 'button';
+      marker.setAttribute(
+        'aria-label',
+        `${cafeMapName(store.name)} 매장 상세보기`,
+      );
+      marker.className =
+        'relative flex h-11 w-[34px] cursor-pointer items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-mint-deep';
+      marker.title = cafeMapName(store.name);
+      const image = document.createElement('img');
+      image.src = storePin;
+      image.alt = '';
+      image.width = 34;
+      image.height = 44;
+      const name = document.createElement('span');
+      name.textContent = cafeMapName(store.name);
+      name.className =
+        'absolute top-11 left-1/2 max-w-36 -translate-x-1/2 truncate rounded-full border border-mint-100 bg-white px-2 py-1 text-[11px] font-bold whitespace-nowrap text-ink shadow-sm';
+      name.hidden = true;
+      storeLabels.push({ label: name, pin: image });
+      marker.append(image, name);
+      marker.onclick = () => {
+        navigate(`/explore/cafes/${store.storeId}`, {
+          state: { from, bookingFrom },
+        });
+      };
+      layers.push(
+        new maps.Marker({
+          map: instance,
+          position: new maps.LatLng(point.lat, point.lng),
+          icon: { content: marker, anchor: new maps.Point(17, 42) },
+          zIndex: 4,
+        }),
+      );
+    }
+    let frame = 0;
+    const updateLabels = () => {
+      const zoom = instance.getZoom();
+      const occupied: MapLabelRect[] = [];
+      const bounds = container.current?.getBoundingClientRect();
+      if (!bounds) return;
+      const pins = storeLabels.map(({ pin }) => pin.getBoundingClientRect());
+      const storeNames = storeLabels.flatMap(({ label }) => {
+        label.hidden = zoom < 16;
+        return label.hidden ? [] : [label.getBoundingClientRect()];
+      });
+      // 매장 핀과 이름이 거리 배지보다 우선한다. 숨긴 배지는 클릭 영역도 함께 제거한다.
+      for (const { element, marker } of streetLabels) {
+        marker.setVisible(true);
+        const rect = element.getBoundingClientRect();
+        const overlapsStore = [...pins, ...storeNames].some((other) =>
+          mapLabelsOverlap(rect, other),
+        );
+        marker.setVisible(!overlapsStore);
+        if (!overlapsStore) occupied.push(rect);
+      }
+      storeLabels.forEach(({ label }, index) => {
+        label.hidden = zoom < 16;
+        if (label.hidden) return;
+        const rect = label.getBoundingClientRect();
+        label.hidden =
+          rect.left < bounds.left + 4 ||
+          rect.right > bounds.right - 4 ||
+          rect.top < bounds.top + 4 ||
+          rect.bottom > bounds.bottom - 4 ||
+          occupied.some((other) => mapLabelsOverlap(rect, other)) ||
+          pins.some(
+            (pin, otherIndex) =>
+              otherIndex !== index && mapLabelsOverlap(rect, pin),
+          );
+        if (!label.hidden) occupied.push(rect);
+      });
+    };
+    const scheduleLabels = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateLabels);
+    };
+    for (const event of ['idle', 'zoom_changed', 'size_changed']) {
+      listeners.push(maps.Event.addListener(instance, event, scheduleLabels));
+    }
+    scheduleLabels();
+    let cleared = false;
+    const cleanup = () => {
+      if (cleared) return;
+      cleared = true;
+      window.cancelAnimationFrame(frame);
+      listeners.forEach((listener) => maps.Event.removeListener(listener));
+      layers.forEach((layer) => layer.setMap(null));
+      if (clearLayers.current === cleanup) clearLayers.current = null;
+    };
+    clearLayers.current = cleanup;
+    return cleanup;
+  }, [
+    sdk.data,
+    readyMap,
+    areas,
+    selected?.id,
+    stores,
+    onSelect,
+    navigate,
+    from,
+    bookingFrom,
+  ]);
+
+  const fitSelected = useCallback(() => {
+    const maps = sdk.data;
+    const instance = readyMap;
+    if (!maps || !instance || map.current !== instance) return;
+    const points: MapCoordinate[] = [...(selected?.boundary ?? [])];
+    stores.forEach((store) => {
+      const point = storeCoordinate(store);
+      if (point) points.push(point);
+    });
+    if (selected?.center) points.push(selected.center);
+    if (!points.length) {
+      showDefaultMap(maps, instance);
+      return;
+    }
+    if (
+      points.every(
+        (point) => point.lat === points[0].lat && point.lng === points[0].lng,
+      )
+    ) {
+      instance.updateBy(new maps.LatLng(points[0].lat, points[0].lng), 16);
+    } else {
+      instance.fitBounds(
+        points.map(({ lat, lng }) => new maps.LatLng(lat, lng)),
+        { top: 80, right: 40, bottom: 60, left: 40, maxZoom: 17 },
+      );
+    }
+  }, [sdk.data, readyMap, selected, stores]);
+  useEffect(() => {
+    // 지도 크기 반영 후 이동하고, 경로·선택이 바뀌면 이전 요청은 취소한다.
+    const frame = window.requestAnimationFrame(() => {
+      if (!sdk.data || !readyMap || map.current !== readyMap) return;
+      if (focusSelected) fitSelected();
+      else showDefaultMap(sdk.data, readyMap);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusSelected, fitSelected, sdk.data, readyMap, entryKey]);
 
   return (
     <div
       ref={viewport}
-      className="relative min-h-0 flex-1 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#f3f5f3] [&::-webkit-scrollbar]:hidden"
-      aria-label="테마거리 개념 지도"
+      className="bg-surface relative min-h-0 flex-1"
+      aria-label="테마거리 지도"
     >
-      <div className="relative" style={{ height: 581 * scale }}>
+      <div ref={container} className="absolute inset-0" />
+      {(sdk.isPending || sdk.isFetching || (sdk.isSuccess && !readyMap)) &&
+        !authError && (
+          <p
+            role="status"
+            className="bg-surface absolute inset-0 grid place-items-center text-sm"
+          >
+            지도를 불러오는 중이에요.
+          </p>
+        )}
+      {((sdk.isError && !sdk.isFetching) || authError) && (
         <div
-          className="absolute top-0 left-1/2 h-[581px] w-[393px] origin-top"
-          style={{ transform: `translateX(-50%) scale(${scale})` }}
+          role="alert"
+          className="bg-surface absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center text-sm"
         >
-          <img
-            src={mapImage}
-            alt=""
-            width={393}
-            height={581}
-            className="pointer-events-none absolute top-0 left-0 max-w-none"
-          />
-          {areas.find((area) => area.name.includes('앞산')) && (
+          <p>
+            {authError
+              ? '지도 인증을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.'
+              : sdk.error?.message}
+          </p>
+          <Button
+            type="button"
+            variant="brand"
+            onClick={() => {
+              setAuthError(false);
+              void sdk.refetch();
+            }}
+          >
+            다시 시도
+          </Button>
+        </div>
+      )}
+      {sdk.isSuccess && readyMap && !authError && !sdk.isFetching && (
+        <div className="absolute right-3 bottom-8 z-10 flex flex-col gap-2">
+          <div className="flex flex-col overflow-hidden rounded-xl bg-white shadow-md">
             <button
               type="button"
-              aria-label="앞산 카페거리 구역 선택"
-              onClick={() => {
-                const area = areas.find((item) => item.name.includes('앞산'));
-                if (area) onSelect(area.id);
-              }}
-              className="focus-visible:outline-mint-deep absolute top-[235px] left-[43px] h-[214px] w-[245px] cursor-pointer rounded-xl focus-visible:outline-2"
-            />
-          )}
-          {STREETS.map((street) => {
-            const area = areas.find((item) => item.name.includes(street.match));
-            const active = area !== undefined && area.id === selected?.id;
-            return (
-              <div key={street.match}>
-                <button
-                  type="button"
-                  disabled={!area}
-                  aria-pressed={active}
-                  onClick={() => area && onSelect(area.id)}
-                  className={`focus-visible:outline-mint-deep absolute cursor-pointer rounded-lg font-bold outline-offset-4 focus-visible:outline-2 disabled:cursor-default ${street.match === '앞산' ? 'text-center text-[22px]' : 'text-left text-[17px]'}`}
-                  style={{ left: street.x, top: street.y, width: street.width }}
-                >
-                  {street.label}
-                </button>
-                {active && (
-                  <span
-                    className="text-mint-deep absolute rounded-full bg-[#d9f5eb] px-[9px] py-[5px] text-[10px] font-bold"
-                    style={{
-                      left: street.match === '앞산' ? 78 : street.x,
-                      top: street.y + 32,
-                    }}
-                  >
-                    ✓ 선택한 테마거리
-                  </span>
-                )}
-                {street.pin && (
-                  <button
-                    type="button"
-                    disabled={!area}
-                    aria-label={`${street.label} 선택`}
-                    onClick={() => area && onSelect(area.id)}
-                    className="focus-visible:outline-mint-deep absolute cursor-pointer rounded-full focus-visible:outline-2"
-                    style={{ left: street.pin.x, top: street.pin.y }}
-                  >
-                    <img
-                      src={streetPin}
-                      alt=""
-                      width={27}
-                      height={27}
-                      className="max-w-none"
-                    />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-          {/* 도안의 두 핀은 선택한 거리의 대표 매장을 안내한다. */}
-          {stores.slice(0, 2).map((store, index) => (
-            <Link
-              key={store.storeId}
-              to={`/explore/cafes/${store.storeId}`}
-              state={{ from, bookingFrom }}
-              aria-label={`${store.name} 매장 상세보기`}
-              className="focus-visible:outline-mint-deep absolute block h-[70px] w-[112px] rounded-xl focus-visible:outline-2"
-              style={{
-                left: index === 0 ? 92 : 164,
-                top: index === 0 ? 310 : 343,
-              }}
+              aria-label="지도 확대"
+              className="border-hairline grid size-11 cursor-pointer place-items-center border-b"
+              onClick={() =>
+                map.current?.setZoom(
+                  Math.min(20, (map.current?.getZoom() ?? 14) + 1),
+                )
+              }
             >
-              <img
-                src={storePin}
-                alt=""
-                width={34}
-                height={44}
-                className={`absolute top-0 max-w-none ${index === 0 ? 'left-0' : 'left-[33px]'}`}
-              />
-              <span
-                className={`absolute ${index === 0 ? 'top-0 left-6' : 'top-11 left-0'}`}
-              >
-                <img
-                  src={index === 0 ? oliveLabel : bakeryLabel}
-                  alt=""
-                  width={index === 0 ? 68.5 : 55.5}
-                  height={26}
-                  className="max-w-none"
-                />
-                <span className="absolute top-[5px] left-2 max-w-[92px] rounded-full bg-white px-0.5 text-[11px] font-bold whitespace-nowrap text-[#142929]">
-                  {store.name}
-                </span>
-              </span>
-            </Link>
-          ))}
-          <span className="absolute top-[550px] left-4 text-[10px]">
-            개념 지도
-          </span>
+              <Plus aria-hidden className="size-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="지도 축소"
+              className="grid size-11 cursor-pointer place-items-center"
+              onClick={() =>
+                map.current?.setZoom(
+                  Math.max(7, (map.current?.getZoom() ?? 14) - 1),
+                )
+              }
+            >
+              <Minus aria-hidden className="size-5" />
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => {
-              viewport.current?.scrollTo({ top: 0, behavior: 'smooth' });
-              onReset();
-            }}
-            aria-label="기본 테마거리로 돌아가기"
-            className="focus-visible:outline-mint-deep absolute top-[522px] left-[332px] grid size-[43px] cursor-pointer place-items-center rounded-full bg-white focus-visible:outline-2"
+            aria-label={
+              selected ? '선택한 거리로 지도 이동' : '대구 지도로 돌아가기'
+            }
+            onClick={fitSelected}
+            className="grid size-11 cursor-pointer place-items-center rounded-full bg-white shadow-md"
           >
-            <img
-              src={recenter}
-              alt=""
-              width={25}
-              height={25}
-              className="max-w-none"
-            />
+            <img src={recenter} alt="" width={25} height={25} />
           </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
