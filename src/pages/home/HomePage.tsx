@@ -9,7 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import bannerCake from '@/assets/home/banner-cake.svg';
+import logo from '@/assets/signup/splash-logo.svg';
 import BottomNav from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
 import { fetchHeartHistory, heartKeys } from '@/api/hearts';
@@ -132,9 +132,9 @@ export default function HomePage() {
             특별한 만남
           </p>
           <img
-            src={bannerCake}
+            src={logo}
             alt=""
-            className="absolute top-[30px] right-0 block"
+            className="absolute top-1/2 right-6 block size-[110px] -translate-y-1/2"
           />
         </section>
 

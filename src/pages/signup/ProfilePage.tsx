@@ -4,7 +4,7 @@ import { Camera } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import avatarCake from '@/assets/signup/avatar-cake.svg';
+import logo from '@/assets/signup/splash-logo.svg';
 import myAvatar from '@/assets/my/avatar.png';
 import BackButton from '@/components/BackButton';
 import { Button } from '@/components/ui/button';
@@ -82,7 +82,7 @@ export default function ProfilePage({
               className="size-full object-cover"
             />
           ) : (
-            <img src={avatarCake} alt="" className="mt-8 ml-[9px] block" />
+            <img src={logo} alt="" className="size-full object-contain p-9" />
           )}
         </div>
         {isEditing && (
