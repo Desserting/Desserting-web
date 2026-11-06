@@ -247,6 +247,9 @@ export async function createCafeReservation(request: {
 export const fetchCafeReservation = (id: number) =>
   getData<CafeReservation>(`/v1/reservations/${id}`);
 
+export const fetchCafeOrder = (reservationId: number) =>
+  getData<CafeOrder>(`/v1/reservations/${reservationId}/order`);
+
 export async function previewCafeOrder(id: number, items: OrderItem[]) {
   const { data } = await api.post<ApiResponse<OrderPreview>>(
     `/v1/reservations/${id}/order/preview`,

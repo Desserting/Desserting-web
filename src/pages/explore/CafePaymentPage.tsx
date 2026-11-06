@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Link,
   Navigate,
   useLocation,
   useParams,
@@ -104,20 +103,11 @@ export default function CafePaymentPage() {
 
   if (payment.isSuccess) {
     return (
-      <main className="text-ink flex min-h-dvh flex-col justify-center gap-6 bg-white px-6 text-center">
-        <div role="status" className="space-y-3">
-          <h1 className="text-2xl font-bold">결제가 완료됐어요</h1>
-          <p>
-            {formatMenuPrice(payment.data.finalAmount)} 모의 결제가 완료됐어요.
-          </p>
-          <p className="text-my-muted text-sm">실제 금액은 청구되지 않아요.</p>
-        </div>
-        <Button asChild variant="brand" size="xl">
-          <Link to={getBookingFrom(state) ?? '/explore'} replace>
-            확인
-          </Link>
-        </Button>
-      </main>
+      <Navigate
+        to={`/explore/cafes/${storeId}/reservations/${reservationId}/complete`}
+        state={{ bookingFrom: getBookingFrom(state) }}
+        replace
+      />
     );
   }
 

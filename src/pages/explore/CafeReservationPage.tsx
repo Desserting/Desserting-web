@@ -22,7 +22,7 @@ import { formatTimeOfDay, toDateKey } from '@/lib/datetime';
 import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
 import CafeRequestState from './CafeRequestState';
-import ReservationTimePicker from './ReservationTimePicker';
+import ReservationTimeSlots from './ReservationTimeSlots';
 import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -111,9 +111,14 @@ export default function CafeReservationPage() {
       slot.currentReservedCount < slot.maxCapacity &&
       new Date(`${dateKey}T${slot.slotTime}:00+09:00`) > now,
   );
-  const availableTimes = availableSlots.map((slot) => slot.slotTime).sort();
-  const time = existing.data?.reservationTime.slice(0, 5) ?? pickedTime;
-  const selectedSlot = availableSlots.find((slot) => slot.slotTime === time);
+  const availableTimes = [
+    ...new Set(availableSlots.map((slot) => slot.slotTime)),
+  ].sort();
+  const selectedSlot = availableSlots.find(
+    (slot) => slot.slotTime === pickedTime,
+  );
+  const time =
+    existing.data?.reservationTime.slice(0, 5) ?? selectedSlot?.slotTime ?? '';
   const submitting = useRef(false);
   const goToMenu = (id: number, state: CafeNavigationState) => {
     navigate(`${location.pathname}?reservationId=${id}`, {
@@ -283,7 +288,10 @@ export default function CafeReservationPage() {
                       create.isPending ||
                       !availableDates.has(toDateKey(value))
                     }
-                    onClick={() => setDate(value)}
+                    onClick={() => {
+                      setDate(value);
+                      setTime('');
+                    }}
                     className={cn(
                       'focus-visible:outline-mint-deep flex h-[45px] cursor-pointer items-center justify-center rounded-full text-[15px] leading-6 focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-default',
                       index % 7 === 0 && 'text-cafe-calendar-sunday',
@@ -324,24 +332,17 @@ export default function CafeReservationPage() {
         )}
 
         <div className="mt-3">
-          <div className="mx-3 grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
-            <label
-              id="reservation-time-label"
-              htmlFor="reservation-time"
-              className="text-lg leading-6 font-bold"
-            >
-              시간
-            </label>
-            <div className="min-w-0">
-              <ReservationTimePicker
-                value={time}
-                onValueChange={setTime}
-                disabled={
-                  !!reservationId || create.isPending || !slots.isSuccess
-                }
-              />
-            </div>
-          </div>
+          <ReservationTimeSlots
+            times={reservationId && time ? [time] : availableTimes}
+            value={time}
+            onValueChange={setTime}
+            disabled={
+              !!reservationId ||
+              create.isPending ||
+              !slots.isSuccess ||
+              slots.isFetching
+            }
+          />
           <p
             aria-live="polite"
             aria-atomic="true"
@@ -360,22 +361,12 @@ export default function CafeReservationPage() {
                 onRetry={() => void slots.refetch()}
               />
             )}
-          {!reservationId && slots.isSuccess && availableTimes.length === 0 && (
-            <p className="text-my-muted mt-2 text-center text-sm">
-              선택한 날짜에는 예약 가능한 시간이 없어요.
-            </p>
-          )}
           {!reservationId &&
-            time &&
+            availableDates.has(dateKey) &&
             slots.isSuccess &&
-            availableTimes.length > 0 &&
-            !selectedSlot && (
-              <p
-                role="alert"
-                className="text-destructive mt-2 text-center text-sm"
-              >
-                선택한 시간은 예약할 수 없어요. 예약 가능한 시간:{' '}
-                {availableTimes.map(formatTimeOfDay).join(', ')}
+            availableTimes.length === 0 && (
+              <p className="text-my-muted mt-2 text-center text-sm">
+                선택한 날짜에는 예약 가능한 시간이 없어요.
               </p>
             )}
           {reservationId > 0 && (

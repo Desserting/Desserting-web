@@ -12,9 +12,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { getApiError } from '@/lib/axios';
-import { formatClock, formatProposalDate, toDateKey } from '@/lib/datetime';
+import { toDateKey } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
-import ReservationTimePicker from '@/pages/explore/ReservationTimePicker';
 import ProposalCalendar from './ProposalCalendar';
 
 /** 직접 제안으로 보내는 PLACE_PROPOSAL metadata */
@@ -23,8 +22,6 @@ export interface PlaceProposalMetadata {
   storeName: string;
   /** YYYY-MM-DD */
   proposedDate: string;
-  /** HH:mm */
-  proposedTime: string;
 }
 
 export interface PlaceProposal {
@@ -40,22 +37,11 @@ interface PlaceProposalSheetProps {
   onPropose: (proposal: PlaceProposal) => boolean;
 }
 
-/** 시간을 따로 고르지 않았을 때 처음 보여주는 시간 */
-const DEFAULT_TIME = '15:00';
-
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 11월 26일 목요일 */
 function formatPickedDate(date: Date) {
   return `${date.getMonth() + 1}월 ${date.getDate()}일 ${WEEKDAYS[date.getDay()]}요일`;
-}
-
-/** 오늘을 골랐다면 이미 지난 시간인지 */
-function isPastTime(date: Date, time: string) {
-  const [hour, minute] = time.split(':').map(Number);
-  const picked = new Date(date);
-  picked.setHours(hour, minute, 0, 0);
-  return picked.getTime() < Date.now();
 }
 
 /** 시안의 '직접 고를래요' 아이콘. 안쪽·바깥쪽 두 겹의 원 */
@@ -143,7 +129,7 @@ function MenuStep({
               직접 고를래요
             </span>
             <span className="text-ink-muted block text-[14px] leading-5">
-              매장과 날짜, 시간을 직접 정해서 보내요.
+              매장과 날짜를 직접 정해서 보내요.
             </span>
           </span>
         </button>
@@ -171,23 +157,21 @@ function PickStep({
   const [stage, setStage] = useState<'store' | 'when'>('store');
   const [storeId, setStoreId] = useState<number | null>(null);
   const [date, setDate] = useState<Date | null>(null);
-  const [time, setTime] = useState(DEFAULT_TIME);
   const [failed, setFailed] = useState(false);
 
   const store = stores.data?.find((item) => item.storeId === storeId);
-  const past = date !== null && isPastTime(date, time);
+  const past = date !== null && toDateKey(date) < toDateKey(new Date());
   const ready = store !== undefined && date !== null && !past;
 
   const submit = () => {
     if (!store || !date || past) return;
     const proposedDate = toDateKey(date);
     const sent = onSubmit({
-      content: `📍 [카페 방문 제안] ${store.name}에서 ${formatProposalDate(proposedDate, time)}에 만나요!`,
+      content: `📍 [카페 방문 제안] ${store.name}에서 ${formatPickedDate(date)}에 만나요!`,
       metadata: {
         storeId: store.storeId,
         storeName: store.name,
         proposedDate,
-        proposedTime: time,
       },
     });
     setFailed(!sent);
@@ -200,7 +184,7 @@ function PickStep({
           언제 만날까요?
         </SheetTitle>
         <SheetDescription className="sr-only">
-          약속 날짜와 시간을 골라 제안을 보내요.
+          약속 날짜를 골라 제안을 보내요.
         </SheetDescription>
 
         <p className="bg-mint-100 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[14px] leading-5 font-bold">
@@ -210,17 +194,6 @@ function PickStep({
 
         <ProposalCalendar value={date} onChange={setDate} />
 
-        <div className="flex items-center gap-3">
-          <label
-            id="reservation-time-label"
-            htmlFor="reservation-time"
-            className="w-10 shrink-0 text-[15px] font-bold"
-          >
-            시간
-          </label>
-          <ReservationTimePicker value={time} onValueChange={setTime} />
-        </div>
-
         <p
           role={past ? 'alert' : 'status'}
           className={cn(
@@ -229,9 +202,9 @@ function PickStep({
           )}
         >
           {past
-            ? '지난 시간은 고를 수 없어요.'
+            ? '지난 날짜는 고를 수 없어요.'
             : date
-              ? `${formatPickedDate(date)} · ${formatClock(`2000-01-01T${time}:00`)}`
+              ? formatPickedDate(date)
               : '날짜를 골라 주세요.'}
         </p>
 
@@ -356,7 +329,7 @@ function PickStep({
 
 /**
  * 카페 방문 제안 시트. AI 추천은 서버가 매장을 골라 카드를 대신 보내고,
- * 직접 제안은 사용자가 고른 매장·일시를 PLACE_PROPOSAL 메시지로 보낸다.
+ * 직접 제안은 사용자가 고른 매장·날짜를 PLACE_PROPOSAL 메시지로 보낸다.
  * 열 때마다 처음 단계에서 시작하도록, 부르는 쪽에서 열 때마다 key를 바꿔 새로 만든다.
  */
 export default function PlaceProposalSheet({

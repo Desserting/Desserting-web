@@ -1,17 +1,23 @@
 import { CalendarDays } from 'lucide-react';
 import { parseProposal, type ChatMessage } from '@/api/chat';
 import Bubble from '@/components/Bubble';
-import { formatClock, formatProposalDate } from '@/lib/datetime';
+import {
+  formatClock,
+  formatDayLabel,
+  formatProposalDate,
+} from '@/lib/datetime';
 import { cn } from '@/lib/utils';
+import ReservationMessageCard from './ReservationMessageCard';
 
 /** 카페 방문 제안(PLACE_PROPOSAL)을 말풍선 안의 카드로 보여준다 */
 function ProposalCard({ message }: { message: ChatMessage }) {
   const proposal = parseProposal(message.metadata);
-  // AI 추천 카드처럼 날짜·시간이 없으면 일시 미정으로 보여준다
-  const schedule =
-    proposal?.proposedDate && proposal.proposedTime
+  // 예전 시간 포함 제안도 표시하고, 새 날짜 전용 제안은 날짜만 보여준다.
+  const schedule = proposal?.proposedDate
+    ? proposal.proposedTime
       ? formatProposalDate(proposal.proposedDate, proposal.proposedTime)
-      : '일시 미정';
+      : formatDayLabel(proposal.proposedDate)
+    : '일시 미정';
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -61,6 +67,9 @@ function ProposalCard({ message }: { message: ChatMessage }) {
 }
 
 function MessageBody({ message }: { message: ChatMessage }) {
+  if (message.messageType === 'RESERVATION_CARD') {
+    return <ReservationMessageCard message={message} />;
+  }
   if (message.messageType === 'PLACE_PROPOSAL') {
     return <ProposalCard message={message} />;
   }
