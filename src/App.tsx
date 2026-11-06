@@ -4,7 +4,6 @@ import SplashScreen from '@/components/SplashScreen';
 import ChatListPage from '@/pages/chat/ChatListPage';
 import ChatRoomPage from '@/pages/chat/ChatRoomPage';
 import HomePage from '@/pages/home/HomePage';
-import CafeDetailPage from '@/pages/explore/CafeDetailPage';
 import CafeReservationPage from '@/pages/explore/CafeReservationPage';
 import CafeMapPage from '@/pages/explore/CafeMapPage';
 import CafeListPage from '@/pages/explore/CafeListPage';
@@ -37,7 +36,10 @@ export default function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/explore" element={<CafeMapPage />} />
         <Route path="/explore/areas/:areaId/cafes" element={<CafeListPage />} />
-        <Route path="/explore/cafes/:cafeId" element={<CafeDetailPage />} />
+        <Route
+          path="/explore/cafes/:cafeId"
+          element={<StoreDetailPage showMenus={false} />}
+        />
         <Route path="/explore/cafes/:cafeId/menu" element={<CafeMenuPage />} />
         <Route
           path="/explore/cafes/:cafeId/orders/:orderId"
