@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getApiError } from '@/lib/axios';
+import { dessertLabel } from '@/lib/dessert';
 import { cn } from '@/lib/utils';
 
 const schema = z.object({
@@ -201,7 +202,7 @@ function ProfileEditor({ profile }: { profile: MyProfile }) {
                   )}
                 >
                   <DessertAvatar src={option.avatarUrl} className="size-12" />
-                  <span>{option.description}</span>
+                  <span>{dessertLabel(option.dessertType)}</span>
                 </button>
               ))}
             </div>
