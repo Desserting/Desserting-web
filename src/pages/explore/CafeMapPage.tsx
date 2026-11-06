@@ -9,7 +9,6 @@ import {
   type CafeStore,
 } from '@/api/cafeBooking';
 import {
-  Link,
   useLocation,
   useNavigationType,
   useSearchParams,
@@ -17,6 +16,7 @@ import {
 import CafeRequestState from './CafeRequestState';
 import PageHeader from '@/components/PageHeader';
 import CafeThemeMap from './CafeThemeMap';
+import ThemeStreetDrawer, { ThemeStreetPicker } from './ThemeStreetDrawer';
 import { useBookingFlow } from '@/lib/bookingFlow';
 
 const EMPTY_STORES: CafeStore[] = [];
@@ -87,10 +87,7 @@ export default function CafeMapPage() {
           onSelect={select}
           from={mapPath}
         />
-        <section
-          aria-label="선택한 테마거리"
-          className="shrink-0 bg-white px-[18px] py-1.5"
-        >
+        <ThemeStreetDrawer>
           {themes.isPending || themes.isError ? (
             <CafeRequestState
               pending={themes.isPending}
@@ -98,56 +95,30 @@ export default function CafeMapPage() {
               onRetry={() => void themes.refetch()}
             />
           ) : areas.length === 0 ? (
-            <p className="text-my-muted text-sm">등록된 테마거리가 없어요.</p>
-          ) : !selected ? (
-            <>
-              <h2 className="text-ink flex min-h-6 items-center text-base font-bold">
-                테마거리를 선택해 주세요
-              </h2>
-              <p className="text-my-muted mt-1 text-sm leading-5">
-                지도에서 거리 이름이나 구역을 누르면 제휴매장을 볼 수 있어요.
-              </p>
-            </>
+            <p className="text-my-muted py-6 text-sm">
+              등록된 테마거리가 없어요.
+            </p>
           ) : (
-            <>
-              <div className="flex min-h-6 items-center justify-between gap-2">
-                <h2 className="min-w-0 flex-1 text-base font-bold text-[#142929]">
-                  {selected.name}
-                </h2>
-                <span className="text-[10px] whitespace-nowrap text-[#5c6e6e]">
-                  제휴매장{' '}
-                  {selected.storeCount !== null
-                    ? `${selected.storeCount}곳`
-                    : stores.isSuccess
-                      ? `${selectedStores.length}곳`
-                      : '—'}
-                </span>
-              </div>
-              {stores.isPending || stores.isError ? (
-                <CafeRequestState
-                  pending={stores.isPending}
-                  error={stores.error}
-                  onRetry={() => void stores.refetch()}
-                />
-              ) : selectedStores.length === 0 ? (
-                <p className="text-my-muted mt-2 text-sm">
-                  등록된 제휴매장이 없어요.
-                </p>
-              ) : null}
-              <div className="text-mint-deep mt-1 flex min-h-9 items-center justify-between gap-3">
-                <p className="min-w-0 flex-1 text-sm leading-5">
-                  지도에서 선택한 거리의 매장을 확인해요
-                </p>
-                <Link
-                  to={listPath}
-                  className="focus-visible:outline-mint-deep shrink-0 rounded py-1.5 text-sm font-semibold focus-visible:outline-2"
-                >
-                  목록 보기 ›
-                </Link>
-              </div>
-            </>
+            <ThemeStreetPicker
+              areas={mapAreas}
+              selected={selected}
+              onSelect={select}
+              listPath={listPath}
+              selectedStoreCount={
+                stores.isSuccess ? selectedStores.length : null
+              }
+              notice={
+                selected && stores.isError ? (
+                  <CafeRequestState
+                    pending={false}
+                    error={stores.error}
+                    onRetry={() => void stores.refetch()}
+                  />
+                ) : null
+              }
+            />
           )}
-        </section>
+        </ThemeStreetDrawer>
       </main>
       <BottomNav />
     </div>
