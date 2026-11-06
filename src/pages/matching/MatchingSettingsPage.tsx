@@ -6,7 +6,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Check, Info, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import BackButton from '@/components/BackButton';
@@ -26,7 +26,7 @@ import {
   useMatchingStore,
 } from '@/stores/matchingStore';
 import {
-  fetchRandomMatchExcludingChats,
+  fetchNextCandidate,
   getLocationPermission,
   saveMyLocation,
   toMatchParams,
@@ -146,7 +146,6 @@ function DistanceSlider({ value, onChange }: DistanceSliderProps) {
 
 export default function MatchingSettingsPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const filter = useMatchingStore((state) => state.filter);
   const setFilter = useMatchingStore((state) => state.setFilter);
@@ -163,7 +162,7 @@ export default function MatchingSettingsPage() {
   const start = useMutation({
     mutationFn: async (useLocation: boolean) => {
       if (useLocation) await saveMyLocation();
-      return fetchRandomMatchExcludingChats(toMatchParams(filter), queryClient);
+      return fetchNextCandidate(toMatchParams(filter));
     },
     onSuccess: (first) => {
       startMatching(first);
