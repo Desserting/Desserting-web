@@ -48,7 +48,6 @@ export default function CafeThemeMap({
   from: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
-  const viewport = useRef<HTMLDivElement>(null);
   const map = useRef<NaverMap | null>(null);
   const [readyMap, setReadyMap] = useState<NaverMap | null>(null);
   const clearLayers = useRef<(() => void) | null>(null);
@@ -65,9 +64,10 @@ export default function CafeThemeMap({
 
   useEffect(() => {
     const element = container.current;
-    const frame = viewport.current;
     const maps = sdk.data;
-    if (!element || !frame || !maps) return;
+    if (!element || !maps) return;
+    // 지도 크기는 패널 위쪽에 남는 캔버스 영역(container) 기준으로 맞춘다.
+    const frame = element;
     const instance = new maps.Map(element, {
       center: new maps.LatLng(
         DAEGU_DEFAULT_CAMERA.center.lat,
@@ -300,7 +300,7 @@ export default function CafeThemeMap({
     } else {
       instance.fitBounds(
         points.map(({ lat, lng }) => new maps.LatLng(lat, lng)),
-        { top: 80, right: 40, bottom: 80, left: 40, maxZoom: 17 },
+        { top: 80, right: 40, bottom: 60, left: 40, maxZoom: 17 },
       );
     }
   }, [sdk.data, readyMap, selected, stores]);
@@ -316,11 +316,11 @@ export default function CafeThemeMap({
 
   return (
     <div
-      ref={viewport}
       className="bg-surface relative min-h-0 flex-1"
       aria-label="테마거리 지도"
     >
-      <div ref={container} className="absolute inset-0" />
+      {/* 아래 20px은 테마거리 패널이 겹치는 자리라 비워 두어 네이버 로고·저작권 표기가 가려지지 않게 한다. */}
+      <div ref={container} className="absolute inset-x-0 top-0 bottom-5" />
       {(sdk.isPending || sdk.isFetching || (sdk.isSuccess && !readyMap)) &&
         !authError && (
           <p
