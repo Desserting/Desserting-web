@@ -11,7 +11,7 @@ import ChatRequestsPage from '@/pages/chat/ChatRequestsPage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import CafeMenuPage from '@/pages/explore/CafeMenuPage';
 import CafePaymentPage from '@/pages/explore/CafePaymentPage';
-import CafeOrderHistoryPage from '@/pages/explore/CafeOrderHistoryPage';
+import CafeReservationResultPage from '@/pages/explore/CafeReservationResultPage';
 import StoreDetailPage from '@/pages/stores/StoreDetailPage';
 import StoresPage from '@/pages/stores/StoresPage';
 import MyPage from '@/pages/my/MyPage';
@@ -43,7 +43,15 @@ export default function App() {
         <Route path="/explore/cafes/:cafeId/menu" element={<CafeMenuPage />} />
         <Route
           path="/explore/cafes/:cafeId/orders/:orderId"
-          element={<CafeOrderHistoryPage />}
+          element={<CafeReservationResultPage view="order" />}
+        />
+        <Route
+          path="/explore/cafes/:cafeId/reservations/:reservationId/complete"
+          element={<CafeReservationResultPage view="complete" />}
+        />
+        <Route
+          path="/explore/cafes/:cafeId/reservations/:reservationId/order"
+          element={<CafeReservationResultPage view="order" />}
         />
         <Route
           path="/explore/cafes/:cafeId/payment"
@@ -62,7 +70,7 @@ export default function App() {
         <Route path="/profile/:id" element={<CandidateProfilePage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/my" element={<MyPage />} />
-        <Route path="/my/orders" element={<CafeOrderHistoryPage />} />
+        <Route path="/my/orders" element={<Navigate to="/my" replace />} />
         <Route path="/my/premium" element={<PremiumPassPage />} />
         <Route path="/my/hearts" element={<HeartPurchasePage />} />
         <Route path="/my/profile" element={<ProfilePage mode="edit" />} />
