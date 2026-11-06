@@ -1,8 +1,7 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { fetchRandomMatch } from '@/api/matching';
 import iconClose from '@/assets/matching/icon-close.svg';
 import iconProfile from '@/assets/matching/icon-profile.svg';
 import DessertAvatar from '@/components/DessertAvatar';
@@ -17,7 +16,7 @@ import { getApiError } from '@/lib/axios';
 import { dessertLabel } from '@/lib/dessert';
 import { cn } from '@/lib/utils';
 import { useMatchingStore } from '@/stores/matchingStore';
-import { toMatchParams } from './matchRequest';
+import { fetchRandomMatchExcludingChats, toMatchParams } from './matchRequest';
 
 const ACTION_BUTTON =
   'flex h-[54px] cursor-pointer items-center justify-center gap-2 rounded-[14px] text-[17px] font-bold transition-transform active:scale-95';
@@ -30,9 +29,11 @@ const CARD_OUT_MS = 420;
 
 export default function MatchingCardsPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const filter = useMatchingStore((state) => state.filter);
   const current = useMatchingStore((state) => state.current);
   const shownCount = useMatchingStore((state) => state.shownCount);
+  const seenIds = useMatchingStore((state) => state.seenIds);
   const showNextMatch = useMatchingStore((state) => state.showNextMatch);
   const markDealt = useMatchingStore((state) => state.markDealt);
   // 프로필을 보고 돌아왔을 때는 카드를 다시 섞지 않는다
@@ -44,7 +45,12 @@ export default function MatchingCardsPage() {
 
   // 서버는 호출할 때마다 다음 상대를 주므로, 넘기기를 누를 때 다시 부른다
   const next = useMutation({
-    mutationFn: () => fetchRandomMatch(toMatchParams(filter)),
+    mutationFn: () =>
+      fetchRandomMatchExcludingChats(
+        toMatchParams(filter),
+        queryClient,
+        seenIds,
+      ),
   });
 
   useEffect(() => {
@@ -83,9 +89,9 @@ export default function MatchingCardsPage() {
         <p className="text-xl leading-8 font-bold break-keep">
           {current.guide ?? (
             <>
-              주변에 더 이상
+              추천 후보를
               <br />
-              매칭할 사람이 없어요
+              모두 확인했어요
             </>
           )}
         </p>

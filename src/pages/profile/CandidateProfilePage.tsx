@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart, Send } from 'lucide-react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { heartKeys } from '@/api/hearts';
-import { REQUEST_HEART_COST, sendChatRequest } from '@/api/matches';
+import { REQUEST_HEART_COST, matchKeys, sendChatRequest } from '@/api/matches';
 import { toggleLike as sendLike } from '@/api/matching';
 import { fetchMe, fetchProfile, userKeys } from '@/api/users';
 import BackButton from '@/components/BackButton';
@@ -162,6 +162,8 @@ export default function CandidateProfilePage() {
       requestChat(profile.key);
       setSpent(isPremium ? 'free' : 'deducted');
       setStep('sent');
+      // 채팅 탭의 보낸 요청 목록에 바로 보이도록 다시 불러온다
+      void queryClient.invalidateQueries({ queryKey: matchKeys.sent });
       // 응답에 남은 하트 수가 없으므로 내 정보와 하트 내역을 다시 불러온다
       void queryClient.invalidateQueries({ queryKey: userKeys.me });
       void queryClient.invalidateQueries({ queryKey: heartKeys.history });

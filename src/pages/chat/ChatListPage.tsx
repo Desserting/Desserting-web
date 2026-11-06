@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { MessageCircleOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { chatKeys, fetchChatRooms, type ChatRoom } from '@/api/chat';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
 import DessertAvatar from '@/components/DessertAvatar';
+import SentRequestsPanel from './SentRequestsPanel';
 
 function RoomItem({ room }: { room: ChatRoom }) {
   const { roomId, otherUserNickname, lastMessagePreview, lastMessageAt } = room;
@@ -57,7 +58,21 @@ function RoomItem({ room }: { room: ChatRoom }) {
   );
 }
 
+const TABS = [
+  { id: 'rooms', label: '대화 목록' },
+  { id: 'sent', label: '보낸 요청' },
+] as const;
+
+type TabId = (typeof TABS)[number]['id'];
+
 export default function ChatListPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  // 프로필을 보고 돌아와도 보던 탭이 유지되도록 URL에 둔다
+  const tab: TabId = searchParams.get('tab') === 'sent' ? 'sent' : 'rooms';
+  const isRoomsTab = tab === 'rooms';
+  const selectTab = (next: TabId) =>
+    setSearchParams(next === 'rooms' ? {} : { tab: next }, { replace: true });
+
   // 목록의 마지막 메시지·안 읽은 수는 실시간 갱신되지 않으므로 화면에 들어올 때마다 다시 불러온다
   const {
     data: rooms,
@@ -68,6 +83,7 @@ export default function ChatListPage() {
     queryKey: chatKeys.rooms,
     queryFn: fetchChatRooms,
     refetchOnMount: 'always',
+    enabled: isRoomsTab,
   });
 
   return (
@@ -75,7 +91,36 @@ export default function ChatListPage() {
       <main className="text-ink flex flex-1 flex-col bg-white px-6 pt-[34px]">
         <h1 className="text-center text-[27px] leading-9 font-bold">채팅</h1>
 
-        {isPending && (
+        <div role="tablist" className="mt-5 grid grid-cols-2 gap-2">
+          {TABS.map(({ id, label }) => {
+            const selected = id === tab;
+            return (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => selectTab(id)}
+                className={cn(
+                  'relative flex h-12 cursor-pointer items-center justify-center rounded-2xl px-2 text-[15px] font-bold whitespace-nowrap',
+                  selected ? 'bg-mint-100' : 'bg-chip',
+                )}
+              >
+                {label}
+                {selected && (
+                  <span
+                    aria-hidden
+                    className="bg-mint absolute bottom-[3px] left-1/2 h-[3px] w-[60px] -translate-x-1/2 rounded-full"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {!isRoomsTab && <SentRequestsPanel />}
+
+        {isRoomsTab && isPending && (
           <div role="status" className="mt-3">
             <span className="sr-only">채팅 목록을 불러오는 중이에요</span>
             {[0, 1, 2].map((key) => (
@@ -94,7 +139,7 @@ export default function ChatListPage() {
           </div>
         )}
 
-        {isError && (
+        {isRoomsTab && isError && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 pb-24">
             <p className="text-ink-muted text-[16px] leading-6">
               채팅 목록을 불러오지 못했어요.
@@ -110,7 +155,7 @@ export default function ChatListPage() {
           </div>
         )}
 
-        {rooms && rooms.length === 0 && (
+        {isRoomsTab && rooms && rooms.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 pb-24">
             <div className="bg-mint-100 flex size-20 items-center justify-center rounded-full">
               <MessageCircleOff
@@ -124,7 +169,7 @@ export default function ChatListPage() {
           </div>
         )}
 
-        {rooms && rooms.length > 0 && (
+        {isRoomsTab && rooms && rooms.length > 0 && (
           <ul className="mt-3">
             {rooms.map((room) => (
               <RoomItem key={room.roomId} room={room} />

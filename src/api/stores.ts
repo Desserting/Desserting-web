@@ -102,8 +102,19 @@ export async function fetchStoreDetail(storeId: number): Promise<StoreDetail> {
   return data.data;
 }
 
+/** 서버는 테마거리의 id를 `themeStreetId`로 내려준다 (`id`는 없다) */
+type ThemeStreetResponse = Omit<ThemeStreet, 'id'> & {
+  id?: number;
+  themeStreetId?: number;
+};
+
 /** 테마거리 목록 */
 export async function fetchThemeStreets(): Promise<ThemeStreet[]> {
   const { data } = await api.get<ApiResponse<unknown>>('/v1/themes');
-  return toList<ThemeStreet>(data.data, ['themes', 'content', 'items']);
+  return toList<ThemeStreetResponse>(data.data, ['themes', 'content', 'items'])
+    .map(({ themeStreetId, id, ...theme }) => ({
+      ...theme,
+      id: Number(themeStreetId ?? id),
+    }))
+    .filter((theme) => Number.isInteger(theme.id) && theme.id > 0);
 }
