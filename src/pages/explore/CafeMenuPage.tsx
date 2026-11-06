@@ -113,7 +113,6 @@ export default function CafeMenuPage() {
   const reservation = navigationState?.reservation;
   const backState = {
     reservationId: reservationId || undefined,
-    bookingFrom: navigationState?.bookingFrom,
     ...(from?.startsWith('/') && !from.startsWith('//') ? { from } : {}),
     ...(reservation ? { reservation } : {}),
     ...(navigationState?.order ? { order: navigationState.order } : {}),

@@ -23,7 +23,8 @@ import CafeNotFound from './CafeNotFound';
 import CafePageHeader from './CafePageHeader';
 import CafeRequestState from './CafeRequestState';
 import ReservationTimeSlots from './ReservationTimeSlots';
-import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
+import { useBookingFlow } from '@/lib/bookingFlow';
+import type { CafeNavigationState } from './cafeNavigation';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
@@ -58,8 +59,8 @@ export default function CafeReservationPage() {
   });
   const backState = {
     ...(from?.startsWith('/') && !from.startsWith('//') ? { from } : {}),
-    bookingFrom: getBookingFrom(navigationState),
   };
+  const { bookingFrom } = useBookingFlow();
   const now = new Date();
   const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const [pickedDate, setDate] = useState(() => {
@@ -205,7 +206,7 @@ export default function CafeReservationPage() {
     }
     if (!selectedSlot || submitting.current || create.isSuccess) return;
     submitting.current = true;
-    const chatRoomId = positiveId(backState.bookingFrom?.split('/').pop());
+    const chatRoomId = positiveId(bookingFrom?.split('/').pop());
     create.mutate({
       slotId: selectedSlot.slotId,
       guestCount: Number(guests),

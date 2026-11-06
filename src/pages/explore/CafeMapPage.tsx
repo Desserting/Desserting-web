@@ -11,30 +11,22 @@ import {
 import {
   Link,
   useLocation,
-  useNavigate,
   useNavigationType,
   useSearchParams,
 } from 'react-router-dom';
 import CafeRequestState from './CafeRequestState';
 import CafePageHeader from './CafePageHeader';
 import CafeThemeMap from './CafeThemeMap';
-import {
-  bookingOriginDelta,
-  getBookingFrom,
-  type CafeNavigationState,
-} from './cafeNavigation';
+import { useBookingFlow } from '@/lib/bookingFlow';
 
 const EMPTY_STORES: CafeStore[] = [];
 
 export default function CafeMapPage() {
   const location = useLocation();
-  const navigate = useNavigate();
   const navigationType = useNavigationType();
   const mapPath = `${location.pathname}${location.search}`;
   const [params, setParams] = useSearchParams();
-  const bookingFrom = getBookingFrom(
-    location.state as CafeNavigationState | null,
-  );
+  const { bookingFrom, exitBooking } = useBookingFlow();
   const themes = useQuery({
     queryKey: cafeKeys.themes,
     queryFn: fetchCafeThemes,
@@ -77,11 +69,7 @@ export default function CafeMapPage() {
             <CafePageHeader
               title="카페 지도"
               backTo={bookingFrom}
-              onBack={() => {
-                const delta = bookingOriginDelta();
-                if (delta === null) navigate(bookingFrom);
-                else navigate(delta);
-              }}
+              onBack={exitBooking}
             />
           </div>
         ) : (
@@ -105,7 +93,6 @@ export default function CafeMapPage() {
           stores={selectedStores}
           onSelect={select}
           from={mapPath}
-          bookingFrom={bookingFrom}
         />
         <section
           aria-label="선택한 테마거리"
@@ -160,7 +147,6 @@ export default function CafeMapPage() {
                 </p>
                 <Link
                   to={listPath}
-                  state={{ bookingFrom }}
                   className="focus-visible:outline-mint-deep shrink-0 rounded py-1.5 text-sm font-semibold focus-visible:outline-2"
                 >
                   목록 보기 ›
@@ -170,8 +156,7 @@ export default function CafeMapPage() {
           )}
         </section>
       </main>
-      {/* 채팅에서 시작한 예약 흐름에서는 헤더 뒤로가기만 남겨 사용자의 경로를 고정한다 */}
-      {!bookingFrom && <BottomNav />}
+      <BottomNav />
     </div>
   );
 }

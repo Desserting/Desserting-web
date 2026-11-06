@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import SplashScreen from '@/components/SplashScreen';
+import { BookingFlowProvider } from '@/components/BookingFlowProvider';
 import ChatListPage from '@/pages/chat/ChatListPage';
 import ChatRoomPage from '@/pages/chat/ChatRoomPage';
 import HomePage from '@/pages/home/HomePage';
@@ -31,7 +32,7 @@ export default function App() {
   const finishSplash = useCallback(() => setShowSplash(false), []);
 
   return (
-    <>
+    <BookingFlowProvider>
       <Routes>
         <Route path="/home" element={<HomePage />} />
         <Route path="/explore" element={<CafeMapPage />} />
@@ -83,6 +84,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/signup" replace />} />
       </Routes>
       {showSplash && <SplashScreen onFinish={finishSplash} />}
-    </>
+    </BookingFlowProvider>
   );
 }

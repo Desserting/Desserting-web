@@ -22,17 +22,8 @@ import { CAFE_FILTERS, findCafeArea } from './cafeAreas';
 import { dessertLabel } from '@/lib/dessert';
 import CafeImage from './CafeImage';
 import CafeRequestState from './CafeRequestState';
-import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
 
-function CafeCard({
-  cafe,
-  from,
-  bookingFrom,
-}: {
-  cafe: CafeStore;
-  from: string;
-  bookingFrom?: string;
-}) {
+function CafeCard({ cafe, from }: { cafe: CafeStore; from: string }) {
   const cafeId = String(cafe.storeId);
   const liked = useCafeStore((state) => state.likedIds.includes(cafeId));
   const toggleLike = useCafeStore((state) => state.toggleLike);
@@ -41,7 +32,7 @@ function CafeCard({
     <li className="border-cafe-list-border relative h-[88px] rounded-[15px] border bg-white">
       <Link
         to={`/explore/cafes/${cafe.storeId}`}
-        state={{ from, bookingFrom }}
+        state={{ from }}
         aria-label={`${cafe.name} 상세 보기`}
         className="focus-visible:outline-mint-deep flex h-full items-center gap-[14px] rounded-[15px] py-2.5 pr-10 pl-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
@@ -103,9 +94,6 @@ export default function CafeListPage() {
     enabled: !!area,
   });
   const location = useLocation();
-  const bookingFrom = getBookingFrom(
-    location.state as CafeNavigationState | null,
-  );
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedFilter =
     CAFE_FILTERS.find((filter) => filter.id === searchParams.get('category'))
@@ -118,7 +106,6 @@ export default function CafeListPage() {
         <CafePageHeader
           title="매장 목록"
           backTo={area ? `/explore?theme=${area.id}` : '/explore'}
-          backState={{ bookingFrom }}
         />
         <CafeRequestState
           pending={themes.isPending}
@@ -145,7 +132,6 @@ export default function CafeListPage() {
         <CafePageHeader
           title={`${area.name} (${cafes.length}) · 선택됨`}
           backTo={`/explore?theme=${area.id}`}
-          backState={{ bookingFrom }}
           titleClassName="w-full truncate pl-9 text-[20px] tracking-[-0.5px]"
         />
         <p className="bg-premium-emblem text-mint-deep flex h-[21px] shrink-0 items-center rounded-full px-2.5 text-[10px] leading-[15px]">
@@ -156,7 +142,6 @@ export default function CafeListPage() {
           onValueChange={(value) =>
             setSearchParams(value === 'all' ? {} : { category: value }, {
               replace: true,
-              state: { bookingFrom },
             })
           }
           className="mt-[9px] min-h-0 flex-1 [scrollbar-width:none] gap-0 overflow-y-auto [&::-webkit-scrollbar]:hidden"
@@ -237,7 +222,6 @@ export default function CafeListPage() {
                         key={cafe.storeId}
                         cafe={cafe}
                         from={`${location.pathname}${location.search}`}
-                        bookingFrom={bookingFrom}
                       />
                     ))}
                   </ul>
@@ -253,7 +237,7 @@ export default function CafeListPage() {
           })}
         </Tabs>
       </main>
-      {!bookingFrom && <BottomNav activePath="/explore" />}
+      <BottomNav activePath="/explore" />
     </div>
   );
 }

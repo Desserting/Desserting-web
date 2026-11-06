@@ -23,7 +23,8 @@ import { formatClock, formatTimeOfDay, parseServerDate } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
 import CafePageHeader from './CafePageHeader';
 import CafeRequestState from './CafeRequestState';
-import { getBookingFrom, type CafeNavigationState } from './cafeNavigation';
+import { useBookingFlow } from '@/lib/bookingFlow';
+import type { CafeNavigationState } from './cafeNavigation';
 
 function reservationDay(value: string) {
   const date = new Date(`${value}T00:00:00`);
@@ -137,6 +138,7 @@ export default function CafeReservationResultPage({
   const [params] = useSearchParams();
   const location = useLocation();
   const state = location.state as CafeNavigationState | null;
+  const { bookingFrom } = useBookingFlow();
   const storeId = positiveId(route.cafeId);
   const reservationId = positiveId(
     route.reservationId ?? params.get('reservationId') ?? state?.reservationId,
@@ -164,14 +166,11 @@ export default function CafeReservationResultPage({
   });
   const roomId =
     positiveId(reservation.data?.chatRoomId) ||
-    positiveId(getBookingFrom(state)?.split('/').pop());
+    positiveId(bookingFrom?.split('/').pop());
   const chatPath = roomId ? `/chat/${roomId}` : '/chat';
   const resultPath = `/explore/cafes/${storeId}/reservations/${reservationId}`;
   const orderPath = `${resultPath}/order`;
-  const backState = {
-    bookingFrom: roomId ? chatPath : undefined,
-    reservationId,
-  } satisfies CafeNavigationState;
+  const backState = { reservationId } satisfies CafeNavigationState;
   const shareKey = [
     'cafes',
     'shared-reservation',
