@@ -31,7 +31,6 @@ export interface OtherUserProfile {
 
 export const userKeys = {
   me: ['users', 'me'] as const,
-  avatars: ['users', 'avatars'] as const,
   profiles: ['users', 'profiles'] as const,
   profile: (userId: number) => ['users', 'profile', userId] as const,
   likesSent: ['users', 'me', 'likes', 'sent'] as const,
@@ -48,22 +47,9 @@ function onlyRegularUsers(profiles: OtherUserProfile[]): OtherUserProfile[] {
   return profiles.filter(({ role }) => role === undefined || role === 'USER');
 }
 
-export interface AvatarOption {
-  dessertType: string;
-  description: string;
-  avatarUrl: string;
-}
-
-export async function fetchAvatarOptions(): Promise<AvatarOption[]> {
-  const { data } =
-    await api.get<ApiResponse<AvatarOption[]>>('/v1/users/avatars');
-  return data.data;
-}
-
 export async function updateMyProfile(profile: {
   nickname: string;
   bio: string;
-  dessertAvatarUrl?: string;
 }): Promise<MyProfile> {
   const { data } = await api.patch<ApiResponse<MyProfile>>(
     '/v1/users/me/profile',
