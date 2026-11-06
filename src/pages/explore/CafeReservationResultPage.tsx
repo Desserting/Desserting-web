@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -18,6 +18,13 @@ import {
 } from '@/api/cafeBooking';
 import { chatKeys, shareCafeReservation, type ChatMessage } from '@/api/chat';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { getApiError } from '@/lib/axios';
 import { formatClock, formatTimeOfDay, parseServerDate } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
@@ -25,6 +32,8 @@ import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import { useBookingFlow } from '@/lib/bookingFlow';
 import type { CafeNavigationState } from './cafeNavigation';
+
+const ACTION_BUTTON_CLASS = 'cursor-pointer rounded-[13px] pb-0 text-base';
 
 function reservationDay(value: string) {
   const date = new Date(`${value}T00:00:00`);
@@ -145,6 +154,7 @@ export default function CafeReservationResultPage({
   );
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const reservation = useQuery({
     queryKey: cafeKeys.reservation(reservationId),
     queryFn: () => fetchCafeReservation(reservationId),
@@ -194,6 +204,18 @@ export default function CafeReservationResultPage({
     },
   });
   const shared = queryClient.getQueryData<ChatMessage>(shareKey);
+  const cancelled =
+    receipt.data?.orderStatus === 'REFUNDED' ||
+    reservation.data?.status === 'CANCELLED';
+  const backToChat = () => navigate(chatPath, { replace: true });
+  const confirmLeave = () => {
+    if (sharing.current || share.isPending) return;
+    if (shared || cancelled || !roomId) {
+      backToChat();
+      return;
+    }
+    setLeaveOpen(true);
+  };
   const uncertainShare = share.isError && !getApiError(share.error);
   const returnToChat = () => {
     if (sharing.current || share.isPending) return;
@@ -241,8 +263,6 @@ export default function CafeReservationResultPage({
       </main>
     );
   }
-  const cancelled =
-    order.orderStatus === 'REFUNDED' || booking.status === 'CANCELLED';
   if (view === 'complete' && cancelled)
     return <Navigate to={orderPath} state={backState} replace />;
 
@@ -250,10 +270,8 @@ export default function CafeReservationResultPage({
     <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]">
       <PageHeader
         title={title}
-        backTo={
-          view === 'order' && !cancelled ? `${resultPath}/complete` : chatPath
-        }
-        backState={backState}
+        backTo={chatPath}
+        onBack={view === 'order' ? confirmLeave : undefined}
       />
       {view === 'complete' ? (
         <>
@@ -294,7 +312,7 @@ export default function CafeReservationResultPage({
               asChild
               variant="brand"
               size="xl"
-              className="rounded-[13px] pb-0 text-base"
+              className={ACTION_BUTTON_CLASS}
             >
               <Link to={orderPath} state={backState}>
                 예약/주문 내역 보기
@@ -330,17 +348,49 @@ export default function CafeReservationResultPage({
                   ? () => navigate(chatPath, { replace: true })
                   : returnToChat
               }
-              className="h-auto min-h-20 cursor-pointer rounded-[15px] px-3 py-5 text-base leading-6 whitespace-normal"
+              className={ACTION_BUTTON_CLASS}
             >
               {share.isPending
                 ? '공유 중…'
                 : cancelled || shared || uncertainShare || !roomId
                   ? '채팅방으로 돌아가기'
-                  : '예약·결제 내역 공유하고 채팅방으로'}
+                  : '예약/결제 내역 채팅방에 공유하기'}
             </Button>
           </div>
         </>
       )}
+      <Dialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <DialogContent>
+          <DialogTitle>채팅방으로 돌아가기</DialogTitle>
+          <DialogDescription>
+            예약/결제 내역을 공유하지 않고 채팅방으로 돌아가시겠습니까?
+          </DialogDescription>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="h-11"
+              >
+                아니요
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="brand"
+              size="lg"
+              className="h-11"
+              onClick={() => {
+                setLeaveOpen(false);
+                backToChat();
+              }}
+            >
+              예
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
