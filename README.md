@@ -49,6 +49,23 @@ npm run dev
 
 개인 환경에서만 값을 바꾸고 싶다면 `.env.development.local`을 만들어 사용하세요. `*.local` 파일은 Git에 올라가지 않습니다.
 
+### 네이버 지도
+
+카페 지도는 NAVER Maps JavaScript SDK와 기존 백엔드의 테마거리 경계·매장 좌표를 사용합니다.
+
+1. [네이버 클라우드 콘솔](https://console.ncloud.com/)에서 **Application Services → Maps → Application**을 등록하고 **Dynamic Map**을 선택합니다.
+2. Web 서비스 URL에 `http://localhost`, `http://127.0.0.1`, `https://desserting-web.vercel.app` 등 실제 사용하는 호스트를 등록합니다. 포트와 경로를 제외합니다. Preview 주소도 사용할 경우 별도로 등록합니다.
+3. 발급받은 **Client ID**를 로컬 `.env.development.local`과 Vercel 환경변수의 `VITE_NAVER_MAP_CLIENT_ID`에 설정합니다. **Client Secret은 프론트에 넣지 않습니다.**
+4. 개발 서버를 재시작하고 Vercel은 다시 배포합니다.
+
+```dotenv
+VITE_NAVER_MAP_CLIENT_ID=발급받은_Client_ID
+```
+
+SDK는 `ncpKeyId`로 로드합니다. 하단 탭이 있는 화면에서 SDK를 미리 준비하고, 실제 지도는 탐색 화면에서 생성합니다. 키가 없거나 SDK 로딩이 실패하면 안내와 재시도 버튼을 표시합니다.
+
+공식 문서: [Client ID 발급](https://navermaps.github.io/maps.js.en/docs/tutorial-1-Getting-Client-ID.html), [SDK 로드](https://navermaps.github.io/maps.js.en/docs/tutorial-2-Getting-Started.html), [Web 서비스 URL 등록](https://www.ncloud.com/support/faq/all/1047?searchKeyword=map).
+
 개발 환경의 `/api`는 Vite 개발 서버 프록시용이라 배포(Vercel)에서는 쓸 수 없습니다. 배포 환경에서는 Vercel 프로젝트의 환경 변수에 `VITE_API_BASE_URL`을 백엔드 전체 주소(예: `https://{백엔드 호스트}/api`)로 설정하세요. 실시간 채팅(WebSocket) 주소는 이 값의 호스트를 기준으로 `wss://{백엔드 호스트}/ws`로 만들어집니다.
 
 ### 개발 서버 프록시

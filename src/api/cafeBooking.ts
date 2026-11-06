@@ -1,10 +1,18 @@
 import { api, type ApiResponse } from '@/lib/axios';
 
+export interface MapCoordinate {
+  lat: number;
+  lng: number;
+}
+
 export interface ThemeStreet {
   id: number;
   name: string;
   description: string | null;
   isActive: boolean;
+  center: MapCoordinate | null;
+  boundary: MapCoordinate[];
+  storeCount: number | null;
 }
 
 export interface CafeStore {
@@ -16,6 +24,8 @@ export interface CafeStore {
   themeStreetName: string | null;
   dessertTypes: string[];
   distanceKm: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface StoreMenu {
@@ -105,6 +115,7 @@ export interface CafeOrder extends OrderPreview {
 
 export const cafeKeys = {
   themes: ['cafes', 'themes'] as const,
+  theme: (id: number) => ['cafes', 'theme', id] as const,
   stores: (themeId: number) => ['cafes', 'stores', themeId] as const,
   detail: (storeId: number) => ['cafes', 'detail', storeId] as const,
   dates: (storeId: number, from: string, to: string) =>
@@ -125,19 +136,54 @@ async function getData<T>(
   return data.data;
 }
 
+type ThemeStreetResponse = Partial<ThemeStreet> & {
+  themeStreetId?: number;
+  name: string;
+};
+
+export function isMapCoordinate(value: unknown): value is MapCoordinate {
+  if (!value || typeof value !== 'object') return false;
+  const coordinate = value as Partial<MapCoordinate>;
+  return (
+    typeof coordinate.lat === 'number' &&
+    Number.isFinite(coordinate.lat) &&
+    Math.abs(coordinate.lat) <= 90 &&
+    typeof coordinate.lng === 'number' &&
+    Number.isFinite(coordinate.lng) &&
+    Math.abs(coordinate.lng) <= 180
+  );
+}
+
+function normalizeTheme(theme: ThemeStreetResponse): ThemeStreet {
+  return {
+    id: positiveId(theme.id ?? theme.themeStreetId),
+    name: theme.name,
+    description: theme.description ?? null,
+    isActive: theme.isActive ?? true,
+    center: isMapCoordinate(theme.center) ? theme.center : null,
+    boundary: Array.isArray(theme.boundary)
+      ? theme.boundary.filter(isMapCoordinate)
+      : [],
+    storeCount:
+      typeof theme.storeCount === 'number' && theme.storeCount >= 0
+        ? theme.storeCount
+        : null,
+  };
+}
+
 export async function fetchCafeThemes(): Promise<ThemeStreet[]> {
-  const themes =
-    await getData<
-      (Partial<ThemeStreet> & { themeStreetId?: number; name: string })[]
-    >('/v1/themes');
-  return themes
-    .map((theme) => ({
-      id: positiveId(theme.id ?? theme.themeStreetId),
-      name: theme.name,
-      description: theme.description ?? null,
-      isActive: theme.isActive ?? true,
-    }))
-    .filter((theme) => theme.id > 0);
+  const themes = await getData<ThemeStreetResponse[]>('/v1/themes');
+  return themes.map(normalizeTheme).filter((theme) => theme.id > 0);
+}
+export async function fetchCafeThemeDetail(id: number) {
+  const result = await getData<{
+    themeStreet: ThemeStreetResponse;
+    stores: CafeStore[];
+  }>(`/v1/themes/${id}`);
+  return {
+    themeStreet: normalizeTheme(result.themeStreet),
+    stores: result.stores,
+  };
 }
 export const fetchAreaStores = (id: number) =>
   getData<CafeStore[]>('/v1/stores', { themeStreetId: id });
