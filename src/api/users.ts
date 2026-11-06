@@ -4,6 +4,7 @@ import { toList } from './list';
 export interface MyProfile {
   userId: number;
   nickname: string;
+  bio: string | null;
   dessertAvatarUrl: string | null;
   heartCount: number;
   isPremium: boolean;
@@ -30,6 +31,7 @@ export interface OtherUserProfile {
 
 export const userKeys = {
   me: ['users', 'me'] as const,
+  avatars: ['users', 'avatars'] as const,
   profiles: ['users', 'profiles'] as const,
   profile: (userId: number) => ['users', 'profile', userId] as const,
   likesSent: ['users', 'me', 'likes', 'sent'] as const,
@@ -44,6 +46,30 @@ export async function fetchMe(): Promise<MyProfile> {
 /** 안전장치: role이 오면 일반 사용자(USER)만 남긴다. role이 없으면 그대로 둔다 */
 function onlyRegularUsers(profiles: OtherUserProfile[]): OtherUserProfile[] {
   return profiles.filter(({ role }) => role === undefined || role === 'USER');
+}
+
+export interface AvatarOption {
+  dessertType: string;
+  description: string;
+  avatarUrl: string;
+}
+
+export async function fetchAvatarOptions(): Promise<AvatarOption[]> {
+  const { data } =
+    await api.get<ApiResponse<AvatarOption[]>>('/v1/users/avatars');
+  return data.data;
+}
+
+export async function updateMyProfile(profile: {
+  nickname: string;
+  bio: string;
+  dessertAvatarUrl?: string;
+}): Promise<MyProfile> {
+  const { data } = await api.patch<ApiResponse<MyProfile>>(
+    '/v1/users/me/profile',
+    profile,
+  );
+  return data.data;
 }
 
 /** 프로필 탐색 목록. 나 자신도 포함돼 있어서 화면에서 걸러야 한다 */
