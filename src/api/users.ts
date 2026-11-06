@@ -9,10 +9,14 @@ export interface MyProfile {
   isPremium: boolean;
 }
 
+export type UserRole = 'USER' | 'OWNER' | 'ADMIN';
+
 /** 다른 사람의 프로필 (프로필 탐색·상세). 이메일·위치 같은 민감 정보는 오지 않는다 */
 export interface OtherUserProfile {
   userId: number;
   nickname: string;
+  /** 계정 역할. 서버가 USER만 내려주지만, 혹시 다른 역할이 오면 화면에서 숨긴다 */
+  role?: UserRole;
   gender?: 'MALE' | 'FEMALE';
   age: number;
   region: string;
@@ -37,10 +41,17 @@ export async function fetchMe(): Promise<MyProfile> {
   return data.data;
 }
 
+/** 안전장치: role이 오면 일반 사용자(USER)만 남긴다. role이 없으면 그대로 둔다 */
+function onlyRegularUsers(profiles: OtherUserProfile[]): OtherUserProfile[] {
+  return profiles.filter(({ role }) => role === undefined || role === 'USER');
+}
+
 /** 프로필 탐색 목록. 나 자신도 포함돼 있어서 화면에서 걸러야 한다 */
 export async function fetchProfiles(): Promise<OtherUserProfile[]> {
   const { data } = await api.get<ApiResponse<unknown>>('/v1/users');
-  return toList<OtherUserProfile>(data.data, ['users', 'content', 'items']);
+  return onlyRegularUsers(
+    toList<OtherUserProfile>(data.data, ['users', 'content', 'items']),
+  );
 }
 
 /** 프로필 상세. 없는 사용자면 U001(404)이다 */
@@ -56,5 +67,7 @@ export async function fetchLikedProfiles(): Promise<OtherUserProfile[]> {
   const { data } = await api.get<ApiResponse<unknown>>(
     '/v1/users/me/likes/sent',
   );
-  return toList<OtherUserProfile>(data.data, ['users', 'content', 'items']);
+  return onlyRegularUsers(
+    toList<OtherUserProfile>(data.data, ['users', 'content', 'items']),
+  );
 }
