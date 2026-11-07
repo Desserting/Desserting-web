@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { logout as requestLogout } from '@/api/auth';
 import { fetchMe, userKeys } from '@/api/users';
 import avatar from '@/assets/my/avatar.png';
 import calendar from '@/assets/my/calendar.svg';
@@ -19,6 +21,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useAuthStore } from '@/stores/authStore';
 
 const MENUS = [
   { label: '내 프로필 관리', icon: profileIcon, to: '/my/profile' },
@@ -63,6 +66,21 @@ export default function MyPage() {
     refetchOnMount: 'always',
   });
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const { refreshToken } = useAuthStore.getState();
+      if (refreshToken) await requestLogout(refreshToken);
+    },
+    // 서버 요청이 실패해도 이 기기에서는 로그아웃되어야 하므로 결과와 상관없이 정리한다
+    onSettled: () => {
+      useAuthStore.getState().logout();
+      queryClient.clear();
+      navigate('/login', { replace: true });
+    },
+  });
   const details: Record<string, string> = {
     '/my/hearts':
       profile && !isError
@@ -76,7 +94,7 @@ export default function MyPage() {
 
   return (
     <div className="my-page flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
-      <main className="my-page-content text-ink grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] px-6">
+      <main className="my-page-content text-ink grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)_auto] px-6">
         <PageHeader title="마이페이지" />
         <section
           aria-label="내 프로필"
@@ -165,6 +183,13 @@ export default function MyPage() {
             );
           })}
         </ul>
+        <button
+          type="button"
+          onClick={() => setLogoutOpen(true)}
+          className="text-my-muted focus-visible:outline-mint-deep mx-auto my-3 cursor-pointer rounded px-3 py-2 text-sm underline underline-offset-2 focus-visible:outline-2"
+        >
+          로그아웃
+        </button>
       </main>
       <BottomNav />
       <Dialog
@@ -181,6 +206,34 @@ export default function MyPage() {
           <DialogClose asChild>
             <Button variant="brand">확인</Button>
           </DialogClose>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <DialogContent className="max-w-[345px]">
+          <DialogTitle>로그아웃할까요?</DialogTitle>
+          <DialogDescription>
+            로그아웃하면 다시 로그인해야 서비스를 이용할 수 있어요.
+          </DialogDescription>
+          <div className="grid grid-cols-2 gap-3">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" className="h-11">
+                취소
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={logoutMutation.isPending}
+              onClick={() => logoutMutation.mutate()}
+              className="h-11 cursor-pointer"
+            >
+              {logoutMutation.isPending ? (
+                <Loader2 aria-hidden className="animate-spin" />
+              ) : (
+                '로그아웃'
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
