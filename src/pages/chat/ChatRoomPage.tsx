@@ -13,6 +13,8 @@ import {
   Loader2,
   LogOut,
   MessageCircle,
+  Sparkles,
+  X,
 } from 'lucide-react';
 import {
   Fragment,
@@ -64,6 +66,25 @@ import { useChatSocket } from './useChatSocket';
 /** 서버가 에러를 알려주지 않으므로, 이 시간 안에 내 메시지가 돌아오지 않으면 실패로 본다 */
 const SEND_TIMEOUT_MS = 5000;
 
+/** 일정 제안 안내 말풍선을 이미 봤는지 기억하는 키 */
+const COACH_SEEN_KEY = 'chat-proposal-coach-seen';
+
+function readCoachSeen() {
+  try {
+    return localStorage.getItem(COACH_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeCoachSeen() {
+  try {
+    localStorage.setItem(COACH_SEEN_KEY, '1');
+  } catch {
+    // 저장이 막힌 환경에서는 이번 접속 동안만 닫아 둔다
+  }
+}
+
 type MessagePages = InfiniteData<ChatMessage[], string | undefined>;
 
 interface PendingMessage {
@@ -101,6 +122,12 @@ function ChatRoom({ roomId }: { roomId: number }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingMessage[]>([]);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  // 안내 말풍선과 "새 기능" 점은 한 번 닫거나 제안을 열어 보면 다시 뜨지 않는다
+  const [coachSeen, setCoachSeen] = useState(readCoachSeen);
+  const markCoachSeen = () => {
+    writeCoachSeen();
+    setCoachSeen(true);
+  };
   // 열 때마다 key를 바꿔 제안 시트를 처음 단계부터 새로 시작한다
   const [proposal, setProposal] = useState({ open: false, key: 0 });
   const navigate = useNavigate();
@@ -299,6 +326,8 @@ function ChatRoom({ roomId }: { roomId: number }) {
     }
   };
 
+  const showCoach = !coachSeen && !otherLeft;
+
   const lastMessage = messages[messages.length - 1];
   const lastIsMine = lastMessage ? isMine(lastMessage) : false;
   const isEmpty =
@@ -332,26 +361,14 @@ function ChatRoom({ roomId }: { roomId: number }) {
         />
       </div>
 
-      {/* 헤더 바로 밑에 떠 있는 제안 버튼. 버튼 말고는 배경이 투명해서 대화가 비쳐 보이고 클릭도 통과한다 */}
-      <div className="pointer-events-none relative z-10 h-0 px-6">
-        <Button
-          type="button"
-          variant="brand"
-          disabled={otherLeft}
-          onClick={() =>
-            setProposal((prev) => ({ open: true, key: prev.key + 1 }))
-          }
-          aria-label="카페 방문 제안하기"
-          className="bg-mint-100 text-mint-deep hover:bg-mint-100/80 border-mint-deep/30 pointer-events-auto absolute top-3 right-6 size-10 cursor-pointer rounded-full border p-0 [&_svg:not([class*='size-'])]:size-5"
-        >
-          <CalendarDays aria-hidden strokeWidth={1.8} />
-        </Button>
-      </div>
-
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-6 pt-[64px] pb-[76px]"
+        className={cn(
+          'min-h-0 flex-1 overflow-y-auto px-6 pt-2',
+          // 안내 말풍선이 마지막 메시지를 가리지 않도록 그만큼 비워 둔다
+          showCoach ? 'pb-[72px]' : 'pb-3',
+        )}
       >
         {isFetchingNextPage && (
           <p
@@ -470,20 +487,70 @@ function ChatRoom({ roomId }: { roomId: number }) {
         </ul>
       </div>
 
-      {/* 입력창 바로 위에 떠 있는 예약 버튼. 버튼 말고는 배경이 투명해서 대화가 비쳐 보이고 클릭도 통과한다 */}
-      <div className="pointer-events-none relative z-10 h-0 px-6">
+      {/* 입력창 바로 위에 나란히 놓은 두 기능. 대화 영역 밖이라 말풍선과 겹치지 않는다 */}
+      <div className="flex shrink-0 gap-2 px-6 pb-3">
+        <div className="relative">
+          {showCoach && (
+            <>
+              <div
+                role="note"
+                className="bg-coach absolute bottom-full left-0 z-10 mb-3 flex w-max max-w-[calc(100vw-48px)] items-center gap-2.5 rounded-[14px] py-2.5 pr-2.5 pl-3.5 shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
+              >
+                <Sparkles
+                  aria-hidden
+                  className="size-5 shrink-0 text-white"
+                  strokeWidth={1.8}
+                />
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[13px] leading-[19px] font-bold text-white">
+                    카페 일정, 이렇게 제안해 보세요
+                  </p>
+                  <p className="text-coach-sub text-[12px] leading-[17px]">
+                    직접 고르거나 AI 추천도 받을 수 있어요
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="안내 닫기"
+                  onClick={markCoachSeen}
+                  className="flex size-6 shrink-0 cursor-pointer items-center justify-center text-white"
+                >
+                  <X aria-hidden className="size-4" strokeWidth={1.8} />
+                </button>
+              </div>
+              <span
+                aria-hidden
+                className="bg-coach absolute bottom-full left-1/2 mb-1 h-2 w-4 -translate-x-1/2 [clip-path:polygon(0_0,100%_0,50%_100%)]"
+              />
+            </>
+          )}
+          <Button
+            type="button"
+            variant="brand"
+            disabled={otherLeft}
+            onClick={() => {
+              markCoachSeen();
+              setProposal((prev) => ({ open: true, key: prev.key + 1 }));
+            }}
+            className="h-11 cursor-pointer gap-1.5 rounded-[22px] py-2.5 pr-4 pl-3.5 text-[14px] font-bold shadow-[0_4px_10px_rgba(140,226,208,0.5)] [&_svg:not([class*='size-'])]:size-[18px]"
+          >
+            <CalendarDays aria-hidden strokeWidth={1.5} />
+            일정 제안하기
+          </Button>
+          {!coachSeen && !otherLeft && (
+            <span
+              aria-hidden
+              className="bg-new-dot absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white box-content"
+            />
+          )}
+        </div>
         <Button
           type="button"
-          variant="brand"
+          variant="social"
           onClick={() => startBooking(`/chat/${roomId}`)}
-          className="pointer-events-auto absolute bottom-4 left-6 flex h-11 w-fit cursor-pointer gap-2.5 rounded-[20px] py-0 pr-5 pl-1.5 text-[15px] font-normal shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
+          className="border-field-line h-11 cursor-pointer gap-1.5 rounded-[22px] py-2.5 pr-4 pl-3.5 text-[14px] font-bold [&_svg:not([class*='size-'])]:size-[18px]"
         >
-          <span
-            aria-hidden
-            className="flex size-8 items-center justify-center rounded-full bg-white/60"
-          >
-            <Clock className="size-[18px]" strokeWidth={1.8} />
-          </span>
+          <Clock aria-hidden strokeWidth={1.5} />
           카페 방문 예약하기
         </Button>
       </div>

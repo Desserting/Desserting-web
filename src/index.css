@@ -203,6 +203,9 @@ html {
   --color-ink-sub: #6c7471;
   --color-ink-hint: #8a9692;
   --color-ink-body: #5f6865;
+  --color-coach: #214d42;
+  --color-coach-sub: #c7f2e5;
+  --color-new-dot: #f27380;
 }
 
 @theme {
