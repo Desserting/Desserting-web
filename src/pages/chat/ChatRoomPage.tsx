@@ -487,72 +487,75 @@ function ChatRoom({ roomId }: { roomId: number }) {
         </ul>
       </div>
 
-      {/* 입력창 바로 위에 나란히 놓은 두 기능. 대화 영역 밖이라 말풍선과 겹치지 않는다 */}
-      <div className="flex shrink-0 gap-2 px-6 pb-3">
-        <div className="relative">
+      {/* 입력창 바로 위, 가운데에 나란히 놓은 두 기능. 대화 영역 밖이라 말풍선과 겹치지 않는다 */}
+      <div className="shrink-0 px-6 pb-6">
+        <div className="relative flex justify-center gap-2">
           {showCoach && (
-            <>
-              <div
-                role="note"
-                className="bg-coach absolute bottom-full left-0 z-10 mb-3 flex w-max max-w-[calc(100vw-48px)] items-center gap-2.5 rounded-[14px] py-2.5 pr-2.5 pl-3.5 shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
-              >
-                <Sparkles
-                  aria-hidden
-                  className="size-5 shrink-0 text-white"
-                  strokeWidth={1.8}
-                />
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[13px] leading-[19px] font-bold text-white">
-                    카페 일정, 이렇게 제안해 보세요
-                  </p>
-                  <p className="text-coach-sub text-[12px] leading-[17px]">
-                    직접 고르거나 AI 추천도 받을 수 있어요
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  aria-label="안내 닫기"
-                  onClick={markCoachSeen}
-                  className="flex size-6 shrink-0 cursor-pointer items-center justify-center text-white"
-                >
-                  <X aria-hidden className="size-4" strokeWidth={1.8} />
-                </button>
+            <div
+              role="note"
+              className="bg-coach absolute bottom-full left-1/2 z-10 mb-3.5 flex w-max max-w-full -translate-x-1/2 items-center gap-2.5 rounded-[14px] py-2.5 pr-2.5 pl-3.5 shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
+            >
+              <Sparkles
+                aria-hidden
+                className="size-5 shrink-0 text-white"
+                strokeWidth={1.8}
+              />
+              <div className="flex flex-col gap-0.5">
+                <p className="text-[13px] leading-[19px] font-bold text-white">
+                  카페 일정, 이렇게 제안해 보세요
+                </p>
+                <p className="text-coach-sub text-[12px] leading-[17px]">
+                  직접 고르거나 AI 추천도 받을 수 있어요
+                </p>
               </div>
+              {/* 아이콘은 16px로 보이고, 누르는 영역만 24px로 넓힌다 */}
+              <button
+                type="button"
+                aria-label="안내 닫기"
+                onClick={markCoachSeen}
+                className="-mx-1 flex size-6 shrink-0 cursor-pointer items-center justify-center text-white"
+              >
+                <X aria-hidden className="size-4" strokeWidth={1.8} />
+              </button>
+            </div>
+          )}
+          <div className="relative">
+            {showCoach && (
               <span
                 aria-hidden
-                className="bg-coach absolute bottom-full left-1/2 mb-1 h-2 w-4 -translate-x-1/2 [clip-path:polygon(0_0,100%_0,50%_100%)]"
+                className="bg-coach absolute bottom-full left-1/2 z-10 mb-[7px] h-2 w-4 -translate-x-1/2 [clip-path:polygon(0_0,100%_0,50%_100%)]"
               />
-            </>
-          )}
+            )}
+            <Button
+              type="button"
+              variant="brand"
+              disabled={otherLeft}
+              onClick={() => {
+                markCoachSeen();
+                setProposal((prev) => ({ open: true, key: prev.key + 1 }));
+              }}
+              className="h-10 cursor-pointer gap-1.5 rounded-[22px] py-2.5 pr-4 pl-3.5 text-[14px] font-bold shadow-[0_4px_10px_rgba(140,226,208,0.5)] [&_svg:not([class*='size-'])]:size-[18px]"
+            >
+              <CalendarDays aria-hidden strokeWidth={1.5} />
+              일정 제안하기
+            </Button>
+            {!coachSeen && !otherLeft && (
+              <span
+                aria-hidden
+                className="bg-new-dot absolute -top-[5px] -right-0.5 box-border size-2.5 rounded-full border-2 border-white"
+              />
+            )}
+          </div>
           <Button
             type="button"
-            variant="brand"
-            disabled={otherLeft}
-            onClick={() => {
-              markCoachSeen();
-              setProposal((prev) => ({ open: true, key: prev.key + 1 }));
-            }}
-            className="h-11 cursor-pointer gap-1.5 rounded-[22px] py-2.5 pr-4 pl-3.5 text-[14px] font-bold shadow-[0_4px_10px_rgba(140,226,208,0.5)] [&_svg:not([class*='size-'])]:size-[18px]"
+            variant="social"
+            onClick={() => startBooking(`/chat/${roomId}`)}
+            className="border-field-line h-10 cursor-pointer gap-1.5 rounded-[22px] py-2.5 pr-4 pl-3.5 text-[14px] font-bold [&_svg:not([class*='size-'])]:size-[18px]"
           >
-            <CalendarDays aria-hidden strokeWidth={1.5} />
-            일정 제안하기
+            <Clock aria-hidden strokeWidth={1.5} />
+            카페 방문 예약하기
           </Button>
-          {!coachSeen && !otherLeft && (
-            <span
-              aria-hidden
-              className="bg-new-dot absolute -top-1 -right-1 size-2.5 rounded-full border-2 border-white box-content"
-            />
-          )}
         </div>
-        <Button
-          type="button"
-          variant="social"
-          onClick={() => startBooking(`/chat/${roomId}`)}
-          className="border-field-line h-11 cursor-pointer gap-1.5 rounded-[22px] py-2.5 pr-4 pl-3.5 text-[14px] font-bold [&_svg:not([class*='size-'])]:size-[18px]"
-        >
-          <Clock aria-hidden strokeWidth={1.5} />
-          카페 방문 예약하기
-        </Button>
       </div>
 
       <footer className="shrink-0 px-6 pb-[max(24px,env(safe-area-inset-bottom))]">
