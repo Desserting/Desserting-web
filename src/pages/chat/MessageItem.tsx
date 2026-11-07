@@ -1,4 +1,4 @@
-import { CalendarDays } from 'lucide-react';
+import { Coffee } from 'lucide-react';
 import { parseProposal, type ChatMessage } from '@/api/chat';
 import Bubble from '@/components/Bubble';
 import {
@@ -25,7 +25,7 @@ function ProposalCard({ message }: { message: ChatMessage }) {
         <div className="text-ink rounded-2xl bg-white px-3.5 py-3 font-normal">
           <div className="flex items-center justify-between gap-2">
             <p className="text-mint-deep flex items-center gap-1.5 text-[13px] font-bold">
-              <CalendarDays aria-hidden className="size-4" />
+              <Coffee aria-hidden className="size-4" />
               디저트 카페 만남 제안
             </p>
             {/* 서버 상태가 아니라 화면 표시용 뱃지다 */}
