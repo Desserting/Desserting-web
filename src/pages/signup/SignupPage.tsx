@@ -34,6 +34,8 @@ export default function SignupPage() {
   const navigate = useNavigate();
   const account = useSignupStore((state) => state.account);
   const setAccount = useSignupStore((state) => state.setAccount);
+  const emailError = useSignupStore((state) => state.emailError);
+  const setEmailError = useSignupStore((state) => state.setEmailError);
   const {
     register,
     handleSubmit,
@@ -83,12 +85,26 @@ export default function SignupPage() {
           type="email"
           autoComplete="email"
           placeholder="dessert@example.com"
-          aria-invalid={!!errors.email}
-          {...register('email')}
+          aria-invalid={!!errors.email || !!emailError}
+          aria-describedby={emailError ? 'email-error' : undefined}
+          {...register('email', {
+            // 다른 이메일을 입력하기 시작하면 서버가 거절했던 안내는 지운다
+            onChange: () => setEmailError(null),
+          })}
         />
-        <p className="text-ink-hint pt-[7px] text-xs leading-[18px]">
-          로그인 아이디로 사용돼요.
-        </p>
+        {emailError ? (
+          <p
+            id="email-error"
+            role="alert"
+            className="text-destructive pt-[7px] text-xs leading-[18px]"
+          >
+            {emailError}
+          </p>
+        ) : (
+          <p className="text-ink-hint pt-[7px] text-xs leading-[18px]">
+            로그인 아이디로 사용돼요.
+          </p>
+        )}
         <AuthLabel htmlFor="password" className="pt-5">
           비밀번호
         </AuthLabel>

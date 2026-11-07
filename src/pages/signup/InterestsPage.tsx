@@ -5,21 +5,21 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSignupStore } from '@/stores/signupStore';
 
-// 이미지는 public/avatars 의 PNG. 매칭·채팅의 DessertAvatar 와 같은 파일을 쓴다
+// id는 서버의 DessertType 코드와 같다. 이미지는 public/avatars 의 PNG. 매칭·채팅의 DessertAvatar 와 같은 파일을 쓴다
 const DESSERTS = [
-  { id: 'cake', label: '케이크', image: '/avatars/cake.png' },
-  { id: 'bakery', label: '베이커리', image: '/avatars/bakery.png' },
-  { id: 'baked-goods', label: '구움과자', image: '/avatars/cookie.png' },
-  { id: 'tart-pie', label: '타르트&파이', image: '/avatars/tart.png' },
+  { id: 'CAKE', label: '케이크', image: '/avatars/cake.png' },
+  { id: 'BAKERY', label: '베이커리', image: '/avatars/bakery.png' },
+  { id: 'COOKIE_FINANCIER', label: '구움과자', image: '/avatars/cookie.png' },
+  { id: 'TART_PIE', label: '타르트&파이', image: '/avatars/tart.png' },
   {
-    id: 'shaved-ice-icecream',
+    id: 'ICE_CREAM_BINGSU',
     label: '빙수&아이스크림',
     image: '/avatars/bingsu.png',
   },
-  { id: 'coffee', label: '커피', image: '/avatars/coffee.png' },
-  { id: 'tea', label: '차&논커피', image: '/avatars/tea.png' },
+  { id: 'COFFEE', label: '커피', image: '/avatars/coffee.png' },
+  { id: 'TEA_NON_COFFEE', label: '차&논커피', image: '/avatars/tea.png' },
   {
-    id: 'traditional',
+    id: 'TRADITIONAL_KOREAN',
     label: '전통 디저트',
     image: '/avatars/traditional.png',
   },
