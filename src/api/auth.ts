@@ -34,9 +34,9 @@ export async function login(body: LoginRequest): Promise<AuthTokens> {
   return data.data;
 }
 
-/** 서버에 로그아웃을 알려 리프레시 토큰을 무효화한다. 로컬 토큰 정리는 호출하는 쪽에서 한다 */
-export async function logout(refreshToken: string): Promise<void> {
-  await api.post('/v1/auth/logout', { refreshToken });
+/** 서버에 저장된 리프레시 토큰을 무효화한다. userId는 쿼리로 보낸다. 로컬 토큰 정리는 호출하는 쪽에서 한다 */
+export async function logout(userId: number): Promise<void> {
+  await api.post('/v1/auth/logout', null, { params: { userId } });
 }
 
 /**

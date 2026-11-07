@@ -2,8 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { logout as requestLogout } from '@/api/auth';
-import { fetchMe, userKeys } from '@/api/users';
-import avatar from '@/assets/my/avatar.png';
+import { fetchMe, userKeys, type MyProfile } from '@/api/users';
 import calendar from '@/assets/my/calendar.svg';
 import chevron from '@/assets/my/chevron.svg';
 import heart from '@/assets/my/heart.svg';
@@ -12,6 +11,7 @@ import profileIcon from '@/assets/my/profile.svg';
 import settings from '@/assets/my/settings.svg';
 import BottomNav from '@/components/BottomNav';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import DessertAvatar from '@/components/DessertAvatar';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,18 +41,6 @@ const MENUS = [
   { label: '설정', icon: settings },
 ];
 
-function ProfileAvatar({ src }: { src?: string | null }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <img
-      src={!src || failed ? avatar : src}
-      alt="내 프로필 사진"
-      onError={() => setFailed(true)}
-      className="my-page-avatar rounded-full object-cover"
-    />
-  );
-}
-
 export default function MyPage() {
   const {
     data: profile,
@@ -71,8 +59,11 @@ export default function MyPage() {
   const queryClient = useQueryClient();
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const { refreshToken } = useAuthStore.getState();
-      if (refreshToken) await requestLogout(refreshToken);
+      // 로그아웃 API는 userId가 필요하다. 내 정보가 아직 없으면 한 번 불러와서 쓴다
+      const userId =
+        queryClient.getQueryData<MyProfile>(userKeys.me)?.userId ??
+        (await fetchMe()).userId;
+      await requestLogout(userId);
     },
     // 서버 요청이 실패해도 이 기기에서는 로그아웃되어야 하므로 결과와 상관없이 정리한다
     onSettled: () => {
@@ -100,9 +91,10 @@ export default function MyPage() {
           aria-label="내 프로필"
           className="my-page-profile flex min-h-0 flex-col items-center"
         >
-          <ProfileAvatar
+          <DessertAvatar
             key={isError ? 'error' : profile?.dessertAvatarUrl}
             src={isError ? null : profile?.dessertAvatarUrl}
+            className="my-page-avatar"
           />
           <div className="mt-3 min-h-8 max-w-full text-center">
             {isPending ? (
