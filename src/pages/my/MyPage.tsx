@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { logout as requestLogout } from '@/api/auth';
@@ -12,6 +11,7 @@ import premium from '@/assets/my/premium.svg';
 import profileIcon from '@/assets/my/profile.svg';
 import settings from '@/assets/my/settings.svg';
 import BottomNav from '@/components/BottomNav';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
@@ -208,34 +208,16 @@ export default function MyPage() {
           </DialogClose>
         </DialogContent>
       </Dialog>
-      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-        <DialogContent className="max-w-[345px]">
-          <DialogTitle>로그아웃할까요?</DialogTitle>
-          <DialogDescription>
-            로그아웃하면 다시 로그인해야 서비스를 이용할 수 있어요.
-          </DialogDescription>
-          <div className="grid grid-cols-2 gap-3">
-            <DialogClose asChild>
-              <Button type="button" variant="secondary" className="h-11">
-                취소
-              </Button>
-            </DialogClose>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={logoutMutation.isPending}
-              onClick={() => logoutMutation.mutate()}
-              className="h-11 cursor-pointer"
-            >
-              {logoutMutation.isPending ? (
-                <Loader2 aria-hidden className="animate-spin" />
-              ) : (
-                '로그아웃'
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        title="로그아웃할까요?"
+        description="로그아웃하면 다시 로그인해야 서비스를 이용할 수 있어요."
+        cancelLabel="취소"
+        confirmLabel="로그아웃"
+        pending={logoutMutation.isPending}
+        onConfirm={() => logoutMutation.mutate()}
+      />
     </div>
   );
 }
