@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { logout as requestLogout } from '@/api/auth';
 import { fetchMe, userKeys, type MyProfile } from '@/api/users';
-import avatar from '@/assets/my/avatar.png';
 import calendar from '@/assets/my/calendar.svg';
 import chevron from '@/assets/my/chevron.svg';
 import heart from '@/assets/my/heart.svg';
@@ -12,6 +11,7 @@ import profileIcon from '@/assets/my/profile.svg';
 import settings from '@/assets/my/settings.svg';
 import BottomNav from '@/components/BottomNav';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import DessertAvatar from '@/components/DessertAvatar';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,18 +40,6 @@ const MENUS = [
   { label: '예약 · 주문 내역', icon: calendar },
   { label: '설정', icon: settings },
 ];
-
-function ProfileAvatar({ src }: { src?: string | null }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <img
-      src={!src || failed ? avatar : src}
-      alt="내 프로필 사진"
-      onError={() => setFailed(true)}
-      className="my-page-avatar rounded-full object-cover"
-    />
-  );
-}
 
 export default function MyPage() {
   const {
@@ -103,9 +91,10 @@ export default function MyPage() {
           aria-label="내 프로필"
           className="my-page-profile flex min-h-0 flex-col items-center"
         >
-          <ProfileAvatar
+          <DessertAvatar
             key={isError ? 'error' : profile?.dessertAvatarUrl}
             src={isError ? null : profile?.dessertAvatarUrl}
+            className="my-page-avatar"
           />
           <div className="mt-3 min-h-8 max-w-full text-center">
             {isPending ? (
