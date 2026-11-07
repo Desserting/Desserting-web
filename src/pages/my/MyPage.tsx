@@ -130,7 +130,7 @@ export default function MyPage() {
               </div>
             ) : (
               <h2 className="truncate text-[22px] leading-8 font-bold">
-                {profile.nickname}님 ♡
+                {profile.nickname}님
               </h2>
             )}
           </div>
