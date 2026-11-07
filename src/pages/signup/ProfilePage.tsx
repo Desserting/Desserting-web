@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { signup } from '@/api/auth';
+import { getSignupEmailError, signup } from '@/api/auth';
 import { updateMyProfile } from '@/api/users';
 import logo from '@/assets/signup/splash-logo.svg';
 import PageHeader from '@/components/PageHeader';
@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const profile = useSignupStore((state) => state.profile);
   const setProfile = useSignupStore((state) => state.setProfile);
   const resetSignup = useSignupStore((state) => state.reset);
+  const setEmailError = useSignupStore((state) => state.setEmailError);
   const setTokens = useAuthStore((state) => state.setTokens);
   const completed = useRef(false);
   // 입력값은 화면을 떠난 뒤에 비운다. 이동 전에 비우면 아래 가드가 홈 이동을 가로챈다
@@ -77,6 +78,14 @@ export default function ProfilePage() {
       }
     },
     retry: false,
+    onError: (error) => {
+      // 이메일이 겹치면 이 화면에서는 고칠 수 없으니, 입력한 취향·프로필은 둔 채 첫 화면으로 돌려보낸다
+      const emailError = getSignupEmailError(error);
+      if (emailError) {
+        setEmailError(emailError);
+        navigate('/signup', { replace: true });
+      }
+    },
     onSuccess: () => {
       completed.current = true;
       // 이전 계정의 캐시가 새 계정에 보이지 않게 한다
