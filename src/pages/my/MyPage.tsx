@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchMe, userKeys } from '@/api/users';
-import avatar from '@/assets/my/avatar.png';
+import { Link, useNavigate } from 'react-router-dom';
+import { logout as requestLogout } from '@/api/auth';
+import { fetchMe, userKeys, type MyProfile } from '@/api/users';
 import calendar from '@/assets/my/calendar.svg';
 import chevron from '@/assets/my/chevron.svg';
 import heart from '@/assets/my/heart.svg';
@@ -10,6 +10,8 @@ import premium from '@/assets/my/premium.svg';
 import profileIcon from '@/assets/my/profile.svg';
 import settings from '@/assets/my/settings.svg';
 import BottomNav from '@/components/BottomNav';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import DessertAvatar from '@/components/DessertAvatar';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +21,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useAuthStore } from '@/stores/authStore';
 
 const MENUS = [
   { label: '내 프로필 관리', icon: profileIcon, to: '/my/profile' },
@@ -38,18 +41,6 @@ const MENUS = [
   { label: '설정', icon: settings },
 ];
 
-function ProfileAvatar({ src }: { src?: string | null }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <img
-      src={!src || failed ? avatar : src}
-      alt="내 프로필 사진"
-      onError={() => setFailed(true)}
-      className="my-page-avatar rounded-full object-cover"
-    />
-  );
-}
-
 export default function MyPage() {
   const {
     data: profile,
@@ -63,6 +54,24 @@ export default function MyPage() {
     refetchOnMount: 'always',
   });
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      // 로그아웃 API는 userId가 필요하다. 내 정보가 아직 없으면 한 번 불러와서 쓴다
+      const userId =
+        queryClient.getQueryData<MyProfile>(userKeys.me)?.userId ??
+        (await fetchMe()).userId;
+      await requestLogout(userId);
+    },
+    // 서버 요청이 실패해도 이 기기에서는 로그아웃되어야 하므로 결과와 상관없이 정리한다
+    onSettled: () => {
+      useAuthStore.getState().logout();
+      queryClient.clear();
+      navigate('/login', { replace: true });
+    },
+  });
   const details: Record<string, string> = {
     '/my/hearts':
       profile && !isError
@@ -76,15 +85,16 @@ export default function MyPage() {
 
   return (
     <div className="my-page flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
-      <main className="my-page-content text-ink grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] px-6">
+      <main className="my-page-content text-ink grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)_auto] px-6">
         <PageHeader title="마이페이지" />
         <section
           aria-label="내 프로필"
           className="my-page-profile flex min-h-0 flex-col items-center"
         >
-          <ProfileAvatar
+          <DessertAvatar
             key={isError ? 'error' : profile?.dessertAvatarUrl}
             src={isError ? null : profile?.dessertAvatarUrl}
+            className="my-page-avatar"
           />
           <div className="mt-3 min-h-8 max-w-full text-center">
             {isPending ? (
@@ -109,7 +119,7 @@ export default function MyPage() {
               </div>
             ) : (
               <h2 className="truncate text-[22px] leading-8 font-bold">
-                {profile.nickname}님 ♡
+                {profile.nickname}님
               </h2>
             )}
           </div>
@@ -165,6 +175,13 @@ export default function MyPage() {
             );
           })}
         </ul>
+        <button
+          type="button"
+          onClick={() => setLogoutOpen(true)}
+          className="text-my-muted focus-visible:outline-mint-deep mx-auto my-3 cursor-pointer rounded px-3 py-2 text-sm underline underline-offset-2 focus-visible:outline-2"
+        >
+          로그아웃
+        </button>
       </main>
       <BottomNav />
       <Dialog
@@ -183,6 +200,16 @@ export default function MyPage() {
           </DialogClose>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        title="로그아웃할까요?"
+        description="로그아웃하면 다시 로그인해야 서비스를 이용할 수 있어요."
+        cancelLabel="취소"
+        confirmLabel="로그아웃"
+        pending={logoutMutation.isPending}
+        onConfirm={() => logoutMutation.mutate()}
+      />
     </div>
   );
 }

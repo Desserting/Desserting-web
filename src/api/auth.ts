@@ -34,6 +34,11 @@ export async function login(body: LoginRequest): Promise<AuthTokens> {
   return data.data;
 }
 
+/** 서버에 저장된 리프레시 토큰을 무효화한다. userId는 쿼리로 보낸다. 로컬 토큰 정리는 호출하는 쪽에서 한다 */
+export async function logout(userId: number): Promise<void> {
+  await api.post('/v1/auth/logout', null, { params: { userId } });
+}
+
 /**
  * 가입 실패가 이메일 때문이면 첫 화면에 보여줄 안내를 돌려준다.
  * 명세에 중복 이메일 전용 코드가 없어, 이메일 필드를 가리키는 오류나 409 응답으로 판단한다
