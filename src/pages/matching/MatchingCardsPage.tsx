@@ -4,15 +4,10 @@ import { ArrowLeft } from 'lucide-react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import iconClose from '@/assets/matching/icon-close.svg';
 import iconProfile from '@/assets/matching/icon-profile.svg';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import DessertAvatar from '@/components/DessertAvatar';
 import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { getApiError } from '@/lib/axios';
 import { dessertLabel } from '@/lib/dessert';
 import { cn } from '@/lib/utils';
@@ -213,38 +208,13 @@ export default function MatchingCardsPage() {
         </Link>
       </div>
 
-      <Dialog open={exitOpen} onOpenChange={setExitOpen}>
-        <DialogContent
-          showCloseButton={false}
-          className="text-ink max-w-[calc(100%-48px)] gap-0 rounded-3xl bg-white p-6 text-center sm:max-w-[340px]"
-        >
-          <DialogTitle className="text-[19px] leading-7 font-bold">
-            랜덤 매칭을 종료하시겠습니까?
-          </DialogTitle>
-          <DialogDescription className="text-ink-muted mt-2 text-[15px] leading-6">
-            같은 사람과 다시 매칭되지 않을 수 있습니다.
-          </DialogDescription>
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              size="xl"
-              onClick={() => setExitOpen(false)}
-              className="bg-chip text-ink hover:bg-chip/80 h-12 rounded-xl pb-0 text-base"
-            >
-              아니요
-            </Button>
-            <Button
-              type="button"
-              variant="brand"
-              size="xl"
-              onClick={() => navigate('/home')}
-              className="h-12 rounded-xl pb-0 text-base"
-            >
-              예
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={exitOpen}
+        onOpenChange={setExitOpen}
+        title="랜덤 매칭을 종료하시겠습니까?"
+        description="같은 사람과 다시 매칭되지 않을 수 있습니다."
+        onConfirm={() => navigate('/home')}
+      />
     </main>
   );
 }
