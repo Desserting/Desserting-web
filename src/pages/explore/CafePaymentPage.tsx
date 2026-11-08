@@ -23,8 +23,8 @@ import { formatMenuPrice, toCafeMenu, getMenuQuantities } from './cafeMenus';
 import type { CafeNavigationState } from './cafeNavigation';
 
 const PAYMENT_METHODS = [
-  { id: 'card', label: '카드 결제 (모의)' },
-  { id: 'simple', label: '간편 결제 (모의)' },
+  { id: 'card', label: '카드 결제' },
+  { id: 'simple', label: '간편 결제' },
 ] as const;
 
 export default function CafePaymentPage() {
