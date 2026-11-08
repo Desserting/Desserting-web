@@ -48,6 +48,8 @@ export interface ReceivedProposal {
 }
 
 export interface ReceivedReservationCard {
+  reservationId: number | null;
+  statusDescription: string | null;
   storeName: string;
   reservationDate: string;
   reservationTime: string;
@@ -78,6 +80,16 @@ export function parseReservationCard(
   )
     return null;
   return {
+    reservationId:
+      typeof card.reservationId === 'number' &&
+      Number.isSafeInteger(card.reservationId) &&
+      card.reservationId > 0
+        ? card.reservationId
+        : null,
+    statusDescription:
+      typeof card.statusDescription === 'string'
+        ? card.statusDescription
+        : null,
     storeName: card.storeName,
     reservationDate: card.reservationDate,
     reservationTime: card.reservationTime.slice(0, 5),

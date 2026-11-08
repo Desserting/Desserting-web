@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChatMessage, ChatMessageType } from '@/api/chat';
 import { refreshAccessToken } from '@/lib/axios';
 import { useAuthStore } from '@/stores/authStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { cafeKeys } from '@/api/cafeBooking';
 
 export type SocketStatus = 'connecting' | 'connected' | 'error';
 
@@ -27,7 +29,12 @@ const bearer = () => ({
 export function useChatSocket(
   roomId: number,
   onMessage: (message: ChatMessage) => void,
+  reservationIds: number[] = [],
 ) {
+  const queryClient = useQueryClient();
+  const reservationKey = [...new Set(reservationIds)]
+    .sort((a, b) => a - b)
+    .join(',');
   const [status, setStatus] = useState<SocketStatus>('connecting');
   const clientRef = useRef<Client | null>(null);
   const onMessageRef = useRef(onMessage);
@@ -53,6 +60,32 @@ export function useChatSocket(
         client.subscribe(`/sub/chat/room/${roomId}`, (frame) => {
           onMessageRef.current(JSON.parse(frame.body) as ChatMessage);
         });
+        for (const id of reservationKey
+          .split(',')
+          .filter(Boolean)
+          .map(Number)) {
+          const refresh = () => {
+            void queryClient.invalidateQueries({
+              queryKey: cafeKeys.reservation(id),
+            });
+            void queryClient.invalidateQueries({
+              queryKey: cafeKeys.receipt(id),
+            });
+          };
+          client.subscribe(`/sub/reservations/${id}`, (frame) => {
+            try {
+              const event = JSON.parse(frame.body);
+              if (
+                event.type === 'RESERVATION_STATUS_CHANGED' &&
+                event.reservationId === id
+              )
+                refresh();
+            } catch {
+              refresh();
+            }
+          });
+          refresh();
+        }
       },
       onWebSocketClose: () => {
         setStatus((current) => (current === 'error' ? current : 'connecting'));
@@ -79,7 +112,7 @@ export function useChatSocket(
       clientRef.current = null;
       void client.deactivate();
     };
-  }, [roomId]);
+  }, [roomId, reservationKey, queryClient]);
 
   const send = useCallback(
     (

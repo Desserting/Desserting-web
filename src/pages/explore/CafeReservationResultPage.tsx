@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import OrderReceipt from './OrderReceipt';
+import { useReservationUpdates } from './useReservationUpdates';
 import { useBookingFlow } from '@/lib/bookingFlow';
 import type { CafeNavigationState } from './cafeNavigation';
 
@@ -54,6 +55,7 @@ export default function CafeReservationResultPage({
   const reservationId = positiveId(
     route.reservationId ?? params.get('reservationId') ?? state?.reservationId,
   );
+  const reservationNotice = useReservationUpdates(storeId ? reservationId : 0);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -180,6 +182,14 @@ export default function CafeReservationResultPage({
         backTo={chatPath}
         onBack={view === 'order' ? confirmLeave : undefined}
       />
+      {reservationNotice && (
+        <p
+          role="status"
+          className="bg-mint-100 text-mint-deep mt-3 rounded-xl px-4 py-3 text-sm"
+        >
+          {reservationNotice}
+        </p>
+      )}
       {view === 'complete' ? (
         <>
           <section

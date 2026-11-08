@@ -35,6 +35,7 @@ import {
   fetchChatRooms,
   leaveChatRoom,
   markChatRoomRead,
+  parseReservationCard,
   type ChatMessage,
   type ChatMessageType,
 } from '@/api/chat';
@@ -217,7 +218,13 @@ function ChatRoom({ roomId }: { roomId: number }) {
     [queryClient, roomId],
   );
 
-  const socket = useChatSocket(roomId, handleIncoming);
+  const reservationIds = messages
+    .filter((message) => message.messageType === 'RESERVATION_CARD')
+    .flatMap((message) => {
+      const id = parseReservationCard(message.metadata)?.reservationId;
+      return id ? [id] : [];
+    });
+  const socket = useChatSocket(roomId, handleIncoming, reservationIds);
 
   const sendMessage = useCallback(
     (

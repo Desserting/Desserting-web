@@ -68,6 +68,11 @@ export default function OrderReceipt({ order }: { order: CafeOrder }) {
           <p className="text-ink-sub mt-px text-xs leading-[18px]">
             예약 · 주문 내역서
           </p>
+          {!refunded && (
+            <p role="status" className="text-mint-deep mt-2 text-sm font-bold">
+              {order.reservationStatusDescription}
+            </p>
+          )}
         </header>
         <Divider className="mt-5" />
         <dl className="text-ink-body flex items-center justify-between gap-3 py-3.5 leading-[26px]">

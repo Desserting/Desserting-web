@@ -1,4 +1,6 @@
 import { ReceiptText } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { cafeKeys, fetchCafeReservation } from '@/api/cafeBooking';
 import { parseReservationCard, type ChatMessage } from '@/api/chat';
 import { formatProposalDate } from '@/lib/datetime';
 
@@ -8,6 +10,18 @@ export default function ReservationMessageCard({
   message: ChatMessage;
 }) {
   const card = parseReservationCard(message.metadata);
+  const reservationId = card?.reservationId ?? 0;
+  const reservation = useQuery({
+    queryKey: cafeKeys.reservation(reservationId),
+    queryFn: () => fetchCafeReservation(reservationId),
+    enabled: !!reservationId,
+    retry: false,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
+    // 소켓 이벤트를 놓쳐도 채팅 카드가 최신 상태를 따라오도록 한다.
+    refetchInterval: 10000,
+  });
+  const status = reservation.data?.statusDescription;
   return (
     <div className="flex flex-col gap-2.5">
       {card && (
@@ -23,9 +37,17 @@ export default function ReservationMessageCard({
             {card.storeName}
           </p>
           <dl className="mt-3 space-y-2 text-[13px] leading-5">
-            <div>
-              <dt className="text-ink-muted">예약 일시</dt>
-              <dd className="font-bold">
+            {(status || card.statusDescription) && (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ink-muted">예약 상태</dt>
+                <dd role="status" className="text-mint-deep font-bold">
+                  {status ?? `${card.statusDescription} (공유 당시)`}
+                </dd>
+              </div>
+            )}
+            <div className="flex items-start justify-between gap-3">
+              <dt className="text-ink-muted shrink-0">예약 일시</dt>
+              <dd className="text-right font-bold">
                 {formatProposalDate(card.reservationDate, card.reservationTime)}
               </dd>
             </div>
