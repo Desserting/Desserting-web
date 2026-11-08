@@ -18,6 +18,7 @@ import CafeNotFound from './CafeNotFound';
 import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import CafeImage from './CafeImage';
+import { cn } from '@/lib/utils';
 import type { CafeNavigationState } from './cafeNavigation';
 import {
   formatMenuPrice,
@@ -43,13 +44,18 @@ function MenuItem({
       <CafeImage
         src={item.image}
         alt={item.name}
-        className="h-[88px] w-[82px] rounded-xl object-cover"
+        className={cn(
+          'h-[88px] w-[82px] rounded-xl object-cover',
+          item.soldOut && 'opacity-60 grayscale',
+        )}
       />
       <div className="min-w-0 pt-[3px]">
         <h2 className="text-lg leading-[27px] font-bold break-words">
           {item.name}
           {item.soldOut && (
-            <span className="text-my-muted ml-2 text-xs">품절</span>
+            <span className="bg-cafe-field text-my-muted ml-2 rounded px-2 py-1 text-xs">
+              품절
+            </span>
           )}
         </h2>
         <p className="mt-[5px] text-base leading-6">
@@ -77,7 +83,7 @@ function MenuItem({
             aria-label={`${item.name} 수량 늘리기`}
             disabled={item.soldOut || quantity >= 20}
             onClick={() => onQuantityChange(quantity + 1)}
-            className="focus-visible:outline-mint-deep h-full cursor-pointer rounded-[9px] focus-visible:outline-2"
+            className="focus-visible:outline-mint-deep h-full cursor-pointer rounded-[9px] focus-visible:outline-2 disabled:cursor-default disabled:opacity-30"
           >
             <span aria-hidden="true">+</span>
           </button>
@@ -94,6 +100,9 @@ export default function CafeMenuPage() {
     queryKey: cafeKeys.detail(storeId),
     queryFn: () => fetchCafeDetail(storeId),
     enabled: !!storeId,
+    refetchInterval: 10000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
   });
   const cafe = detail.data;
   const menu = toCafeMenu(cafe?.menus ?? []);
@@ -121,6 +130,9 @@ export default function CafeMenuPage() {
     navigationState?.order?.quantities ?? {},
   );
   const quantities = getMenuQuantities(menu, draftQuantities);
+  const soldOutSelection = menu.some(
+    (item) => item.soldOut && (draftQuantities[item.id] ?? 0) > 0,
+  );
   const [category, setCategory] = useState<MenuCategory>(
     navigationState?.order?.category ?? 'dessert',
   );
@@ -196,6 +208,11 @@ export default function CafeMenuPage() {
         }
         backState={{ ...backState, order: { quantities, category } }}
       />
+      {soldOutSelection && (
+        <p role="status" className="text-my-muted mt-3 text-sm">
+          선택한 메뉴 중 품절된 메뉴를 주문에서 제외했어요.
+        </p>
+      )}
       <Tabs
         value={category}
         onValueChange={(value) => setCategory(value as MenuCategory)}

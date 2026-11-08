@@ -26,7 +26,7 @@ function MenuItem({ menu }: { menu: StoreMenu }) {
             alt=""
             className={cn(
               'size-full object-cover',
-              menu.soldOut && 'opacity-50',
+              menu.soldOut && 'opacity-60 grayscale',
             )}
           />
         ) : (
@@ -89,6 +89,9 @@ export default function StoreDetailPage({
     queryKey: storeKeys.detail(id),
     queryFn: () => fetchStoreDetail(id),
     enabled: validId,
+    refetchInterval: showMenus ? 10000 : false,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
     // 없는 매장(404)은 다시 시도해도 같다
     retry: (count, error) => !isNotFound(error) && count < 2,
   });
