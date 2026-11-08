@@ -292,6 +292,9 @@ export default function CafeReservationPage() {
                     onClick={() => {
                       setDate(value);
                       setTime('');
+                      if (create.isError && getApiError(create.error)) {
+                        create.reset();
+                      }
                     }}
                     className={cn(
                       'focus-visible:outline-mint-deep flex h-[45px] cursor-pointer items-center justify-center rounded-full text-[15px] leading-6 focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-default',
@@ -336,7 +339,12 @@ export default function CafeReservationPage() {
           <ReservationTimeSlots
             times={reservationId && time ? [time] : availableTimes}
             value={time}
-            onValueChange={setTime}
+            onValueChange={(value) => {
+              setTime(value);
+              if (create.isError && getApiError(create.error)) {
+                create.reset();
+              }
+            }}
             disabled={
               !!reservationId ||
               create.isPending ||
