@@ -33,6 +33,7 @@ export default function CafePaymentPage() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [params] = useSearchParams();
+  const [menuNotice, setMenuNotice] = useState<string | null>(null);
   const state = location.state as CafeNavigationState | null;
   const reservationId = positiveId(
     params.get('reservationId') ?? state?.reservationId,
@@ -41,6 +42,9 @@ export default function CafePaymentPage() {
     queryKey: cafeKeys.detail(storeId),
     queryFn: () => fetchCafeDetail(storeId),
     enabled: !!storeId,
+    refetchInterval: 10000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
   });
   const reservation = useQuery({
     queryKey: cafeKeys.reservation(reservationId),
@@ -48,6 +52,12 @@ export default function CafePaymentPage() {
     enabled: !!reservationId,
   });
   const menu = toCafeMenu(detail.data?.menus ?? []);
+  const unavailableSelection = Object.entries(
+    state?.order?.quantities ?? {},
+  ).some(
+    ([id, quantity]) =>
+      quantity > 0 && !menu.some((item) => item.id === id && !item.soldOut),
+  );
   const quantities = getMenuQuantities(menu, state?.order?.quantities);
   const items = menu
     .filter((item) => quantities[item.id] > 0)
@@ -66,6 +76,7 @@ export default function CafePaymentPage() {
       detail.isSuccess &&
       matchingReservation &&
       !blocked &&
+      !unavailableSelection &&
       items.length > 0 &&
       items.length <= 20,
     retry: false,
@@ -75,12 +86,27 @@ export default function CafePaymentPage() {
   );
   const submitting = useRef(false);
   const payment = useMutation({
-    mutationFn: () =>
-      placeCafeOrder(reservationId, {
+    mutationFn: async () => {
+      const latest = await fetchCafeDetail(storeId);
+      queryClient.setQueryData(cafeKeys.detail(storeId), latest);
+      const unavailable = items.some((item) => {
+        const current = latest.menus.find(
+          (menu) => menu.menuId === item.menuId,
+        );
+        return !current || current.soldOut;
+      });
+      if (unavailable) {
+        setMenuNotice(
+          '선택한 메뉴가 품절되었어요. 메뉴 선택 화면에서 다시 확인해 주세요.',
+        );
+        throw new Error('MENU_UNAVAILABLE');
+      }
+      return placeCafeOrder(reservationId, {
         items,
         paymentType: 'COMBINED',
         paymentMethod: method === 'card' ? 'CARD' : 'EASY_PAY',
-      }),
+      });
+    },
     retry: false,
     onSuccess: (order) => {
       queryClient.setQueryData(cafeKeys.receipt(reservationId), order);
@@ -139,7 +165,10 @@ export default function CafePaymentPage() {
       </main>
     );
   if (!matchingReservation) return <CafeNotFound />;
-  if (!state?.order || items.length === 0)
+  if (
+    !state?.order ||
+    (items.length === 0 && !unavailableSelection && !menuNotice)
+  )
     return <Navigate to={menuPath} state={backState} replace />;
 
   const submit = () => {
@@ -147,6 +176,8 @@ export default function CafePaymentPage() {
       !preview.isSuccess ||
       preview.isFetching ||
       blocked ||
+      unavailableSelection ||
+      !!menuNotice ||
       submitting.current ||
       payment.isSuccess
     )
@@ -160,11 +191,19 @@ export default function CafePaymentPage() {
   return (
     <main className="text-ink flex min-h-dvh flex-col bg-white px-6 pb-[max(47px,env(safe-area-inset-bottom,0px))]">
       <PageHeader title="결제하기" backTo={menuPath} backState={backState} />
+      {(unavailableSelection || menuNotice) && (
+        <p role="alert" className="text-destructive mt-4 text-sm">
+          {menuNotice ??
+            '선택한 메뉴가 품절되었어요. 메뉴 선택 화면에서 다시 확인해 주세요.'}
+        </p>
+      )}
       {blocked ? (
         <p role="alert" className="text-destructive mt-8">
           취소되었거나 완료된 예약은 결제할 수 없어요.
         </p>
       ) : (
+        !unavailableSelection &&
+        !menuNotice &&
         (preview.isPending || preview.isError) && (
           <CafeRequestState
             pending={preview.isPending}
@@ -224,7 +263,7 @@ export default function CafePaymentPage() {
       <p className="text-my-muted mt-4 text-center text-xs">
         모의 결제로 실제 금액은 청구되지 않아요.
       </p>
-      {payment.isError && (
+      {payment.isError && !menuNotice && (
         <div role="alert" className="text-destructive mt-4 text-sm">
           <p>
             {getApiError(payment.error)?.message ??
@@ -240,6 +279,8 @@ export default function CafePaymentPage() {
           onClick={submit}
           disabled={
             blocked ||
+            unavailableSelection ||
+            !!menuNotice ||
             !preview.isSuccess ||
             preview.isFetching ||
             payment.isPending ||
