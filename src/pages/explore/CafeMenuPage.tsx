@@ -18,6 +18,7 @@ import CafeNotFound from './CafeNotFound';
 import PageHeader from '@/components/PageHeader';
 import CafeRequestState from './CafeRequestState';
 import CafeImage from './CafeImage';
+import SoldOutMenuNotice from '@/components/SoldOutMenuNotice';
 import { cn } from '@/lib/utils';
 import type { CafeNavigationState } from './cafeNavigation';
 import {
@@ -40,7 +41,7 @@ function MenuItem({
   onQuantityChange: (quantity: number) => void;
 }) {
   return (
-    <li className="grid min-h-[108px] grid-cols-[82px_minmax(0,1fr)] gap-4">
+    <li className="relative grid min-h-[108px] grid-cols-[82px_minmax(0,1fr)] gap-4">
       <CafeImage
         src={item.image}
         alt={item.name}
@@ -64,8 +65,9 @@ function MenuItem({
         <div
           role="group"
           aria-label={`${item.name} 수량 선택`}
-          className="bg-cafe-field mt-[11px] ml-auto grid h-[37px] w-[121px] max-w-full grid-cols-3 items-center rounded-[9px] text-center text-base font-bold"
+          className="bg-cafe-field relative mt-[11px] ml-auto grid h-[37px] w-[121px] max-w-full grid-cols-3 items-center rounded-[9px] text-center text-base font-bold"
         >
+          {item.soldOut && <SoldOutMenuNotice name={item.name} />}
           <button
             type="button"
             aria-label={`${item.name} 수량 줄이기`}
