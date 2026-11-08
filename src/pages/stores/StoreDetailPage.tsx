@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import StoreDetailInfo from '@/components/StoreDetailInfo';
+import SoldOutMenuNotice from '@/components/SoldOutMenuNotice';
 import { useBookingFlow } from '@/lib/bookingFlow';
 import type { CafeNavigationState } from '@/pages/explore/cafeNavigation';
 import { cn } from '@/lib/utils';
@@ -18,7 +19,8 @@ const isNotFound = (error: unknown) =>
 
 function MenuItem({ menu }: { menu: StoreMenu }) {
   return (
-    <li className="border-hairline flex items-center gap-3 rounded-2xl border p-3">
+    <li className="border-hairline relative flex items-center gap-3 rounded-2xl border p-3">
+      {menu.soldOut && <SoldOutMenuNotice name={menu.name} />}
       <span className="bg-chip flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl">
         {menu.imageUrl ? (
           <img
