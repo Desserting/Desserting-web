@@ -147,7 +147,7 @@ Desserting은 **"좋아하는 디저트"라는 가벼운 공통점**으로 첫 �
 > 만날 카페를 **테마 거리 지도**에서 고르고, 예약과 주문까지 앱 안에서 끝내요.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/d1745ba6-23ca-4781-a277-008c53202fb6" alt="핵심 기능 가다 — 테마거리 선택, 제휴매장 탐색, 날짜·시간 선택, 메뉴 담기, 예약 완료" width="800" />
+  <img src="https://github.com/user-attachments/assets/f56006e3-1611-4fa4-9f54-70e56cbb4bf6" alt="핵심 기능 가다 — 테마거리 선택, 제휴매장 탐색, 날짜·시간 선택, 메뉴 담기, 예약 완료" width="800" />
 </p>
 
 | 단계 | 동작 |
