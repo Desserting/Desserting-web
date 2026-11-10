@@ -1,9 +1,13 @@
 import { api, type ApiResponse } from '@/lib/axios';
 import { toList } from './list';
 
+export type Gender = 'MALE' | 'FEMALE';
+
 export interface MyProfile {
   userId: number;
   nickname: string;
+  /** 내 성별. 프로필 탐색에서 이성만 보여줄 때 쓴다 */
+  gender?: Gender;
   bio: string | null;
   dessertAvatarUrl: string | null;
   heartCount: number;
@@ -18,7 +22,7 @@ export interface OtherUserProfile {
   nickname: string;
   /** 계정 역할. 서버가 USER만 내려주지만, 혹시 다른 역할이 오면 화면에서 숨긴다 */
   role?: UserRole;
-  gender?: 'MALE' | 'FEMALE';
+  gender?: Gender;
   age: number;
   region: string;
   bio?: string | null;
