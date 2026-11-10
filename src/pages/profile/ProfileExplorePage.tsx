@@ -69,12 +69,17 @@ export default function ProfileExplorePage() {
   const query = isLikedTab ? likes : explore;
   const isLiked = (userId: number) =>
     likedIds.includes(serverCandidateKey(userId));
-  const candidates = (query.data ?? []).filter(({ userId }) =>
+  // 여성 계정에는 남성만, 남성 계정에는 여성만 보여준다. 내 성별을 모르면 거르지 않는다
+  const myGender = me.data?.gender;
+  const candidates = (query.data ?? []).filter(({ userId, gender }) => {
+    if (myGender && gender !== (myGender === 'MALE' ? 'FEMALE' : 'MALE')) {
+      return false;
+    }
     // 좋아요 탭에서는 방금 취소한 프로필이 바로 빠지도록 현재 상태로 한 번 더 거른다
-    isLikedTab ? isLiked(userId) : userId !== me.data?.userId,
-  );
-  // 내 정보를 불러오기 전에 목록을 그리면 내 카드가 잠깐 보였다 사라진다
-  const loading = query.isPending || (!isLikedTab && me.isPending);
+    return isLikedTab ? isLiked(userId) : userId !== me.data?.userId;
+  });
+  // 내 정보를 불러오기 전에 목록을 그리면 내 카드나 같은 성별 카드가 잠깐 보였다 사라진다
+  const loading = query.isPending || me.isPending;
 
   const like = useMutation({
     mutationFn: (userId: number) => sendLike(userId),
